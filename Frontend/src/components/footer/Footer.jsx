@@ -78,13 +78,6 @@ const Footer = () => {
                   </li>
                 ))}
               </ul>
-
-              <a
-                href="tel:+923001234567"
-                className="inline-flex items-center rounded-xl border border-[var(--c-brand)]/50 bg-[var(--c-brand)]/12 px-4 py-2.5 text-xs font-black uppercase tracking-[0.14em] text-[var(--c-brand)] hover:bg-[var(--c-brand)]/20 transition-colors"
-              >
-                Talk to an advisor
-              </a>
             </div>
           </div>
         </div>

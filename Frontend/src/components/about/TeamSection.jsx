@@ -1,4 +1,4 @@
-import { Quote, ShieldCheck, Sparkles } from "lucide-react";
+import { Quote, ShieldCheck } from "lucide-react";
 
 const leadershipTeam = [
   {
@@ -68,9 +68,8 @@ const TeamSection = () => {
                 {leader.focusAreas.map((area) => (
                   <span
                     key={area}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-theme bg-theme-bg px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-muted"
+                    className="inline-flex items-center rounded-full border border-theme bg-theme-bg px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-muted"
                   >
-                    <Sparkles size={11} className="text-[var(--c-brand)]" />
                     {area}
                   </span>
                 ))}

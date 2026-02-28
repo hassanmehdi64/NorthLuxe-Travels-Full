@@ -9,10 +9,10 @@ const BlogCategories = ({ categories, active, onChange }) => {
           <li key={cat}>
             <button
               onClick={() => onChange(cat)}
-              className={`w-full text-left rounded-lg px-3 py-2 text-sm transition-colors ${
+              className={`w-full text-left rounded-lg border px-3 py-2 text-sm transition-all duration-200 ${
                 active === cat
-                  ? "bg-[var(--c-brand)]/15 text-theme font-semibold"
-                  : "text-muted hover:bg-theme-bg hover:text-theme"
+                  ? "border-[var(--c-brand)]/35 bg-[var(--c-brand)]/15 text-theme font-semibold"
+                  : "border-transparent text-muted hover:-translate-y-[1px] hover:border-[var(--c-brand)]/25 hover:bg-theme-bg hover:text-theme"
               }`}
             >
               {cat}

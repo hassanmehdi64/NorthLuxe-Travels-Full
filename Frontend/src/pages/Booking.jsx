@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
-import { CheckCircle2, ChevronDown, CreditCard, ReceiptText, RotateCcw, ShieldCheck, Sparkles } from "lucide-react";
+import { CheckCircle2, ChevronDown, CreditCard, MoveUpRight, ReceiptText, RotateCcw, ShieldCheck } from "lucide-react";
 import {
   useCreatePaymentIntent,
   useCreatePublicBooking,
@@ -463,16 +463,28 @@ const Booking = () => {
               <div className="grid xl:grid-cols-[minmax(0,1fr)_320px] gap-6 items-start">
                 <div className="space-y-5">
                   {isStandardBooking && selectedTour ? (
-                    <div className="rounded-2xl border border-theme bg-theme-surface p-4 shadow-[0_8px_16px_rgba(15,23,42,0.06)]">
-                      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-subheading">
+                    <div className="rounded-2xl border border-[#cfe9de] bg-[linear-gradient(180deg,#f9fffc_0%,#f3fbf7_100%)] p-4 md:p-5 shadow-[0_10px_20px_rgba(15,23,42,0.08)]">
+                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#4c6472]">
                         Booking Summary
                       </p>
-                      <div className="mt-3 grid md:grid-cols-3 gap-3 md:gap-4 items-center">
-                        <p className="text-base font-semibold text-heading leading-tight">{selectedTour.title}</p>
-                        <p className="text-sm text-subheading">
-                          {selectedTour.location} | {selectedTour.durationLabel || `${selectedTour.durationDays} Days`}
-                        </p>
-                        <p className="justify-self-start md:justify-self-end inline-flex items-center rounded-full border border-[var(--c-brand)]/35 bg-[var(--c-brand)]/12 px-3 py-1 text-sm font-bold text-accent">
+                      <div className="mt-3 grid md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-3 md:gap-4 items-center">
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#6a7f8e]">
+                            Selected Tour
+                          </p>
+                          <p className="mt-1 text-lg font-bold text-[#1f3342] leading-tight line-clamp-1">
+                            {selectedTour.title}
+                          </p>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#6a7f8e]">
+                            Route & Duration
+                          </p>
+                          <p className="mt-1 text-sm font-semibold text-[#3b5568] line-clamp-1">
+                            {selectedTour.location} | {selectedTour.durationLabel || `${selectedTour.durationDays} Days`}
+                          </p>
+                        </div>
+                        <p className="justify-self-start md:justify-self-end inline-flex items-center rounded-full border border-[#8fdcc2] bg-[#e7faf2] px-3.5 py-1.5 text-base font-black text-[#123245] shadow-[0_6px_14px_rgba(123,231,196,0.2)]">
                           {selectedTour.currency} {Number(selectedTour.price || 0).toLocaleString()}
                         </p>
                       </div>
@@ -855,7 +867,6 @@ const Booking = () => {
                             <p className="text-[0.98rem] font-semibold text-[#2e4352] leading-tight line-clamp-2">{plan.title}</p>
                             {plan.featured ? (
                               <span className="inline-flex items-center gap-1 rounded-full border border-[#9fe7cf] bg-[#e7fbf3] px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-[#2b7d63]">
-                                <Sparkles size={10} />
                                 Hot
                               </span>
                             ) : null}
@@ -874,7 +885,7 @@ const Booking = () => {
                       className="mt-3.5 inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#cfe9de] bg-white px-3.5 py-2.5 text-[11px] font-semibold text-[#4b6271] hover:border-[#8cdbc1] hover:bg-[#effcf6] hover:text-[#2b7d63] transition"
                     >
                       View all tours
-                      <Sparkles size={12} />
+                      <MoveUpRight size={12} />
                     </Link>
                   </div>
 
