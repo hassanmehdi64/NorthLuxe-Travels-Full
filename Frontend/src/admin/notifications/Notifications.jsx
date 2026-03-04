@@ -32,8 +32,8 @@ const Notifications = () => {
   const deleteNotification = useDeleteNotification();
 
   // Logic Handlers
-  const handleMarkAsRead = (id) => {
-    updateNotification.mutate({ id, isRead: true });
+  const handleMarkAsRead = async (id) => {
+    await updateNotification.mutateAsync({ id, isRead: true });
   };
 
   const handleMarkAllRead = () => {
@@ -54,10 +54,11 @@ const Notifications = () => {
       return bTime - aTime;
     });
 
+  const unread = notifications.filter((n) => !n.isRead);
   const counts = {
-    All: notifications.length,
-    Bookings: notifications.filter((n) => n.type === "Bookings").length,
-    System: notifications.filter((n) => n.type === "System").length,
+    All: unread.length,
+    Bookings: unread.filter((n) => n.type === "Bookings").length,
+    System: unread.filter((n) => n.type === "System").length,
   };
 
   return (

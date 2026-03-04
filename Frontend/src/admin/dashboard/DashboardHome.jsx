@@ -14,6 +14,7 @@ import {
 import {
   useBookings,
   useContacts,
+  useAdminContentList,
   useDashboardOverview,
   useGallery,
   useNotifications,
@@ -27,6 +28,20 @@ const isManualPaymentMethod = (value = "") => {
   return ["easypaisa", "jazzcash", "bank_transfer", "manual"].includes(v);
 };
 
+const formatNumber = (value) => {
+  const num = Number(value || 0);
+  return new Intl.NumberFormat("en-US").format(num);
+};
+
+const formatCurrency = (value) => {
+  const num = Number(value || 0);
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(num);
+};
+
 const DashboardHome = () => {
   const { data: overview } = useDashboardOverview();
   const { data: bookings = [] } = useBookings();
@@ -36,6 +51,8 @@ const DashboardHome = () => {
   const { data: blogs = [] } = usePublicBlogs();
   const { data: gallery = [] } = useGallery();
   const { data: users = [] } = useUsers();
+  const { data: activities = [] } = useAdminContentList("activity");
+  const { data: services = [] } = useAdminContentList("service");
 
   const stats = overview?.stats || {};
   const latestBookings = overview?.latestBookings || bookings.slice(0, 6);
@@ -61,37 +78,43 @@ const DashboardHome = () => {
   const cards = [
     {
       title: "Total Bookings",
-      value: stats.totalBookings ?? bookings.length,
+      value: formatNumber(stats.totalBookings ?? bookings.length),
+      hint: "All recorded bookings",
       icon: Briefcase,
       tone: "text-blue-600 bg-blue-50 border-blue-100",
     },
     {
       title: "Revenue",
-      value: `$${stats.totalRevenue || 0}`,
+      value: formatCurrency(stats.totalRevenue || 0),
+      hint: "Confirmed collections",
       icon: CreditCard,
       tone: "text-emerald-600 bg-emerald-50 border-emerald-100",
     },
     {
       title: "Custom Requests",
-      value: customPlanRequests,
+      value: formatNumber(customPlanRequests),
+      hint: "From contact forms",
       icon: MessageSquare,
       tone: "text-violet-600 bg-violet-50 border-violet-100",
     },
     {
       title: "Pending Payments",
-      value: pendingPaymentVerifications,
+      value: formatNumber(pendingPaymentVerifications),
+      hint: "Need verification",
       icon: ShieldCheck,
       tone: "text-amber-600 bg-amber-50 border-amber-100",
     },
     {
       title: "Unread Alerts",
-      value: unreadNotifications,
+      value: formatNumber(unreadNotifications),
+      hint: "Awaiting review",
       icon: Bell,
       tone: "text-rose-600 bg-rose-50 border-rose-100",
     },
     {
       title: "Active Users",
-      value: stats.totalUsers ?? users.length,
+      value: formatNumber(stats.totalUsers ?? users.length),
+      hint: "Accessible accounts",
       icon: Users,
       tone: "text-cyan-600 bg-cyan-50 border-cyan-100",
     },
@@ -122,6 +145,18 @@ const DashboardHome = () => {
       to: "/admin/tours",
       icon: FolderOpen,
     },
+    {
+      title: "Manage Activities",
+      desc: `${activities.length} total entries. Add or update activity data.`,
+      to: "/admin/activities",
+      icon: Briefcase,
+    },
+    {
+      title: "Manage Services",
+      desc: `${services.length} total entries. Add or update service data.`,
+      to: "/admin/services",
+      icon: BookOpen,
+    },
   ];
 
   return (
@@ -136,11 +171,28 @@ const DashboardHome = () => {
         </p>
       </div>
 
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-black uppercase tracking-[0.16em] text-slate-500 dark:text-slate-300">
+            Live Snapshot
+          </h2>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-300">
+            Quick health metrics for operations, users, and requests.
+          </p>
+        </div>
+        <p className="hidden sm:block text-[11px] font-semibold text-slate-400 dark:text-slate-300">
+          Updated {new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+        </p>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         {cards.map((card) => {
           const Icon = card.icon;
           return (
-            <div key={card.title} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:bg-slate-900 dark:border-slate-700">
+            <div
+              key={card.title}
+              className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:bg-slate-900 dark:border-slate-700"
+            >
               <div className="flex items-center justify-between">
                 <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-500 dark:text-slate-300">{card.title}</p>
                 <span className={`inline-flex h-9 w-9 items-center justify-center rounded-xl border ${card.tone}`}>
@@ -148,6 +200,7 @@ const DashboardHome = () => {
                 </span>
               </div>
               <p className="mt-3 text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">{card.value}</p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-300">{card.hint}</p>
             </div>
           );
         })}
@@ -217,6 +270,8 @@ const DashboardHome = () => {
             <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Content Snapshot</h3>
             <div className="mt-3 space-y-2 text-sm text-slate-700 dark:text-slate-200">
               <p className="flex items-center justify-between"><span className="inline-flex items-center gap-1.5"><Briefcase size={13} /> Tours</span><b>{tours.length}</b></p>
+              <p className="flex items-center justify-between"><span className="inline-flex items-center gap-1.5"><Briefcase size={13} /> Activities</span><b>{activities.length}</b></p>
+              <p className="flex items-center justify-between"><span className="inline-flex items-center gap-1.5"><BookOpen size={13} /> Services</span><b>{services.length}</b></p>
               <p className="flex items-center justify-between"><span className="inline-flex items-center gap-1.5"><BookOpen size={13} /> Blogs</span><b>{blogs.length}</b></p>
               <p className="flex items-center justify-between"><span className="inline-flex items-center gap-1.5"><Image size={13} /> Gallery Media</span><b>{gallery.length}</b></p>
             </div>

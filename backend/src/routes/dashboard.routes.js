@@ -1,13 +1,13 @@
 import express from "express";
 import { asyncHandler } from "../middleware/asyncHandler.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, requireRole } from "../middleware/auth.js";
 import { Booking } from "../models/Booking.js";
 import { Tour } from "../models/Tour.js";
 import { User } from "../models/User.js";
 
 const router = express.Router();
 
-router.use(requireAuth);
+router.use(requireAuth, requireRole("Admin"));
 
 router.get(
   "/overview",

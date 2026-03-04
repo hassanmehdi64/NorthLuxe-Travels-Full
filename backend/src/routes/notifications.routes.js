@@ -1,6 +1,6 @@
 import express from "express";
 import { asyncHandler } from "../middleware/asyncHandler.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, requireRole } from "../middleware/auth.js";
 import { Notification } from "../models/Notification.js";
 
 const router = express.Router();
@@ -15,7 +15,7 @@ const toNotification = (item) => ({
   createdAt: item.createdAt,
 });
 
-router.use(requireAuth);
+router.use(requireAuth, requireRole("Admin"));
 
 router.get(
   "/",

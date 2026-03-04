@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Eye,
@@ -13,10 +13,13 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useBookings, useUpdateBooking } from "../../hooks/useCms";
+import { useNotifications, useUpdateNotification } from "../../hooks/useCms";
 
 const BookingManagement = () => {
   const { data: bookings = [] } = useBookings();
   const updateBooking = useUpdateBooking();
+  const { data: notifications = [] } = useNotifications();
+  const updateNotification = useUpdateNotification();
 
   // Modal States
   const [activeModal, setActiveModal] = useState(null);
@@ -45,6 +48,17 @@ const BookingManagement = () => {
     setSelectedBooking(null);
     setAdminNote("");
   };
+
+  useEffect(() => {
+    const unreadBookingAlerts = notifications.filter(
+      (n) => !n?.isRead && String(n?.type || "") === "Bookings",
+    );
+    if (!unreadBookingAlerts.length) return;
+
+    unreadBookingAlerts.forEach((n) => {
+      updateNotification.mutate({ id: n.id, isRead: true });
+    });
+  }, [notifications, updateNotification]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">

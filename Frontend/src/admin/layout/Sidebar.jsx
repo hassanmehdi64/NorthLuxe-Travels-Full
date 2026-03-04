@@ -2,53 +2,59 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import { LogOut, X } from "lucide-react";
 import { adminNavItems } from "./navConfig";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/useAuth";
 import {
   useAdminBlogs,
+  useAdminContentList,
   useAdminTestimonials,
   useAdminTours,
-  useBookings,
-  useContacts,
   useNotifications,
 } from "../../hooks/useCms";
 
-const isPendingBooking = (item) => {
-  const status = String(item?.status || "").toLowerCase();
-  const payment = String(item?.payment || "").toLowerCase();
-  return status === "pending" || payment.includes("pending") || payment.includes("unverified");
-};
-
-const isUnreadInquiry = (item) => {
-  const status = String(item?.status || "").toLowerCase();
-  return !status || status === "unread" || status === "new";
-};
-
 const Sidebar = ({ isSidebarOpen, setSidebarOpen, theme }) => {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const isDark = theme === "dark";
+  const role = user?.role;
+  const isAdmin = role === "Admin";
 
-  const { data: bookings = [] } = useBookings();
-  const { data: contacts = [] } = useContacts();
-  const { data: notifications = [] } = useNotifications();
+  const { data: notifications = [] } = useNotifications(isAdmin);
   const { data: tours = [] } = useAdminTours();
   const { data: blogs = [] } = useAdminBlogs();
+  const { data: contentItems = [] } = useAdminContentList();
   const { data: testimonials = [] } = useAdminTestimonials();
+
+  const unreadNotifications = notifications.filter((n) => !n?.isRead);
+  const unreadBookingAlerts = unreadNotifications.filter(
+    (n) => String(n?.type || "") === "Bookings",
+  ).length;
+  const unreadContactAlerts = unreadNotifications.filter((n) => {
+    const text = `${n?.title || ""} ${n?.message || ""}`.toLowerCase();
+    return String(n?.type || "") === "System" && (text.includes("contact") || text.includes("inquiry"));
+  }).length;
 
   const badgeCounts = {
     overview:
-      bookings.filter(isPendingBooking).length +
-      contacts.filter(isUnreadInquiry).length +
-      notifications.filter((n) => !n?.isRead).length +
+      unreadBookingAlerts +
+      unreadContactAlerts +
+      unreadNotifications.length +
       tours.filter((t) => String(t?.status || "").toLowerCase() !== "published").length +
       blogs.filter((b) => String(b?.status || "").toLowerCase() !== "published").length +
+      contentItems.filter((i) => String(i?.status || "").toLowerCase() !== "published").length +
       testimonials.filter((t) => String(t?.status || "").toLowerCase() !== "published").length,
-    bookings: bookings.filter(isPendingBooking).length,
-    tours: tours.filter((t) => String(t?.status || "").toLowerCase() !== "published").length,
-    blogs: blogs.filter((b) => String(b?.status || "").toLowerCase() !== "published").length,
-    testimonials: testimonials.filter((t) => String(t?.status || "").toLowerCase() !== "published").length,
-    contacts: contacts.filter(isUnreadInquiry).length,
-    notifications: notifications.filter((n) => !n?.isRead).length,
+    bookings: unreadBookingAlerts,
+    tours: tours.length,
+    activities: contentItems.filter((i) => String(i?.type || "").toLowerCase() === "activity").length,
+    services: contentItems.filter((i) => String(i?.type || "").toLowerCase() === "service").length,
+    blogs: blogs.length,
+    content: contentItems.length,
+    testimonials: testimonials.length,
+    contacts: unreadContactAlerts,
+    notifications: unreadNotifications.length,
   };
+
+  const visibleNavItems = adminNavItems.filter(
+    (item) => !item.roles?.length || item.roles.includes(role),
+  );
 
   const mobileVisibility = isSidebarOpen
     ? "translate-x-0"
@@ -70,7 +76,7 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen, theme }) => {
           }`}
         >
           <span className="text-xl font-black tracking-tighter italic">
-            NORTH<span className={isDark ? "text-accent" : "text-[#19c6ad]"}>LUXE</span>
+            NORTH<span className={isDark ? "text-accent" : "text-[var(--c-brand)]"}>LUXE</span>
           </span>
           <button
             onClick={() => setSidebarOpen(false)}
@@ -82,7 +88,7 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen, theme }) => {
 
         {/* Navigation Items */}
         <nav className="flex-1 px-3 py-6 overflow-y-auto">
-          {adminNavItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <NavLink
               key={item.id}
               to={item.path}
@@ -93,7 +99,7 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen, theme }) => {
                   isActive
                     ? isDark
                       ? "bg-white/12 text-white border border-white/20"
-                      : "bg-[#19c6ad]/16 text-slate-900 border border-[#19c6ad]/35"
+                      : "bg-[var(--c-brand)]/16 text-slate-900 border border-[var(--c-brand)]/35"
                     : isDark
                       ? "text-white/85 border border-transparent hover:text-white"
                       : "text-slate-700 border border-transparent hover:text-slate-900"
@@ -108,8 +114,8 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen, theme }) => {
                 <span
                   className={`inline-flex min-w-5 h-5 px-1.5 items-center justify-center rounded-full text-[10px] leading-5 font-black ${
                     isDark
-                      ? "bg-[#19c6ad] text-slate-900"
-                      : "bg-[#19c6ad] text-slate-900"
+                      ? "bg-[var(--c-brand)] text-slate-900"
+                      : "bg-[var(--c-brand)] text-slate-900"
                   }`}
                 >
                   {badgeCounts[item.id] > 99 ? "99+" : badgeCounts[item.id]}

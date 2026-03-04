@@ -1,6 +1,6 @@
 import express from "express";
 import { asyncHandler } from "../middleware/asyncHandler.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, requireRole } from "../middleware/auth.js";
 import { GalleryItem } from "../models/GalleryItem.js";
 
 const router = express.Router();
@@ -22,7 +22,7 @@ router.get(
   }),
 );
 
-router.use(requireAuth);
+router.use(requireAuth, requireRole("Admin", "Editor"));
 
 router.get(
   "/",

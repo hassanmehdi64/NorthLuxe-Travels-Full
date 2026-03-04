@@ -19,6 +19,9 @@ const keys = {
   galleryAdmin: ["gallery", "admin"],
   settingsPublic: ["settings", "public"],
   settingsAdmin: ["settings", "admin"],
+  contentPublic: (type) => ["content", "public", type],
+  contentPublicItem: (type, slug) => ["content", "public", type, slug],
+  contentAdmin: (type) => ["content", "admin", type],
   notifications: ["notifications"],
   dashboard: ["dashboard", "overview"],
 };
@@ -186,10 +189,11 @@ export const useDeleteBlog = () => {
   });
 };
 
-export const useBookings = () =>
+export const useBookings = (enabled = true) =>
   useQuery({
     queryKey: keys.bookings,
     queryFn: () => apiClient.get("/bookings").then(unwrap).then((d) => d.items),
+    enabled,
   });
 
 export const useBooking = (id) =>
@@ -295,10 +299,75 @@ export const useDeleteGalleryItem = () => {
   });
 };
 
-export const useUsers = () =>
+export const usePublicContentList = (type) =>
+  useQuery({
+    queryKey: keys.contentPublic(type || "all"),
+    queryFn: () =>
+      apiClient
+        .get("/content/public", { params: { type } })
+        .then(unwrap)
+        .then((d) => d.items),
+    enabled: Boolean(type),
+  });
+
+export const usePublicContentItem = (type, slug) =>
+  useQuery({
+    queryKey: keys.contentPublicItem(type || "all", slug),
+    queryFn: () =>
+      apiClient
+        .get(`/content/${slug}/public`, { params: { type } })
+        .then(unwrap)
+        .then((d) => d.item),
+    enabled: Boolean(type && slug),
+    retry: false,
+  });
+
+export const useAdminContentList = (type) =>
+  useQuery({
+    queryKey: keys.contentAdmin(type || "all"),
+    queryFn: () =>
+      apiClient
+        .get("/content", { params: type ? { type } : undefined })
+        .then(unwrap)
+        .then((d) => d.items),
+  });
+
+export const useCreateContent = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload) => apiClient.post("/content", payload).then(unwrap).then((d) => d.item),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["content"] });
+    },
+  });
+};
+
+export const useUpdateContent = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...payload }) =>
+      apiClient.patch(`/content/${id}`, payload).then(unwrap).then((d) => d.item),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["content"] });
+    },
+  });
+};
+
+export const useDeleteContent = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => apiClient.delete(`/content/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["content"] });
+    },
+  });
+};
+
+export const useUsers = (enabled = true) =>
   useQuery({
     queryKey: keys.users,
     queryFn: () => apiClient.get("/users").then(unwrap).then((d) => d.items),
+    enabled,
   });
 
 export const useCreateUser = () => {
@@ -326,10 +395,11 @@ export const useDeleteUser = () => {
   });
 };
 
-export const useContacts = () =>
+export const useContacts = (enabled = true) =>
   useQuery({
     queryKey: keys.contacts,
     queryFn: () => apiClient.get("/contacts").then(unwrap).then((d) => d.items),
+    enabled,
   });
 
 export const useCreateContact = () =>
@@ -381,10 +451,11 @@ export const useUpdateSettings = () => {
   });
 };
 
-export const useNotifications = () =>
+export const useNotifications = (enabled = true) =>
   useQuery({
     queryKey: keys.notifications,
     queryFn: () => apiClient.get("/notifications").then(unwrap).then((d) => d.items),
+    enabled,
   });
 
 export const useUpdateNotification = () => {
@@ -412,8 +483,9 @@ export const useDeleteNotification = () => {
   });
 };
 
-export const useDashboardOverview = () =>
+export const useDashboardOverview = (enabled = true) =>
   useQuery({
     queryKey: keys.dashboard,
     queryFn: () => apiClient.get("/dashboard/overview").then(unwrap),
+    enabled,
   });

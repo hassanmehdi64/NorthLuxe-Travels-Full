@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Mail,
   MessageSquare,
@@ -12,7 +12,14 @@ import {
   Inbox,
 } from "lucide-react";
 import MessageDetail from "./MessageDetail";
-import { useContacts, useDeleteContact, useReplyContact, useUpdateContact } from "../../hooks/useCms";
+import {
+  useContacts,
+  useDeleteContact,
+  useReplyContact,
+  useUpdateContact,
+  useNotifications,
+  useUpdateNotification,
+} from "../../hooks/useCms";
 
 const isRecentlyReceived = (value) => {
   if (!value) return false;
@@ -24,9 +31,11 @@ const isRecentlyReceived = (value) => {
 
 const ContactMessages = () => {
   const { data: messages = [] } = useContacts();
+  const { data: notifications = [] } = useNotifications();
   const deleteContact = useDeleteContact();
   const updateContact = useUpdateContact();
   const replyContact = useReplyContact();
+  const updateNotification = useUpdateNotification();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMessage, setSelectedMessage] = useState(null);
@@ -65,6 +74,20 @@ const ContactMessages = () => {
       markAsStatus(msg.id, "Read");
     }
   };
+
+  useEffect(() => {
+    const unreadContactAlerts = notifications.filter((n) => {
+      if (n?.isRead) return false;
+      const text = `${n?.title || ""} ${n?.message || ""}`.toLowerCase();
+      return String(n?.type || "") === "System" && (text.includes("contact") || text.includes("inquiry"));
+    });
+
+    if (!unreadContactAlerts.length) return;
+
+    unreadContactAlerts.forEach((n) => {
+      updateNotification.mutate({ id: n.id, isRead: true });
+    });
+  }, [notifications, updateNotification]);
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-180px)]">

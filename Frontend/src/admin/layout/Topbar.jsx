@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Bell, Search, Menu, Command, Moon, Sun } from "lucide-react";
 import ProfileDropdown from "../profile/ProfileDropdown";
 import { useNotifications } from "../../hooks/useCms";
+import { useAuth } from "../../context/useAuth";
 
 /**
  * Topbar Component
@@ -10,8 +11,10 @@ import { useNotifications } from "../../hooks/useCms";
  */
 const Topbar = ({ onMenuClick, theme, setTheme }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const isDark = theme === "dark";
-  const { data: notifications = [] } = useNotifications();
+  const isAdmin = user?.role === "Admin";
+  const { data: notifications = [] } = useNotifications(isAdmin);
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   const toggleTheme = () => {
@@ -46,7 +49,7 @@ const Topbar = ({ onMenuClick, theme, setTheme }) => {
           className={`hidden md:flex items-center px-4 py-2.5 rounded-2xl border transition-all w-full max-w-md group ${
             isDark
               ? "bg-white/5 border-white/10 focus-within:border-accent/70 focus-within:bg-white/10"
-              : "bg-white border-slate-200 focus-within:border-[#19c6ad]/50 focus-within:bg-white focus-within:shadow-xl focus-within:shadow-slate-500/5"
+              : "bg-white border-slate-200 focus-within:border-[var(--c-brand)] focus-within:bg-white focus-within:shadow-xl focus-within:shadow-slate-500/5"
           }`}
         >
           <Search
@@ -94,31 +97,33 @@ const Topbar = ({ onMenuClick, theme, setTheme }) => {
         </button>
 
         {/* Activity Notifications */}
-        <button
-          onClick={() => navigate("notifications")}
-          className={`relative p-3 rounded-2xl transition-all group ${
-            isDark
-              ? "text-white/70 hover:bg-white/10 hover:text-accent"
-              : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
-          }`}
-        >
-          <Bell
-            size={22}
-            className="group-hover:rotate-[15deg] transition-transform duration-300"
-          />
-          {/* Unread Count Badge */}
-          {unreadCount > 0 && (
-            <span
-              className={`absolute -top-0.5 -right-0.5 min-w-5 h-5 px-1 rounded-full text-[10px] leading-5 font-black text-center transition-transform group-hover:scale-110 ${
-                isDark
-                  ? "bg-[#19c6ad] text-slate-900 border border-slate-950"
-                  : "bg-[#19c6ad] text-slate-900 border border-white"
-              }`}
-            >
-              {unreadCount > 99 ? "99+" : unreadCount}
-            </span>
-          )}
-        </button>
+        {isAdmin ? (
+          <button
+            onClick={() => navigate("notifications")}
+            className={`relative p-3 rounded-2xl transition-all group ${
+              isDark
+                ? "text-white/70 hover:bg-white/10 hover:text-accent"
+                : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+            }`}
+          >
+            <Bell
+              size={22}
+              className="group-hover:rotate-[15deg] transition-transform duration-300"
+            />
+            {/* Unread Count Badge */}
+            {unreadCount > 0 && (
+              <span
+                className={`absolute -top-0.5 -right-0.5 min-w-5 h-5 px-1 rounded-full text-[10px] leading-5 font-black text-center transition-transform group-hover:scale-110 ${
+                  isDark
+                    ? "bg-[var(--c-brand)] text-slate-900 border border-slate-950"
+                    : "bg-[var(--c-brand)] text-slate-900 border border-white"
+                }`}
+              >
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
+          </button>
+        ) : null}
 
         {/* Divider Line */}
         <div

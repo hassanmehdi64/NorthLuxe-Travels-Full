@@ -1,11 +1,12 @@
 import { useMemo } from "react";
 import DestinationCard from "./DestinationCard";
-import { usePublicTours } from "../../hooks/useCms";
+import { usePublicContentList, usePublicTours } from "../../hooks/useCms";
 
 const AllDestinations = () => {
   const { data: tours = [] } = usePublicTours();
+  const { data: backendDestinations = [] } = usePublicContentList("destination");
 
-  const destinations = useMemo(() => {
+  const tourDestinations = useMemo(() => {
     const map = new Map();
     tours.forEach((tour) => {
       const key = (tour.location || "").trim();
@@ -23,6 +24,19 @@ const AllDestinations = () => {
     });
     return Array.from(map.values());
   }, [tours]);
+
+  const destinations = useMemo(() => {
+    if (backendDestinations.length) {
+      return backendDestinations.map((item) => ({
+        id: item.id || item.slug,
+        title: item.title,
+        image: item.image || item.coverImage,
+        description: item.shortDescription || item.description,
+        href: `/destinations/${item.slug}`,
+      }));
+    }
+    return tourDestinations;
+  }, [backendDestinations, tourDestinations]);
 
   return (
     <section className="py-20 bg-theme-bg ql-scroll-reveal" data-ql-reveal>

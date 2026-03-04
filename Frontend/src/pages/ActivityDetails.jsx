@@ -5,12 +5,16 @@ import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 import { activitiesData, getActivityById } from "../data/activitiesData";
+import { usePublicContentItem, usePublicContentList } from "../hooks/useCms";
 
 const ActivityDetails = () => {
   const { slug } = useParams();
-  const activity = getActivityById(slug);
+  const { data: backendActivity, isLoading } = usePublicContentItem("activity", slug);
+  const { data: backendActivities = [] } = usePublicContentList("activity");
 
-  if (!activity) {
+  const activity = backendActivity || getActivityById(slug);
+
+  if (!activity && !isLoading) {
     return (
       <section className="py-12 lg:py-14 bg-theme-bg">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-14">
@@ -22,7 +26,14 @@ const ActivityDetails = () => {
     );
   }
 
-  const related = activitiesData.filter((item) => item.id !== activity.id).slice(0, 3);
+  if (!activity) return null;
+
+  const allActivities = backendActivities.length ? backendActivities : activitiesData;
+  const related = allActivities
+    .filter((item) => (item.id || item.slug) !== (activity.id || activity.slug))
+    .slice(0, 3);
+  const gallery = activity.gallery?.length ? activity.gallery : [activity.image || activity.coverImage].filter(Boolean);
+  const includes = activity.includes?.length ? activity.includes : [];
 
   return (
     <section className="py-10 md:py-12 bg-theme-bg">
@@ -34,7 +45,7 @@ const ActivityDetails = () => {
         </header>
 
         <div className="rounded-2xl overflow-hidden border border-theme bg-theme-surface">
-          <img src={activity.image} alt={activity.title} className="w-full h-[220px] sm:h-[300px] lg:h-[360px] object-cover" />
+          <img src={activity.image || activity.coverImage} alt={activity.title} className="w-full h-[220px] sm:h-[300px] lg:h-[360px] object-cover" />
         </div>
 
         <div className="grid lg:grid-cols-[minmax(0,1fr)_300px] gap-6">
@@ -44,7 +55,7 @@ const ActivityDetails = () => {
 
             <h3 className="text-sm font-black uppercase tracking-[0.16em] text-theme">What is Included</h3>
             <ul className="space-y-2">
-              {activity.includes.map((item) => (
+              {includes.map((item) => (
                 <li key={item} className="inline-flex items-start gap-2 text-sm text-theme">
                   <Check size={14} className="mt-0.5 text-[var(--c-brand)]" />
                   {item}
@@ -83,7 +94,7 @@ const ActivityDetails = () => {
               }}
               className="!pb-8"
             >
-              {activity.gallery.map((img, idx) => (
+              {gallery.map((img, idx) => (
                 <SwiperSlide key={`${img}-${idx}`}>
                   <img
                     src={img}
@@ -102,8 +113,8 @@ const ActivityDetails = () => {
             <div className="mt-3 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {related.map((item) => (
                 <Link
-                  key={item.id}
-                  to={`/activities/${item.id}`}
+                  key={item.id || item.slug}
+                  to={`/activities/${item.slug || item.id}`}
                   className="rounded-xl border border-theme bg-theme-surface p-4 hover:border-[var(--c-brand)]/45 transition"
                 >
                   <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[var(--c-brand)]">{item.location}</p>

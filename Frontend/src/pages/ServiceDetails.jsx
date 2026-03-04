@@ -1,12 +1,16 @@
 import { Link, useParams } from "react-router-dom";
 import { Check, MoveUpRight } from "lucide-react";
 import { servicesData, getServiceById } from "../data/servicesData";
+import { usePublicContentItem, usePublicContentList } from "../hooks/useCms";
 
 const ServiceDetails = () => {
   const { slug } = useParams();
-  const service = getServiceById(slug);
+  const { data: backendService, isLoading } = usePublicContentItem("service", slug);
+  const { data: backendServices = [] } = usePublicContentList("service");
 
-  if (!service) {
+  const service = backendService || getServiceById(slug);
+
+  if (!service && !isLoading) {
     return (
       <section className="py-12 lg:py-14 bg-theme-bg">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-14">
@@ -18,7 +22,13 @@ const ServiceDetails = () => {
     );
   }
 
-  const related = servicesData.filter((item) => item.id !== service.id).slice(0, 3);
+  if (!service) return null;
+
+  const allServices = backendServices.length ? backendServices : servicesData;
+  const related = allServices
+    .filter((item) => (item.id || item.slug) !== (service.id || service.slug))
+    .slice(0, 3);
+  const deliverables = service.deliverables?.length ? service.deliverables : [];
 
   return (
     <section className="py-10 md:py-12 bg-theme-bg">
@@ -26,11 +36,11 @@ const ServiceDetails = () => {
         <header className="space-y-3">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--c-brand)]">Service Details</p>
           <h1 className="text-2xl md:text-4xl font-bold text-theme tracking-tight">{service.title}</h1>
-          <p className="text-sm md:text-base text-muted">{service.category}</p>
+          <p className="text-sm md:text-base text-muted">{service.category || "Service"}</p>
         </header>
 
         <div className="rounded-2xl overflow-hidden border border-theme bg-theme-surface">
-          <img src={service.image} alt={service.title} className="w-full h-[220px] sm:h-[300px] lg:h-[360px] object-cover" />
+          <img src={service.image || service.coverImage} alt={service.title} className="w-full h-[220px] sm:h-[300px] lg:h-[360px] object-cover" />
         </div>
 
         <div className="grid lg:grid-cols-[minmax(0,1fr)_300px] gap-6">
@@ -40,7 +50,7 @@ const ServiceDetails = () => {
 
             <h3 className="text-sm font-black uppercase tracking-[0.16em] text-theme">What You Get</h3>
             <ul className="space-y-2">
-              {service.deliverables.map((item) => (
+              {deliverables.map((item) => (
                 <li key={item} className="inline-flex items-start gap-2 text-sm text-theme">
                   <Check size={14} className="mt-0.5 text-[var(--c-brand)]" />
                   {item}
@@ -70,8 +80,8 @@ const ServiceDetails = () => {
             <div className="mt-3 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {related.map((item) => (
                 <Link
-                  key={item.id}
-                  to={`/services/${item.id}`}
+                  key={item.id || item.slug}
+                  to={`/services/${item.slug || item.id}`}
                   className="rounded-xl border border-theme bg-theme-surface p-4 hover:border-[var(--c-brand)]/45 transition"
                 >
                   <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[var(--c-brand)]">{item.category}</p>

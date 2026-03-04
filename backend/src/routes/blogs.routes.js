@@ -1,6 +1,6 @@
 import express from "express";
 import { asyncHandler } from "../middleware/asyncHandler.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, requireRole } from "../middleware/auth.js";
 import { Blog } from "../models/Blog.js";
 import { slugify } from "../utils/slugify.js";
 
@@ -48,7 +48,7 @@ router.get(
   }),
 );
 
-router.use(requireAuth);
+router.use(requireAuth, requireRole("Admin", "Editor"));
 
 router.get(
   "/",

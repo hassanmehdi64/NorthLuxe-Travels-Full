@@ -39,11 +39,16 @@ import BlogManagement from "./admin/blogs/BlogList";
 import UserManagement from "./admin/users/UserList";
 import ContactManagement from "./admin/contact/ContactMessages";
 import SiteSettings from "./admin/settings/SiteSettings";
+import ContentManagement from "./admin/content/ContentManagement";
+import ActivitiesManagement from "./admin/content/ActivitiesManagement";
+import ServicesManagement from "./admin/content/ServicesManagement";
 import BlogForm from "./admin/blogs/BlogForm";
 import TourManagement from "./admin/tours/TourManagement";
 import TestimonialsManagement from "./admin/testimonials/TestimonialsManagement";
 import Login from "./pages/Login";
 import RequireAdminAuth from "./components/auth/RequireAdminAuth";
+import RequireRole from "./components/auth/RequireRole";
+import { useAuth } from "./context/useAuth";
 
 /* ===== ADMIN PROFILE COMPONENTS (New) ===== */
 import MyProfile from "./admin/profile/MyProfile";
@@ -74,6 +79,12 @@ const RouteRevealObserver = () => {
   return null;
 };
 
+const AdminIndexGate = () => {
+  const { user } = useAuth();
+  if (user?.role === "Editor") return <ContentManagement fixedType="activity" />;
+  return <DashboardHome />;
+};
+
 const App = () => {
   return (
     <Router>
@@ -89,25 +100,28 @@ const App = () => {
             </RequireAdminAuth>
           }
         >
-          <Route index element={<DashboardHome />} />
+          <Route index element={<AdminIndexGate />} />
 
           {/* Profile Section Routes */}
           <Route path="profile/MyProfile" element={<MyProfile />} />
           <Route path="profile/AccountSettings" element={<AccountSettings />} />
           <Route path="profile/ActivityLog" element={<ActivityLog />} />
 
-          <Route path="bookings" element={<BookingManagement />} />
-          <Route path="bookings/:id" element={<BookingDetails />} />
+          <Route path="bookings" element={<RequireRole roles={["Admin"]} fallback="/admin/content"><BookingManagement /></RequireRole>} />
+          <Route path="bookings/:id" element={<RequireRole roles={["Admin"]} fallback="/admin/content"><BookingDetails /></RequireRole>} />
           <Route path="tours" element={<TourManagement />} />
           <Route path="gallery" element={<GalleryManagement />} />
           <Route path="blogs" element={<BlogManagement />} />
           <Route path="blogs/new" element={<BlogForm />} />
           <Route path="blogs/edit/:id" element={<BlogForm />} />
           <Route path="testimonials" element={<TestimonialsManagement />} />
-          <Route path="users" element={<UserManagement />} />
-          <Route path="contacts" element={<ContactManagement />} />
-          <Route path="settings" element={<SiteSettings />} />
-          <Route path="notifications" element={<Notifications />} />
+          <Route path="users" element={<RequireRole roles={["Admin"]} fallback="/admin/content"><UserManagement /></RequireRole>} />
+          <Route path="contacts" element={<RequireRole roles={["Admin"]} fallback="/admin/content"><ContactManagement /></RequireRole>} />
+          <Route path="content" element={<ContentManagement />} />
+          <Route path="activities" element={<ActivitiesManagement />} />
+          <Route path="services" element={<ServicesManagement />} />
+          <Route path="settings" element={<RequireRole roles={["Admin"]} fallback="/admin/content"><SiteSettings /></RequireRole>} />
+          <Route path="notifications" element={<RequireRole roles={["Admin"]} fallback="/admin/content"><Notifications /></RequireRole>} />
         </Route>
 
         {/* ========== PUBLIC WEBSITE ========== */}

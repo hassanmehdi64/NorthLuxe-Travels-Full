@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 // Added onEdit to the props destructuring
-const UserCard = ({ user, onToggleStatus, onDelete, onEdit }) => {
+const UserCard = ({ user, onToggleStatus, onDelete, onEdit, disableDangerActions = false }) => {
   const [showMenu, setShowMenu] = useState(false);
 
   return (
@@ -64,11 +64,12 @@ const UserCard = ({ user, onToggleStatus, onDelete, onEdit }) => {
                   <Edit3 size={14} /> Edit Profile
                 </button>
                 <button
+                  disabled={disableDangerActions}
                   onClick={() => {
                     onDelete(user.id);
                     setShowMenu(false);
                   }}
-                  className="w-full px-4 py-3 text-left text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2"
+                  className="w-full px-4 py-3 text-left text-xs font-bold text-rose-600 hover:bg-rose-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   <Trash2 size={14} /> Remove User
                 </button>
@@ -105,8 +106,9 @@ const UserCard = ({ user, onToggleStatus, onDelete, onEdit }) => {
         </div>
 
         <button
+          disabled={disableDangerActions}
           onClick={() => onToggleStatus(user.id)}
-          className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg transition-all ${
+          className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
             user.status === "Active"
               ? "bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white"
               : "bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white"

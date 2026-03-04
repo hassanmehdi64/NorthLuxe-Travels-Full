@@ -19,7 +19,7 @@ const siteSettingSchema = new mongoose.Schema(
     address: { type: String, default: "" },
     currency: { type: String, default: "USD" },
     maintenanceMode: { type: Boolean, default: false },
-    primaryColor: { type: String, default: "#0D8ABC" },
+    primaryColor: { type: String, default: "#13DDB4" },
     seoTitle: { type: String, default: "North Luxe | Luxury Travel" },
     seoDescription: { type: String, default: "" },
     socialLinks: {

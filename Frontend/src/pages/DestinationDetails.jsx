@@ -1,6 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import { ChevronRight, MoveUpRight } from "lucide-react";
-import { usePublicTours } from "../hooks/useCms";
+import { usePublicContentItem, usePublicTours } from "../hooks/useCms";
 
 const toSlug = (value = "") =>
   String(value)
@@ -175,20 +175,36 @@ const getDestinationContent = (slug) => {
 const DestinationDetails = () => {
   const { slug } = useParams();
   const { data: tours = [] } = usePublicTours();
-
   const normalizedSlug = (slug || "").toLowerCase().trim();
-  const destinationName = (slug || "destination").replace(/-/g, " ").trim();
+  const { data: backendDestination } = usePublicContentItem("destination", normalizedSlug);
+
+  const destinationName = backendDestination?.title || (slug || "destination").replace(/-/g, " ").trim();
 
   const matchedTours = tours.filter(
     (tour) => toSlug(tour.location || "") === normalizedSlug,
   );
-  const content = getDestinationContent(normalizedSlug);
+  const defaultContent = getDestinationContent(normalizedSlug);
+  const content = backendDestination
+    ? {
+      overview:
+          backendDestination.shortDescription ||
+          backendDestination.description ||
+          defaultContent.overview,
+      history: backendDestination.content || backendDestination.meta?.history || defaultContent.history,
+      highlights: backendDestination.highlights?.length ? backendDestination.highlights : defaultContent.highlights,
+      features: backendDestination.features?.length ? backendDestination.features : defaultContent.features,
+      bestTime: backendDestination.meta?.bestTime || defaultContent.bestTime,
+      idealFor: backendDestination.meta?.idealFor || defaultContent.idealFor,
+    }
+    : defaultContent;
   const historyParagraphs = String(content?.history || "")
     .split("\n\n")
     .map((item) => item.trim())
     .filter(Boolean);
 
   const heroImage =
+    backendDestination?.image ||
+    backendDestination?.coverImage ||
     matchedTours[0]?.image ||
     "https://gilgitbaltistan.gov.pk/public/images/river-5688258_1920.jpg";
 

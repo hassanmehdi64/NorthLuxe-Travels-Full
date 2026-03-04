@@ -14,13 +14,28 @@ const NotificationItem = ({ item, onMarkAsRead, onDelete }) => {
   const [showMenu, setShowMenu] = useState(false);
 
   // Dynamic Navigation based on type
-  const handleViewDetails = () => {
+  const handleViewDetails = async () => {
+    const text = `${item?.title || ""} ${item?.message || ""}`.toLowerCase();
     const routes = {
       Bookings: `/admin/bookings`,
-      System: `/admin/settings`,
       User: `/admin/users`,
     };
-    navigate(routes[item.type] || "/admin");
+
+    let target = routes[item.type] || "/admin";
+    if (item.type === "System") {
+      if (text.includes("contact") || text.includes("inquiry")) target = "/admin/contacts";
+      else target = "/admin/settings";
+    }
+
+    if (!item.isRead) {
+      try {
+        await onMarkAsRead(item.id);
+      } catch {
+        // Allow navigation even if mark-read fails.
+      }
+    }
+
+    navigate(target);
   };
 
   return (

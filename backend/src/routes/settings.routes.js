@@ -1,6 +1,6 @@
 import express from "express";
 import { asyncHandler } from "../middleware/asyncHandler.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, requireRole } from "../middleware/auth.js";
 import { SiteSetting } from "../models/SiteSetting.js";
 
 const router = express.Router();
@@ -117,7 +117,7 @@ router.get(
   }),
 );
 
-router.use(requireAuth);
+router.use(requireAuth, requireRole("Admin"));
 
 router.get(
   "/",
