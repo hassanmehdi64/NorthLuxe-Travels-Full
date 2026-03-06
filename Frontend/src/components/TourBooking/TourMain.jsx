@@ -42,8 +42,7 @@ const TourMain = () => {
         {/* IMPORTANT: no overflow-hidden anywhere around the date popover */}
         <form
           onSubmit={onSubmit}
-          className="mt-6 md:mt-8 bg-white rounded-2xl shadow-lg overflow-visible relative"
-        >
+          className="mt-6 md:mt-8 bg-white rounded-2xl shadow-lg overflow-visible relative">
           {/* IMPORTANT: remove overflow-hidden here too */}
           <div className="grid md:grid-cols-3 rounded-2xl">
             {/* Where */}
@@ -63,9 +62,8 @@ const TourMain = () => {
             {/* Search button */}
             <button
               type="submit"
-              className="flex items-center justify-center gap-2 py-3.5 md:py-4 font-semibold text-[var(--c-text)] transition rounded-b-2xl md:rounded-b-none md:rounded-r-2xl"
-              style={{ background: "var(--c-brand)" }}
-            >
+              className="flex items-center justify-center gap-2 py-3.5 md:py-4 font-semibold text-[var(--c-text)] transition rounded-br-2xl rounded-bl-2xl md:rounded-bl-none md:rounded-tr-2xl md:rounded-br-2xl"
+              style={{ background: "var(--c-brand)" }}>
               <Search size={18} />
               Search
             </button>
@@ -74,18 +72,16 @@ const TourMain = () => {
 
         <div className="mt-5 md:mt-6 flex flex-wrap justify-center gap-3 md:gap-4">
           <Link
-            to="/book"
+            to="/custom-plan-request"
             className="w-full sm:w-auto px-6 py-3 rounded-xl font-semibold text-[var(--c-text)] transition"
-            style={{ background: "var(--c-brand)" }}
-          >
-            Book Now
+            style={{ background: "var(--c-brand)" }}>
+            Custom Request
           </Link>
 
           <Link
-            to="/custom-plan-request"
-            className="w-full sm:w-auto px-6 py-3 rounded-xl font-semibold border border-white/40 text-white hover:bg-white/10 transition"
-          >
-            Custom Request
+            to="/book"
+            className="w-full sm:w-auto px-6 py-3 rounded-xl font-semibold border border-white/40 text-white hover:bg-white/10 transition">
+            Book Tour
           </Link>
         </div>
 

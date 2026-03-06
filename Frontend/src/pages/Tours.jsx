@@ -2,10 +2,13 @@ import ToursHero from "../components/tours/ToursHero";
 import ToursFilter from "../components/tours/ToursFilter";
 import ToursList from "../components/tours/ToursList";
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { usePublicTours } from "../hooks/useCms";
 
 const Tours = () => {
   const { data: tours = [] } = usePublicTours();
+  const [searchParams] = useSearchParams();
+  const seasonFilter = (searchParams.get("season") || "").toLowerCase();
 
   const [filters, setFilters] = useState({
     destination: "all",
@@ -29,7 +32,17 @@ const Tours = () => {
     const matches = tours.filter((tour) => {
       const destinationOk = filters.destination === "all" || tour.location === filters.destination;
       const durationOk = fitsDuration(Number(tour.durationDays || 0));
-      return destinationOk && durationOk;
+      const seasonText = [
+        tour?.title,
+        tour?.location,
+        tour?.shortDescription,
+        ...(Array.isArray(tour?.tags) ? tour.tags : []),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      const seasonOk = !seasonFilter || seasonText.includes(seasonFilter);
+      return destinationOk && durationOk && seasonOk;
     });
 
     return matches.sort((a, b) => {
@@ -40,7 +53,7 @@ const Tours = () => {
       const popularityB = Number(b.reviews || 0) + (b.featured ? 100 : 0);
       return popularityB - popularityA;
     });
-  }, [tours, filters]);
+  }, [tours, filters, seasonFilter]);
 
   return (
     <main className="bg-theme-bg text-theme">

@@ -22,6 +22,7 @@ import {
   buildIncludedServices,
   buildPackageOverview,
   buildPlacesCovered,
+  buildVehicleDetails,
   fallbackFaq,
   fallbackReviews,
 } from "../components/tour-details/tourDetailsData";
@@ -74,6 +75,7 @@ const TourDetails = () => {
   const packageOverview = buildPackageOverview(tour);
   const includedServices = buildIncludedServices(tour);
   const placesCovered = buildPlacesCovered(tour, displayItinerary);
+  const vehicleDetails = buildVehicleDetails(tour);
 
   const detailedDescription = buildDetailedDescription(tour);
 
@@ -112,6 +114,7 @@ const TourDetails = () => {
           includedServices={includedServices}
           placesCovered={placesCovered}
           packageOverview={packageOverview}
+          vehicleDetails={vehicleDetails}
         />
 
         <ItinerarySection

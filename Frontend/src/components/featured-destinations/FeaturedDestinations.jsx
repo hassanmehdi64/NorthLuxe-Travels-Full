@@ -75,7 +75,7 @@ const FeaturedDestinations = () => {
           {destinations.map((destination, index) => (
             <div
               key={destination.id || `${destination.title}-${index}`}
-              className="w-full max-w-[360px] mx-auto sm:max-w-none"
+              className="w-full max-w-[280px] mx-auto sm:max-w-none"
             >
               <DestinationCard
                 destination={destination}

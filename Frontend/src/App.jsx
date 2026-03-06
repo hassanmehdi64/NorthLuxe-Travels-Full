@@ -22,6 +22,7 @@ import BlogDetails from "./pages/BlogDetails";
 import Booking from "./pages/Booking";
 import DestinationsPage from "./pages/DestinationsPage";
 import DestinationDetails from "./pages/DestinationDetails";
+import SeasonDetails from "./pages/SeasonDetails";
 import TourDetails from "./pages/TourDetails";
 import NotFound from "./pages/NotFound";
 import SearchPage from "./pages/features/Search";
@@ -146,6 +147,7 @@ const App = () => {
           <Route path="tours/:slug" element={<TourDetails />} />
           <Route path="destinations" element={<DestinationsPage />} />
           <Route path="destinations/:slug" element={<DestinationDetails />} />
+          <Route path="seasons/:slug" element={<SeasonDetails />} />
           <Route path="search" element={<SearchPage />} />
           <Route path="wishlist" element={<WishlistPage />} />
           <Route path="cart" element={<CartPage />} />

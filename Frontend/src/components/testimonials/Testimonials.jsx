@@ -6,12 +6,52 @@ import TestimonialCard from "./TestimonialCard";
 import { usePublicTestimonials } from "../../hooks/useCms";
 import { Sparkles, Star } from "lucide-react";
 
+const fallbackStories = [
+  {
+    id: "fallback-1",
+    name: "Areeba Malik",
+    role: "Family Traveler",
+    avatar: "https://i.pravatar.cc/160?img=32",
+    message:
+      "Everything felt well-managed from pickup to hotel stays. The route pacing was calm, the views were unforgettable, and our family stayed comfortable throughout the trip.",
+    rating: 5,
+    date: "March 2026",
+    locationLabel: "Hunza Valley",
+  },
+  {
+    id: "fallback-2",
+    name: "Hassan Raza",
+    role: "Adventure Guest",
+    avatar: "https://i.pravatar.cc/160?img=12",
+    message:
+      "Our Skardu journey had the right mix of sightseeing and downtime. Transport was reliable, timings were practical, and the support team stayed responsive the whole way.",
+    rating: 5,
+    date: "February 2026",
+    locationLabel: "Skardu",
+  },
+  {
+    id: "fallback-3",
+    name: "Maham Iqbal",
+    role: "Couple Tour",
+    avatar: "https://i.pravatar.cc/160?img=47",
+    message:
+      "The itinerary felt polished and premium without being rushed. We especially liked the hotel selection, scenic stops, and how smooth the full experience was from start to finish.",
+    rating: 4,
+    date: "January 2026",
+    locationLabel: "Nagar Valley",
+  },
+];
+
 const Testimonials = () => {
   const { data: testimonials = [] } = usePublicTestimonials();
-  const avgRating = testimonials.length
+  const stories = testimonials.length >= 4
+    ? testimonials
+    : [...testimonials, ...fallbackStories.slice(0, Math.max(0, 4 - testimonials.length))];
+
+  const avgRating = stories.length
     ? (
-        testimonials.reduce((sum, item) => sum + Number(item?.rating || 5), 0) /
-        testimonials.length
+        stories.reduce((sum, item) => sum + Number(item?.rating || 5), 0) /
+        stories.length
       ).toFixed(1)
     : "5.0";
 
@@ -45,7 +85,7 @@ const Testimonials = () => {
             <div className="flex items-center gap-2 self-start md:self-auto">
               <span className="inline-flex items-center gap-1.5 rounded-xl border border-theme bg-theme-surface px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-theme">
                 <Sparkles size={11} className="text-[var(--c-brand)]" />
-                {testimonials.length} Stories
+                {stories.length} Stories
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-xl border border-theme bg-theme-surface px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-theme">
                 <Star size={11} className="text-[var(--c-brand)] fill-[var(--c-brand)]" />
@@ -55,13 +95,13 @@ const Testimonials = () => {
           </div>
         </div>
 
-        {testimonials.length ? (
+        {stories.length ? (
           <div className="w-full rounded-2xl border border-theme bg-theme-surface p-4 md:p-5 lg:p-6 pb-9 testimonial-swiper-container">
             <Swiper
               modules={[Pagination, Autoplay]}
               spaceBetween={20}
               slidesPerView={1}
-              loop={testimonials.length > 3}
+              loop={stories.length > 3}
               autoplay={{ delay: 4500, disableOnInteraction: false }}
               pagination={{ clickable: true, dynamicBullets: true }}
               grabCursor
@@ -71,7 +111,7 @@ const Testimonials = () => {
               }}
               className="!pb-10"
             >
-              {testimonials.map((testimonial) => (
+              {stories.map((testimonial) => (
                 <SwiperSlide key={testimonial.id} className="h-auto flex justify-center">
                   <TestimonialCard
                     name={testimonial.name}

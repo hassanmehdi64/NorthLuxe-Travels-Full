@@ -1,5 +1,6 @@
 import FeaturedDestinations from "../components/featured-destinations/FeaturedDestinations";
 import PopularTours from "../components/popular-tours/PopularTours";
+import SeasonalJourneys from "../components/seasonal-journeys/SeasonalJourneys";
 import WhyChooseUs from "../components/why-choose-us/WhyChooseUs";
 import TourMain from "../components/TourBooking/TourMain";
 import Experiences from "../components/experiences/Experiences";
@@ -52,6 +53,7 @@ const Home = () => {
     <>
       <TourMain />
       <PopularTours />
+      <SeasonalJourneys />
       <FeaturedDestinations />
       <OurAchievements />
       <HomeHighlights />

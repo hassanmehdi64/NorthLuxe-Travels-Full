@@ -93,6 +93,22 @@ export const buildIncludedServices = (tour) => {
   return services;
 };
 
+export const buildVehicleDetails = (tour) => {
+  const configuredVehicles = Array.isArray(tour?.availableOptions?.vehicleTypes)
+    ? tour.availableOptions.vehicleTypes.filter(Boolean)
+    : [];
+
+  if (configuredVehicles.length) {
+    return configuredVehicles;
+  }
+
+  const seats = Number(tour?.capacity || tour?.availableSeats || 0);
+  if (seats >= 12) return ["Coaster / Saloon", "SUV support vehicle"];
+  if (seats >= 6) return ["SUV / Prado", "Hiace / Grand Cabin"];
+  if (seats >= 2) return ["Sedan / Corolla", "SUV upgrade on request"];
+  return ["Transport arranged as per group size"];
+};
+
 export const buildPlacesCovered = (tour, itinerary) => {
   const places = new Set();
   itinerary.forEach((item) => item.placesCovered.forEach((place) => places.add(place)));

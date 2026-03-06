@@ -47,7 +47,9 @@ const PopularTours = () => {
   }, [activeCategory, tours]);
 
   return (
-    <section className="py-12 lg:py-14 bg-theme-bg ql-scroll-reveal" data-ql-reveal>
+    <section
+      className="py-12 lg:py-14 bg-theme-bg ql-scroll-reveal"
+      data-ql-reveal>
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-14">
         <div className="mb-10 lg:mb-12">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
@@ -64,35 +66,39 @@ const PopularTours = () => {
               </h2>
 
               <p className="text-muted text-sm md:text-base max-w-xl leading-relaxed">
-                Most booked experiences with live availability and direct booking.
+                Most booked experiences with live availability and direct
+                booking.
               </p>
 
-              <div className="flex flex-wrap gap-2 pt-3">
-                  {categoryButtons.map((category) => {
-                    const isActive = category.id === activeCategory;
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-2">
+                {categoryButtons.map((category) => {
+                  const isActive = category.id === activeCategory;
 
-                    return (
-                      <button
-                        key={category.id}
-                        type="button"
-                        onClick={() => setActiveCategory(category.id)}
-                        className={`inline-flex cursor-pointer items-center rounded-full border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors duration-200 ${
-                          isActive
-                            ? "border-[var(--c-brand)] bg-[var(--c-brand)] text-[var(--c-text)]"
-                            : "border-theme bg-theme-surface text-theme hover:border-[var(--c-brand)]/40 hover:text-[var(--c-brand)]"
+                  return (
+                    <button
+                      key={category.id}
+                      type="button"
+                      onClick={() => setActiveCategory(category.id)}
+                      className={`relative inline-flex cursor-pointer items-center pb-1 text-[15px] leading-none font-medium transition-colors duration-200 ${
+                        isActive
+                          ? "text-[var(--c-brand)]"
+                          : "text-theme hover:text-[var(--c-brand)]"
+                      }`}>
+                      {category.label}
+                      <span
+                        className={`absolute left-0 bottom-0 h-[2px] rounded-full bg-[var(--c-brand)] transition-all duration-200 ${
+                          isActive ? "w-full opacity-100" : "w-0 opacity-0"
                         }`}
-                      >
-                        {category.label}
-                      </button>
-                    );
-                  })}
+                      />
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
             <Link
               to="/tours"
-              className="inline-flex items-center justify-center gap-2 self-start md:self-auto rounded-xl border border-theme bg-theme-surface px-5 py-3 text-[11px] font-black uppercase tracking-[0.14em] text-theme hover:text-[var(--c-brand)] hover:border-[var(--c-brand)]/45 hover:bg-white transition-all duration-300 active:scale-[0.98]"
-            >
+              className="inline-flex items-center justify-center gap-2 self-start md:self-auto rounded-xl border border-theme bg-theme-surface px-5 py-3 text-[11px] font-black uppercase tracking-[0.14em] text-theme hover:text-[var(--c-brand)] hover:border-[var(--c-brand)]/45 hover:bg-white transition-all duration-300 active:scale-[0.98]">
               View All Tours
               <MoveUpRight size={14} />
             </Link>

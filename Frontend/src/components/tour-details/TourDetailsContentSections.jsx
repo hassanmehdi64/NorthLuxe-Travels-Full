@@ -26,11 +26,11 @@ export const TourBookingSidebar = ({ tour, ratingValue, reviewCount }) => (
   </aside>
 );
 
-export const PackageDetailsSection = ({ placeName, includedServices, placesCovered, packageOverview }) => (
+export const PackageDetailsSection = ({ placeName, includedServices, placesCovered, packageOverview, vehicleDetails }) => (
   <section className="rounded-2xl border-[0.5px] border-[rgba(15,23,42,0.08)] bg-theme-surface p-4 md:p-5 shadow-[0_8px_24px_rgba(15,23,42,0.02)]">
     <div className="pb-3">
       <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[var(--c-brand)]">Package Overview</p>
-      <h2 className="mt-1 text-[1.35rem] leading-none md:text-[1.65rem] font-semibold tracking-[-0.02em] text-theme">Package Details</h2>
+      <h2 className="mt-1 text-[1.4rem] leading-none md:text-[1.8rem] font-semibold tracking-[-0.025em] text-theme">Package Details</h2>
     </div>
     <p className="mt-3 max-w-4xl text-[15px] md:text-[16px] text-muted leading-7">
       This package is arranged as a guided multi-day route through {placeName} with structured sightseeing, hotel stays, and coordinated travel support. It is best suited for travelers who want a clear plan with practical timing and flexible comfort options.
@@ -52,6 +52,17 @@ export const PackageDetailsSection = ({ placeName, includedServices, placesCover
           <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[var(--c-brand)]">Places of Attraction</p>
           <ul className="mt-2.5 grid gap-x-7 gap-y-2.5 sm:grid-cols-2">
             {placesCovered.map((item) => (
+              <li key={item} className="flex items-start gap-2 text-[15px] text-muted leading-6">
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--c-brand)]" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="rounded-xl border-[0.5px] border-[rgba(15,23,42,0.06)] bg-theme-bg/60 p-3.5">
+          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[var(--c-brand)]">Vehicle Options</p>
+          <ul className="mt-2.5 grid gap-y-2">
+            {vehicleDetails.map((item) => (
               <li key={item} className="flex items-start gap-2 text-[15px] text-muted leading-6">
                 <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--c-brand)]" />
                 <span>{item}</span>

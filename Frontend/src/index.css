@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap");
 @import "tailwindcss";               /* Tailwind base utilities */
 @import "./styles/variables.css";    /* Your CSS variables (colors, backgrounds, etc.) */
 @import "./styles/custom-classes.css"; /* Your reusable classes (bg-primary, text-textMain, etc.) */
@@ -75,5 +76,26 @@ body,
 body {
   margin: 0;
   background-color: #eef3f5;
+  font-family: var(--font-primary);
+  color: var(--c-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
 }
 
