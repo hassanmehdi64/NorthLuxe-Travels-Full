@@ -5,9 +5,68 @@ import CustomTourBookingButton from "../booking/CustomTourBookingButton";
 import { useToast } from "../../context/ToastContext";
 import { addToCart, isInCart, isInWishlist, toggleWishlist } from "../../features/commerce/storage";
 
-const formatPrice = (price) => {
-  const value = Number(price || 0);
-  return Number.isFinite(value) ? value.toLocaleString() : "0";
+const normalizePlaceName = (location = "") =>
+  String(location)
+    .replace(/\b(valley|lake|lakes|district|region|plateau|meadows)\b/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim() || "Pakistan";
+
+const deriveSimpleTourName = (tour) => {
+  const searchText = [tour?.title, ...(Array.isArray(tour?.tags) ? tour.tags : [])]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  if (searchText.includes("summer")) return "Summer Escape";
+  if (searchText.includes("winter")) return "Winter Escape";
+  if (searchText.includes("spring")) return "Spring Retreat";
+  if (searchText.includes("autumn") || searchText.includes("fall")) return "Autumn Retreat";
+  if (searchText.includes("family")) return "Family Escape";
+  if (searchText.includes("group")) return "Group Adventure";
+  if (searchText.includes("premium") || searchText.includes("luxury")) return "Signature Escape";
+  if (searchText.includes("heritage") || searchText.includes("culture")) return "Heritage Journey";
+  if (searchText.includes("honeymoon") || searchText.includes("couple")) return "Romantic Escape";
+  if (searchText.includes("trek")) return "Trail Adventure";
+  return "Scenic Escape";
+};
+
+const derivePlacesCount = (tour) => {
+  const places = new Set();
+  const genericStops = {
+    hunza: ["Karimabad", "Baltit Fort", "Altit Village", "Attabad Lake", "Passu Cones", "Duikar"],
+    skardu: ["Shangrila", "Upper Kachura", "Shigar Fort", "Blind Lake", "Katpana Desert", "Skardu Bazaar"],
+    nagar: ["Hopar Glacier", "Rakaposhi Viewpoint", "Nagar Villages", "Karimabad"],
+    fairy: ["Raikot Bridge", "Tattu Village", "Fairy Meadows", "Beyal Camp"],
+    astore: ["Rama Meadows", "Rama Lake", "Astore Valley", "Deosai"],
+    khaplu: ["Khaplu Palace", "Chaqchan Mosque", "Old Village", "River Viewpoints"],
+    shigar: ["Shigar Fort", "Shigar Valley", "Traditional Settlements", "River Edge"],
+    deosai: ["Deosai Plains", "Sheosar Lake", "Wildlife Point", "Scenic Plateau"],
+  };
+
+  if (Array.isArray(tour?.itinerary)) {
+    tour.itinerary.forEach((item) => {
+      const parts = String(item?.description || "")
+        .split(/,| and /i)
+        .map((entry) => entry.trim())
+        .filter(Boolean);
+
+      parts.forEach((place) => places.add(place));
+    });
+  }
+
+  if (!places.size) {
+    const searchText = [tour?.location, tour?.title]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    const matchedKey = Object.keys(genericStops).find((key) => searchText.includes(key));
+    if (matchedKey) {
+      genericStops[matchedKey].forEach((place) => places.add(place));
+    }
+  }
+
+  return places.size;
 };
 
 const TourCard = ({ tour }) => {
@@ -18,6 +77,12 @@ const TourCard = ({ tour }) => {
   const slugOrId = tour?.slug || tour?.id;
   const [wishlistVersion, setWishlistVersion] = useState(0);
   const savedInWishlist = wishlistVersion >= 0 && isInWishlist(tour?.id);
+  const placeName = normalizePlaceName(tour?.location);
+  const simpleTourName = deriveSimpleTourName(tour);
+  const personsCount = Number(tour?.capacity || tour?.availableSeats || 0);
+  const totalDays = Number(tour?.durationDays || 0);
+  const placesCount = derivePlacesCount(tour);
+  const placesLabel = placesCount > 0 ? `${placesCount} Places` : "Planned Route";
 
   const handleWishlist = () => {
     const added = toggleWishlist(tour);
@@ -44,28 +109,6 @@ const TourCard = ({ tour }) => {
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
 
-        <div className="absolute top-3 right-3">
-          <div className="relative overflow-hidden rounded-2xl px-4 py-2 bg-white/88 backdrop-blur-xl border border-white/45 shadow-[0_10px_25px_rgba(0,0,0,0.12)] transition-all duration-300 group-hover:scale-[1.03] group-hover:shadow-[0_16px_38px_rgba(0,0,0,0.18)]">
-            <div className="absolute inset-0 bg-gradient-to-br from-white/55 via-white/10 to-transparent pointer-events-none" />
-            <div className="relative flex flex-col leading-tight">
-              <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted/70">
-                From
-              </span>
-              <div className="flex items-end gap-1">
-                <span className="text-[11px] font-bold text-[var(--c-brand)]">
-                  {tour?.currency || "PKR"}
-                </span>
-                <span className="text-xl font-extrabold text-theme tracking-tight">
-                  {formatPrice(tour?.price)}
-                </span>
-              </div>
-              <span className="mt-0.5 text-[9px] text-muted/60">
-                per person
-              </span>
-            </div>
-          </div>
-        </div>
-
         <div className="absolute bottom-3 left-3 flex gap-1.5">
           <div className="bg-theme-text/80 backdrop-blur-md text-white px-2 py-1 rounded-lg flex items-center gap-1 text-[10px] font-bold">
             <Star size={10} className="fill-[var(--c-brand)] stroke-[var(--c-brand)]" />
@@ -80,25 +123,31 @@ const TourCard = ({ tour }) => {
       </div>
 
       <div className="p-4 sm:p-5 flex flex-col flex-1">
-        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.15em] text-muted mb-2">
+        <div className="mb-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10px] font-bold uppercase tracking-[0.15em] text-muted">
           <span className="flex items-center gap-1 text-[var(--c-brand)] truncate max-w-[140px]">
             <MapPin size={11} className="opacity-70" />
-            {tour?.location || "Pakistan"}
+            {placeName}
           </span>
           <span className="opacity-20">|</span>
           <span className="flex items-center gap-1">
-            <Clock3 size={11} /> {tour?.durationDays || 0} Days
+            <Clock3 size={11} /> {totalDays} Days
           </span>
+          <span className="opacity-20">|</span>
+          <span className="truncate">{placesLabel}</span>
         </div>
 
         <h3 className="text-sm sm:text-base font-bold text-theme leading-tight mb-4 line-clamp-2 min-h-[42px] group-hover:text-[var(--c-brand)] transition-colors">
-          {tour?.title}
+          {simpleTourName}
         </h3>
 
-        <div className="flex items-center justify-between mb-5 text-[11px] font-medium text-muted">
+        <div className="mb-5 flex items-center justify-between gap-5 text-[11px] font-medium text-muted">
           <div className="flex items-center gap-1">
             <Users size={12} className="opacity-50" />
-            <span>{isAvailable ? `${seatsLeft} seats left` : "Joining Waitlist"}</span>
+            <span>{personsCount ? `${personsCount} persons` : "Custom group size"}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-right">
+            <MapPin size={12} className="opacity-50" />
+            <span>{placesCount > 0 ? `${placesCount} Places` : "Planned Route"}</span>
           </div>
           <div className="h-1 w-12 bg-theme-bg rounded-full overflow-hidden">
             <div
