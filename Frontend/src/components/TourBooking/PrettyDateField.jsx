@@ -21,7 +21,13 @@ function useIsMobile(breakpoint = 640) {
   return isMobile;
 }
 
-export default function PrettyDateField({ when, setWhen }) {
+export default function PrettyDateField({
+  when,
+  setWhen,
+  placeholder = "When",
+  disabled = false,
+  variant = "inline",
+}) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
   const isMobile = useIsMobile(640);
@@ -68,6 +74,10 @@ export default function PrettyDateField({ when, setWhen }) {
     };
   }, [open, isMobile]);
 
+  useEffect(() => {
+    if (disabled) setOpen(false);
+  }, [disabled]);
+
   const CalendarUI = (
     <div>
       <style>{`
@@ -96,18 +106,38 @@ export default function PrettyDateField({ when, setWhen }) {
   return (
     <div
       ref={wrapRef}
-      className="relative flex items-center gap-3 px-4 py-3.5 md:py-4 border-b md:border-b-0 md:border-r border-[var(--c-border)]"
+      className={
+        variant === "standalone"
+          ? "relative"
+          : "relative flex items-center gap-3 px-4 py-3.5 md:py-4 border-b md:border-b-0 md:border-r border-[var(--c-border)]"
+      }
     >
-      <CalendarDays size={18} className="text-[var(--c-muted)]" />
+      {variant !== "standalone" ? (
+        <CalendarDays size={18} className="text-[var(--c-muted)]" />
+      ) : null}
 
       {/* Clickable field */}
       <button
         type="button"
-        onClick={() => setOpen(true)}
-        className="w-full text-left text-sm select-none"
-        style={{ color: "var(--c-text)" }}
+        onClick={() => !disabled && setOpen(true)}
+        disabled={disabled}
+        className={
+          variant === "standalone"
+            ? `ql-input flex items-center gap-2 text-left text-sm select-none ${disabled ? "cursor-not-allowed opacity-60" : ""}`
+            : "w-full text-left text-sm select-none"
+        }
+        style={variant === "standalone" ? undefined : { color: "var(--c-text)" }}
       >
-        {when ? when : <span style={{ color: "var(--c-muted)" }}>When</span>}
+        {variant === "standalone" ? (
+          <>
+            <CalendarDays size={16} className="text-[var(--c-muted)] shrink-0" />
+            {when ? when : <span style={{ color: "var(--c-muted)" }}>{placeholder}</span>}
+          </>
+        ) : when ? (
+          when
+        ) : (
+          <span style={{ color: "var(--c-muted)" }}>{placeholder}</span>
+        )}
       </button>
 
       {/* Portal rendering (prevents clipping ALWAYS) */}

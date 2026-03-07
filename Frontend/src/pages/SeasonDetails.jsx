@@ -11,17 +11,17 @@ const SeasonDetails = () => {
     <section className="bg-theme-bg py-10 md:py-12">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-14 space-y-6">
         <div className="overflow-hidden rounded-2xl border border-theme bg-theme-surface">
-          <div className="relative h-[240px] sm:h-[300px] lg:h-[340px]">
+          <div className="relative h-[250px] sm:h-[300px] lg:h-[340px]">
             <img src={season.image} alt={season.title} className="h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-black/10" />
-            <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-7 lg:p-9">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--c-brand)]">
+            <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/15" />
+            <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-6 lg:p-9">
+              <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[var(--c-brand)] sm:text-[10px]">
                 Seasonal Journey
               </p>
-              <h1 className="mt-2 max-w-3xl text-[2.15rem] font-semibold tracking-[-0.03em] text-white md:text-[3.4rem]">
+              <h1 className="mt-2 max-w-[85%] text-[1.95rem] font-semibold leading-[1.02] tracking-[-0.03em] text-white sm:max-w-3xl sm:text-[2.7rem] lg:text-[3.4rem]">
                 {season.title}
               </h1>
-              <p className="mt-3 max-w-2xl text-[15px] leading-7 text-white/85 md:text-[17px]">
+              <p className="mt-3 max-w-[92%] text-[13px] leading-6 text-white/85 sm:max-w-2xl sm:text-[15px] sm:leading-7 md:text-[16px]">
                 {season.overview}
               </p>
             </div>

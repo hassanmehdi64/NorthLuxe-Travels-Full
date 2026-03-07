@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { CalendarDays, ChevronDown } from "lucide-react";
 import { createPortal } from "react-dom";
 import { DayPicker } from "react-day-picker";
@@ -33,6 +33,7 @@ const VEHICLE_OPTIONS = [
   { value: "standard_suv", label: "Standard SUV" },
   { value: "premium_suv", label: "Premium SUV" },
   { value: "hiace", label: "Hiace / Van" },
+  { value: "other", label: "Other" },
 ];
 
 const BUDGET_TYPE_OPTIONS = [
@@ -101,7 +102,11 @@ const BookingStyleDropdown = ({
     <div className="relative" ref={menuRef}>
       <button
         type="button"
-        className="w-full rounded-2xl border border-[#89dfc3] bg-[#f2fff9] px-4 py-3 text-left text-sm text-theme shadow-[0_5px_14px_rgba(123,231,196,0.18)] transition hover:border-[#67d7b2] hover:bg-[#e8fbf3]"
+        className={`w-full rounded-2xl border px-4 py-3 text-left text-sm text-theme transition ${
+          open
+            ? "border-[#67d7b2] bg-[#f2fff9] shadow-[0_5px_14px_rgba(123,231,196,0.14)]"
+            : "border-[var(--c-border)] bg-white hover:border-[#8fdcc1] hover:bg-[#fbfffd]"
+        }`}
         onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
       >
@@ -307,6 +312,7 @@ const createInitialForm = (sourceTour = null) => ({
   phone: "",
   destinations: sourceTour?.location ? [sourceTour.location] : [],
   otherDestination: "",
+  customDestinations: [],
   startDate: "",
   endDate: "",
   persons: 2,
@@ -315,11 +321,13 @@ const createInitialForm = (sourceTour = null) => ({
   budgetMode: "total_trip",
   hotelPreference: "4_star",
   vehiclePreference: "premium_suv",
+  customVehicle: "",
   requirements: "",
 });
 
 const CustomPlanRequest = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const createContact = useCreateContact();
   const toast = useToast();
   const sourceTour = location.state?.sourceTour || null;
@@ -331,6 +339,7 @@ const CustomPlanRequest = () => {
         : "",
   }));
   const [submitting, setSubmitting] = useState(false);
+  const [submissionNotice, setSubmissionNotice] = useState(null);
 
   const subject = useMemo(
     () =>
@@ -348,7 +357,11 @@ const CustomPlanRequest = () => {
     }
 
     const selectedDestinations = form.destinations.includes("Other")
-      ? [...form.destinations.filter((item) => item !== "Other"), form.otherDestination.trim()].filter(Boolean)
+      ? [
+          ...form.destinations.filter((item) => item !== "Other"),
+          ...form.customDestinations,
+          form.otherDestination.trim(),
+        ].filter(Boolean)
       : form.destinations;
 
     const message = [
@@ -361,7 +374,7 @@ const CustomPlanRequest = () => {
       `Budget: ${form.budget || "Not specified"}`,
       `Budget Mode: ${form.budgetMode}`,
       `Hotel Preference: ${form.hotelPreference}`,
-      `Vehicle Preference: ${form.vehiclePreference}`,
+      `Vehicle Preference: ${form.vehiclePreference === "other" ? form.customVehicle || "Other" : form.vehiclePreference}`,
       `Requirements: ${form.requirements || "None"}`,
     ].join("\n");
 
@@ -374,7 +387,18 @@ const CustomPlanRequest = () => {
         message,
       });
       toast.success("Request submitted", "Our travel specialist will contact you soon.");
-      setForm(createInitialForm());
+      setSubmissionNotice({
+        title: "Request Submitted Successfully",
+        message:
+          "Your custom tour plan request has been received. Our team will review your details and get back to you shortly with the next steps.",
+      });
+      setForm({
+        ...createInitialForm(sourceTour),
+        budget:
+          sourceTour?.price && sourceTour?.currency
+            ? `${sourceTour.currency} ${sourceTour.price}`
+            : "",
+      });
     } catch (error) {
       toast.error(
         "Submission failed",
@@ -394,15 +418,24 @@ const CustomPlanRequest = () => {
           ? prev.destinations.filter((item) => item !== value)
           : [...prev.destinations, value],
         otherDestination: value === "Other" && exists ? "" : prev.otherDestination,
+        customDestinations: value === "Other" && exists ? [] : prev.customDestinations,
       };
     });
   };
 
   const selectedDestinationLabel = (() => {
-    const count = form.destinations.length;
+    const destinations = form.destinations.includes("Other")
+      ? [
+          ...form.destinations.filter((item) => item !== "Other"),
+          ...form.customDestinations,
+          ...(form.otherDestination.trim() ? [form.otherDestination.trim()] : []),
+        ].filter(Boolean)
+      : form.destinations;
+
+    const count = destinations.length;
     if (!count) return "Select destinations";
-    if (count === 1) return form.destinations[0];
-    return `${count} destinations selected`;
+    if (count <= 2) return destinations.join(", ");
+    return `${destinations[0]}, ${destinations[1]} +${count - 2} more`;
   })();
 
   return (
@@ -415,87 +448,181 @@ const CustomPlanRequest = () => {
           description="Share your budget and preferences to receive a tour plan tailored to your comfort and spending level."
         />
 
+        {submissionNotice ? (
+          <div className="ql-form-shell px-6 py-8 text-center">
+            <div className="mx-auto max-w-2xl rounded-[24px] border border-[rgba(123,231,196,0.34)] bg-[linear-gradient(180deg,rgba(234,253,245,0.96),rgba(255,255,255,0.98))] px-6 py-7 shadow-[0_14px_34px_rgba(123,231,196,0.16)]">
+              <p className="text-lg font-semibold text-theme">{submissionNotice.title}</p>
+              <p className="mt-3 text-sm leading-7 text-muted">{submissionNotice.message}</p>
+              <div className="mt-5 flex justify-center">
+                <button
+                  type="button"
+                  className="ql-btn-secondary px-5 py-2.5"
+                  onClick={() => navigate(-1)}
+                >
+                  Back
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
         <form onSubmit={handleSubmit} className="ql-form-shell p-7 grid md:grid-cols-2 gap-4">
           <label>
             <span className="ql-label">Full Name</span>
             <input
               className="ql-input"
+              placeholder="Your Full Name"
               value={form.name}
-              onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+              onChange={(e) => {
+                setSubmissionNotice(null);
+                setForm((prev) => ({ ...prev, name: e.target.value }));
+              }}
             />
           </label>
           <label>
             <span className="ql-label">Email</span>
             <input
               type="email"
+              placeholder="Email"
               className="ql-input"
               value={form.email}
-              onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
+              onChange={(e) => {
+                setSubmissionNotice(null);
+                setForm((prev) => ({ ...prev, email: e.target.value }));
+              }}
             />
           </label>
-          <label>
-            <span className="ql-label">Phone</span>
-            <input
-              className="ql-input"
-              value={form.phone}
-              onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
-            />
-          </label>
-          <label>
-            <span className="ql-label">Start Date</span>
-            <BookingStyleDateField
-              value={form.startDate}
-              onChange={(date) => setForm((prev) => ({ ...prev, startDate: date }))}
-              placeholder="Select start date"
-            />
-          </label>
-          <label>
-            <span className="ql-label">End Date</span>
-            <BookingStyleDateField
-              value={form.endDate}
-              onChange={(date) => setForm((prev) => ({ ...prev, endDate: date }))}
-              placeholder="Select end date"
-            />
-          </label>
-          <div className="md:col-span-2">
-            <span className="ql-label">Preferred Destinations</span>
-            <BookingStyleDropdown
-              multiple
-              options={DESTINATION_OPTIONS.map((item) => ({ value: item, label: item }))}
-              selectedValues={form.destinations}
-              onToggleOption={toggleDestination}
-              renderValue={() => selectedDestinationLabel}
-            >
-              {form.destinations.includes("Other") ? (
-                <input
-                  className="ql-input"
-                  placeholder="Enter custom destination"
-                  value={form.otherDestination}
-                  onChange={(e) => setForm((prev) => ({ ...prev, otherDestination: e.target.value }))}
-                />
-              ) : null}
-            </BookingStyleDropdown>
+          <div className="md:col-span-2 grid gap-4 md:grid-cols-3">
+            <label>
+              <span className="ql-label">Phone</span>
+              <input
+                className="ql-input"
+                placeholder="Enter a contact Number"
+                value={form.phone}
+                onChange={(e) => {
+                  setSubmissionNotice(null);
+                  setForm((prev) => ({ ...prev, phone: e.target.value }));
+                }}
+              />
+            </label>
+            <label>
+              <span className="ql-label">Start Date</span>
+              <BookingStyleDateField
+                value={form.startDate}
+                onChange={(date) => setForm((prev) => ({ ...prev, startDate: date }))}
+                placeholder="Select start date"
+              />
+            </label>
+            <label>
+              <span className="ql-label">End Date</span>
+              <BookingStyleDateField
+                value={form.endDate}
+                onChange={(date) => setForm((prev) => ({ ...prev, endDate: date }))}
+                placeholder="Select end date"
+              />
+            </label>
           </div>
-          <label>
-            <span className="ql-label">Persons</span>
-            <input
-              type="number"
-              min={1}
-              className="ql-input"
-              value={form.persons}
-              onChange={(e) => setForm((prev) => ({ ...prev, persons: Number(e.target.value || 1) }))}
-            />
-          </label>
-          <label>
-            <span className="ql-label">Children below 3 years</span>
-            <input
-              className="ql-input"
-              type="number"
-              min={0}
-              value={form.childrenBelowThree}
-              onChange={(e) => setForm((prev) => ({ ...prev, childrenBelowThree: Number(e.target.value || 0) }))}
-            />
-          </label>
+          <div className="md:col-span-2 grid gap-4 md:grid-cols-3">
+            <div className="md:col-span-1">
+              <span className="ql-label">Preferred Destinations</span>
+              <BookingStyleDropdown
+                multiple
+                options={DESTINATION_OPTIONS.map((item) => ({ value: item, label: item }))}
+                selectedValues={form.destinations}
+                onToggleOption={toggleDestination}
+                renderValue={() => selectedDestinationLabel}
+              >
+                {form.destinations.includes("Other") ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <input
+                        className="ql-input"
+                        placeholder="Enter custom destination"
+                        value={form.otherDestination}
+                        onChange={(e) => setForm((prev) => ({ ...prev, otherDestination: e.target.value }))}
+                      />
+                      <button
+                        type="button"
+                        className="ql-btn-primary shrink-0 px-4 py-2.5"
+                        onClick={() => {
+                          const nextValue = form.otherDestination.trim();
+                          if (!nextValue) {
+                            toast.info("Add destination", "Enter a custom destination first.");
+                            return;
+                          }
+                          setForm((prev) => {
+                            const existsInSelected = prev.destinations.some(
+                              (item) => item.toLowerCase() === nextValue.toLowerCase(),
+                            );
+                            const existsInCustom = prev.customDestinations.some(
+                              (item) => item.toLowerCase() === nextValue.toLowerCase(),
+                            );
+
+                            if (existsInSelected || existsInCustom) {
+                              return { ...prev, otherDestination: "" };
+                            }
+
+                            return {
+                              ...prev,
+                              customDestinations: [...prev.customDestinations, nextValue],
+                              otherDestination: "",
+                            };
+                          });
+                        }}
+                      >
+                        Add
+                      </button>
+                    </div>
+                    {form.customDestinations.length ? (
+                      <div className="flex flex-wrap gap-2">
+                        {form.customDestinations.map((item) => (
+                          <span
+                            key={item}
+                            className="inline-flex items-center gap-2 rounded-full border border-[#9fe7cf] bg-[#e9fbf4] px-3 py-1 text-[11px] font-medium text-theme"
+                          >
+                            {item}
+                            <button
+                              type="button"
+                              className="text-muted transition hover:text-theme"
+                              onClick={() =>
+                                setForm((prev) => ({
+                                  ...prev,
+                                  customDestinations: prev.customDestinations.filter(
+                                    (destination) => destination !== item,
+                                  ),
+                                }))
+                              }
+                            >
+                              x
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </BookingStyleDropdown>
+            </div>
+            <label>
+              <span className="ql-label">Persons</span>
+              <input
+                type="number"
+                min={1}
+                className="ql-input"
+                value={form.persons}
+                onChange={(e) => setForm((prev) => ({ ...prev, persons: Number(e.target.value || 1) }))}
+              />
+            </label>
+            <label>
+              <span className="ql-label">Children below 3 years</span>
+              <input
+                className="ql-input"
+                type="number"
+                min={0}
+                value={form.childrenBelowThree}
+                onChange={(e) => setForm((prev) => ({ ...prev, childrenBelowThree: Number(e.target.value || 0) }))}
+              />
+            </label>
+          </div>
           <label>
             <span className="ql-label">Budget Type</span>
             <BookingStyleDropdown
@@ -525,10 +652,27 @@ const CustomPlanRequest = () => {
             <span className="ql-label">Vehicle Preference</span>
             <BookingStyleDropdown
               value={form.vehiclePreference}
-              onChange={(value) => setForm((prev) => ({ ...prev, vehiclePreference: value }))}
+              onChange={(value) =>
+                setForm((prev) => ({
+                  ...prev,
+                  vehiclePreference: value,
+                  customVehicle: value === "other" ? prev.customVehicle : "",
+                }))
+              }
               options={VEHICLE_OPTIONS}
             />
           </label>
+          {form.vehiclePreference === "other" ? (
+            <label>
+              <span className="ql-label">Custom Vehicle</span>
+              <input
+                className="ql-input"
+                placeholder="Enter your preferred vehicle"
+                value={form.customVehicle}
+                onChange={(e) => setForm((prev) => ({ ...prev, customVehicle: e.target.value }))}
+              />
+            </label>
+          ) : null}
           <label className="md:col-span-2">
             <span className="ql-label">Special Requirements</span>
             <textarea
@@ -545,6 +689,7 @@ const CustomPlanRequest = () => {
             </button>
           </div>
         </form>
+        )}
       </div>
     </section>
   );

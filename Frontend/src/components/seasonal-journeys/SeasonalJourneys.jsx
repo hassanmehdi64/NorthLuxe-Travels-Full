@@ -1,6 +1,4 @@
 import { useMemo } from "react";
-import { Link } from "react-router-dom";
-import { MoveUpRight } from "lucide-react";
 import { usePublicTours } from "../../hooks/useCms";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
@@ -15,7 +13,7 @@ const SeasonalJourneys = () => {
   return (
     <section className="bg-theme-bg py-12 lg:py-14 ql-scroll-reveal" data-ql-reveal>
       <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-10 xl:px-14">
-        <div className="mb-8 flex flex-col gap-5 md:mb-10 md:flex-row md:items-end md:justify-between">
+        <div className="mb-8 md:mb-10">
           <div className="max-w-2xl space-y-2">
             <div className="inline-flex items-center gap-3">
               <span className="h-px w-8 bg-[var(--c-brand)]" />
@@ -30,14 +28,6 @@ const SeasonalJourneys = () => {
               Discover Gilgit-Baltistan through spring, summer, autumn, and winter travel experiences.
             </p>
           </div>
-
-          <Link
-            to="/tours"
-            className="inline-flex items-center justify-center gap-2 self-start rounded-xl border border-theme bg-theme-surface px-5 py-3 text-[11px] font-black uppercase tracking-[0.14em] text-theme transition-all duration-300 hover:border-[var(--c-brand)]/45 hover:bg-white hover:text-[var(--c-brand)]"
-          >
-            Explore All Packages
-            <MoveUpRight size={14} />
-          </Link>
         </div>
 
         <div className="seasonal-journeys-swiper">

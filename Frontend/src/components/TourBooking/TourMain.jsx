@@ -19,7 +19,7 @@ const TourMain = () => {
   };
 
   return (
-    <section className="relative min-h-[72vh] md:min-h-[85vh] flex items-center justify-center">
+    <section className="relative flex min-h-[72vh] items-center justify-center sm:-mx-[5px] md:min-h-[85vh]">
       {/* Background */}
       <div className="absolute inset-0 -z-10">
         <img

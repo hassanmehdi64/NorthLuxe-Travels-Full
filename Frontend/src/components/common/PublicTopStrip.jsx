@@ -8,22 +8,26 @@ const PublicTopStrip = () => {
   const email = settings?.siteEmail || "info@northluxetravels.com";
 
   return (
-    <div className="max-sm:ml-[27px] max-sm:mr-3 sm:mx-0 flex flex-col gap-2 text-center sm:text-left sm:flex-row sm:items-center sm:justify-between rounded-2xl border border-theme bg-theme-surface px-3 sm:px-4 py-2 mb-3 text-sm text-muted font-bold">
+    <div className="mb-3 flex flex-col gap-2 rounded-xl border border-theme bg-theme-surface px-3 py-2.5 text-center text-sm font-bold text-muted max-sm:ml-[27px] max-sm:mr-3 sm:mx-0 sm:flex-row sm:items-center sm:justify-between sm:px-4 sm:text-left">
       <p className="hidden sm:block font-semibold">
         Premium tours across Gilgit-Baltistan.
       </p>
-      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 sm:gap-4">
-        <a href={`tel:${phone}`} className="hover:text-theme transition-colors">
+      <div className="flex items-center justify-center gap-5 overflow-x-auto whitespace-nowrap text-[11px] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:justify-start sm:gap-4 sm:overflow-visible sm:text-sm">
+        <a
+          href={`tel:${phone}`}
+          className="shrink-0 whitespace-nowrap leading-none transition-colors hover:text-theme"
+        >
           {phone}
         </a>
         <a
           href={`mailto:${email}`}
-          className="hover:text-theme transition-colors">
+          className="shrink-0 whitespace-nowrap leading-none transition-colors hover:text-theme"
+        >
           {email}
-        </a>
+        </a>{" "}
         <Link
           to="/contact"
-          className="text-[var(--c-brand)] font-semibold hover:opacity-80">
+          className="hidden font-semibold text-[var(--c-brand)] hover:opacity-80 sm:inline-flex">
           Talk to an advisor
         </Link>
       </div>

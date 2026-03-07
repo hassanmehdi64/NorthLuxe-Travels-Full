@@ -87,7 +87,12 @@ export const buildDisplayItinerary = (tour) => {
 };
 
 export const buildIncludedServices = (tour) => {
-  const services = ["Private transport across the route", "Hotel stays for the full tour duration", "Daily breakfast at the hotel", "Driver allowance, tolls, and fuel", "On-trip coordination and support"];
+  const services = [
+    "Private transport across the route",
+    "Hotel stays for the full tour duration",
+    "Driver allowance, tolls, and fuel",
+    "On-trip coordination and support",
+  ];
   if (tour?.availableOptions?.vehicleTypes?.length) services.push(`Vehicle options: ${tour.availableOptions.vehicleTypes.join(", ")}`);
   if (tour?.availableOptions?.hotelCategories?.length) services.push(`Hotel categories: ${tour.availableOptions.hotelCategories.join(", ")}`);
   return services;

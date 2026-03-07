@@ -7,15 +7,21 @@ const formatStartingPrice = (value) => {
 
 export const TourDetailsHeader = ({ tour }) => (
   <header className="space-y-4">
-    <p className="text-[10px] font-extrabold uppercase tracking-[0.28em] text-[var(--c-brand)]">Tour Profile</p>
-    <h1 className="max-w-5xl text-[1.85rem] leading-[1.04] md:text-[2.7rem] font-semibold text-theme tracking-[-0.035em]">{tour.title}</h1>
-    <div className="inline-flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border-[0.5px] border-[rgba(15,23,42,0.08)] bg-theme-surface px-4 py-3.5 shadow-[0_8px_24px_rgba(15,23,42,0.02)]">
-      <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-muted">Starting From</p>
-      <p className="text-[1.6rem] leading-none md:text-[2rem] font-semibold text-theme tracking-[-0.03em]">
+    <p className="text-[10px] font-extrabold uppercase tracking-[0.28em] text-[var(--c-brand)]">
+      Tour Profile
+    </p>
+    <h1 className="max-w-5xl text-[1.85rem] leading-[1.04] md:text-[2.7rem] font-semibold text-theme tracking-[-0.035em]">
+      {tour.title}
+    </h1>
+    <div className="inline-flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border-[0.5px] border-[rgba(15,23,42,0.08)] bg-theme-surface px-4 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.02)]">
+      <p className="text-[14px] md:text-[0.8rem] font-medium uppercase tracking-[0.08em] text-muted">
+        Starting From
+      </p>
+      <p className="text-[1rem] leading-none md:text-[1rem] font-semibold text-theme tracking-[-0.01em]">
         {tour.currency} {formatStartingPrice(tour.price)}
       </p>
       <span className="hidden h-5 w-px bg-[rgba(15,23,42,0.08)] sm:block" />
-      <p className="text-[15px] md:text-[1.1rem] font-medium text-theme">
+      <p className="text-[14px] md:text-[1rem] font-medium text-theme">
         {tour.durationLabel || `${tour.durationDays || 0} Days`}
       </p>
     </div>

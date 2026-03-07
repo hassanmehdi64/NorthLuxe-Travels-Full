@@ -79,15 +79,17 @@ const PopularTours = () => {
                       key={category.id}
                       type="button"
                       onClick={() => setActiveCategory(category.id)}
-                      className={`relative inline-flex cursor-pointer items-center pb-1 text-[15px] leading-none font-medium transition-colors duration-200 ${
+                      className={`group relative inline-flex cursor-pointer items-center pb-1 text-[15px] leading-none font-medium transition-all duration-200 hover:-translate-y-[1px] ${
                         isActive
                           ? "text-[var(--c-brand)]"
-                          : "text-theme hover:text-[var(--c-brand)]"
+                          : "text-theme hover:text-[var(--c-brand)] hover:opacity-90"
                       }`}>
                       {category.label}
                       <span
                         className={`absolute left-0 bottom-0 h-[2px] rounded-full bg-[var(--c-brand)] transition-all duration-200 ${
-                          isActive ? "w-full opacity-100" : "w-0 opacity-0"
+                          isActive
+                            ? "w-full opacity-100"
+                            : "w-0 opacity-0 group-hover:w-full group-hover:opacity-70"
                         }`}
                       />
                     </button>
