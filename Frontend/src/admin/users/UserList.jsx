@@ -4,6 +4,7 @@ import UserCard from "./UserCard";
 import { useCreateUser, useDeleteUser, useUpdateUser, useUsers } from "../../hooks/useCms";
 import { useAuth } from "../../context/useAuth";
 import { useToast } from "../../context/ToastContext";
+import { getApiErrorMessage } from "../../lib/apiError";
 
 const UserList = () => {
   const { user: me } = useAuth();
@@ -99,7 +100,7 @@ const UserList = () => {
       }
       setIsFormOpen(false);
     } catch (error) {
-      toast.error("Save failed", error?.response?.data?.message || "Could not save member.");
+      toast.error("Save failed", getApiErrorMessage(error, "Could not save member."));
     }
   };
 
@@ -117,7 +118,7 @@ const UserList = () => {
       },
       {
         onError: (error) =>
-          toast.error("Status update failed", error?.response?.data?.message || "Please try again."),
+          toast.error("Status update failed", getApiErrorMessage(error, "Please try again.")),
       },
     );
   };
@@ -131,7 +132,7 @@ const UserList = () => {
       deleteUserMutation.mutate(id, {
         onSuccess: () => toast.success("Member removed", "User has been deleted."),
         onError: (error) =>
-          toast.error("Delete failed", error?.response?.data?.message || "Please try again."),
+          toast.error("Delete failed", getApiErrorMessage(error, "Please try again.")),
       });
     }
   };

@@ -6,7 +6,12 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "seed": "node src/scripts/seed.js"
+    "seed": "node src/scripts/seed.js",
+    "seed:destinations": "node src/scripts/seed-destinations.js",
+    "seed:activities": "node src/scripts/seed-activities.js",
+    "seed:services": "node src/scripts/seed-services.js",
+    "seed:tour-packages": "node src/scripts/seed-tour-packages.js",
+    "create-admin": "node src/scripts/createAdmin.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -15,9 +20,9 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.19.3",
+    "mongoose": "^8.23.0",
     "morgan": "^1.10.1",
-    "nodemailer": "^7.0.10",
+    "nodemailer": "^8.0.5",
     "react-day-picker": "^9.13.2",
     "stripe": "^17.7.0"
   },

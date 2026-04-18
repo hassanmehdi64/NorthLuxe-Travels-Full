@@ -17,6 +17,7 @@ const contentEntrySchema = new mongoose.Schema(
         "destination",
         "activity",
         "service",
+        "season",
         "career",
         "faq",
         "help-center",

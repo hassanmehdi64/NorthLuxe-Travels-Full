@@ -1,32 +1,52 @@
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Clock3, MapPin, Wallet } from "lucide-react";
+import { formatCurrencyAmount } from "../../utils/currency";
 
-const formatStartingPrice = (value) => {
-  const amount = Number(value || 0);
-  return Number.isFinite(amount) ? amount.toLocaleString() : value;
-};
-
-export const TourDetailsHeader = ({ tour }) => (
-  <header className="space-y-4">
-    <p className="text-[10px] font-extrabold uppercase tracking-[0.28em] text-[var(--c-brand)]">
-      Tour Profile
-    </p>
-    <h1 className="max-w-5xl text-[1.85rem] leading-[1.04] md:text-[2.7rem] font-semibold text-theme tracking-[-0.035em]">
-      {tour.title}
-    </h1>
-    <div className="inline-flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border-[0.5px] border-[rgba(15,23,42,0.08)] bg-theme-surface px-4 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.02)]">
-      <p className="text-[14px] md:text-[0.8rem] font-medium uppercase tracking-[0.08em] text-muted">
-        Starting From
+const InfoCard = ({ icon: Icon, label, value, className = "" }) => (
+  <div
+    className={`flex min-h-[76px] min-w-0 items-center gap-2.5 rounded-2xl border border-[rgba(15,23,42,0.08)] bg-white px-3 py-2.5 shadow-[0_8px_20px_rgba(15,23,42,0.03)] sm:min-h-[84px] sm:gap-3 sm:px-3.5 ${className}`}
+  >
+    <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--c-brand)]/10 text-[var(--c-brand)] sm:h-9 sm:w-9">
+      <Icon size={15} />
+    </span>
+    <div className="min-w-0">
+      <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted sm:text-[10px]">
+        {label}
       </p>
-      <p className="text-[1rem] leading-none md:text-[1rem] font-semibold text-theme tracking-[-0.01em]">
-        {tour.currency} {formatStartingPrice(tour.price)}
-      </p>
-      <span className="hidden h-5 w-px bg-[rgba(15,23,42,0.08)] sm:block" />
-      <p className="text-[14px] md:text-[1rem] font-medium text-theme">
-        {tour.durationLabel || `${tour.durationDays || 0} Days`}
+      <p className="mt-1 truncate text-[0.88rem] font-semibold leading-tight text-theme sm:text-[0.95rem]">
+        {value}
       </p>
     </div>
-  </header>
+  </div>
 );
+
+export const TourDetailsHeader = ({ tour }) => {
+  const durationText = tour.durationLabel || `${tour.durationDays || 0} Days`;
+  const routeText = tour.location || tour.destination || "Northern Pakistan";
+
+  return (
+    <header className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2.5">
+        <p className="text-[10px] font-extrabold uppercase tracking-[0.28em] text-[var(--c-brand)]">
+          Tour Profile
+        </p>
+      </div>
+
+      <h1 className="max-w-4xl text-[1.72rem] font-semibold leading-[1.05] tracking-[-0.035em] text-theme md:text-[2.35rem]">
+        {tour.title}
+      </h1>
+
+      <div className="grid max-w-3xl grid-cols-2 gap-2.5 sm:grid-cols-3">
+        <InfoCard
+          icon={Wallet}
+          label="Starting From"
+          value={formatCurrencyAmount(tour.price, tour.currency)}
+        />
+        <InfoCard icon={Clock3} label="Duration" value={durationText} />
+        <InfoCard icon={MapPin} label="Route" value={routeText} className="col-span-2 sm:col-span-1" />
+      </div>
+    </header>
+  );
+};
 
 export const TourDetailsIntro = ({ shortDescription, highlights }) => (
   <article className="space-y-3">

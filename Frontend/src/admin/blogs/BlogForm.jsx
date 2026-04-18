@@ -2,10 +2,13 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Eye, FileText, Send } from "lucide-react";
 import { useAdminBlog, useCreateBlog, useUpdateBlog } from "../../hooks/useCms";
+import { useToast } from "../../context/ToastContext";
+import { getApiErrorMessage } from "../../lib/apiError";
 
 const BlogForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
   const [previewMode, setPreviewMode] = useState(false);
   const { data: blog } = useAdminBlog(id);
   const createBlog = useCreateBlog();
@@ -35,12 +38,28 @@ const BlogForm = () => {
   const handleSubmit = async (e, status) => {
     e.preventDefault();
     const payload = { ...formData, status };
-    if (id) {
-      await updateBlog.mutateAsync({ id, ...payload });
-    } else {
-      await createBlog.mutateAsync(payload);
+    try {
+      if (id) {
+        await updateBlog.mutateAsync({ id, ...payload });
+        toast.success(
+          "Blog updated",
+          status === "published"
+            ? "The post is published on the public site."
+            : "Saved as draft. It will not appear publicly until published.",
+        );
+      } else {
+        await createBlog.mutateAsync(payload);
+        toast.success(
+          "Blog created",
+          status === "published"
+            ? "The post is published on the public site."
+            : "Saved as draft. It will not appear publicly until published.",
+        );
+      }
+      navigate("/admin/blogs");
+    } catch (error) {
+      toast.error("Save failed", getApiErrorMessage(error, "Could not save blog."));
     }
-    navigate("/admin/blogs");
   };
 
   return (

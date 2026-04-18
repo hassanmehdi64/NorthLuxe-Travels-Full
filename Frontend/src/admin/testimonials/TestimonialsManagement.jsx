@@ -7,6 +7,7 @@ import {
   useUpdateTestimonial,
 } from "../../hooks/useCms";
 import { useToast } from "../../context/ToastContext";
+import { getApiErrorMessage } from "../../lib/apiError";
 
 const initialForm = {
   name: "",
@@ -60,7 +61,7 @@ const TestimonialsManagement = () => {
       }
       resetForm();
     } catch (error) {
-      toast.error("Save failed", error?.response?.data?.message || "Please try again.");
+      toast.error("Save failed", getApiErrorMessage(error, "Please try again."));
     }
   };
 
@@ -92,7 +93,7 @@ const TestimonialsManagement = () => {
       if (editingId === id) resetForm();
       setPendingDeleteId("");
     } catch (error) {
-      toast.error("Delete failed", error?.response?.data?.message || "Please try again.");
+      toast.error("Delete failed", getApiErrorMessage(error, "Please try again."));
     }
   };
 

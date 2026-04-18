@@ -12,6 +12,52 @@ import { calculateBookingQuote } from "../utils/pricing.js";
 const router = express.Router();
 const SETTINGS_KEY = "default";
 
+const parseCustomRequestSummary = (value = "") =>
+  String(value || "")
+    .split(/\r?\n/)
+    .reduce((acc, line) => {
+      const index = line.indexOf(":");
+      if (index === -1) return acc;
+      const key = line.slice(0, index).trim();
+      const fieldValue = line.slice(index + 1).trim();
+      if (key) acc[key] = fieldValue;
+      return acc;
+    }, {});
+
+const toNumber = (value, fallback = 0) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const splitDestinations = (value) =>
+  String(value || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .filter((item) => item.toLowerCase() !== "flexible");
+
+const normalizeCustomRequest = (source = {}, fallbackTourTitle = "") => {
+  const explicit = source.customRequest || {};
+  const legacy = parseCustomRequestSummary(source.customRequirements);
+  const preferredDestinations = Array.isArray(explicit.preferredDestinations) && explicit.preferredDestinations.length
+    ? explicit.preferredDestinations.filter(Boolean)
+    : splitDestinations(legacy["Preferred Destinations"]);
+
+  return {
+    preferredDestinations,
+    sourceTourTitle: explicit.sourceTourTitle || legacy["Source Tour"] || fallbackTourTitle || "",
+    startDate: explicit.startDate || legacy["Start Date"] || "",
+    endDate: explicit.endDate || legacy["End Date"] || "",
+    persons: toNumber(explicit.persons, toNumber(legacy["Persons"], toNumber(source.groupSize, 0))),
+    childrenBelowThree: toNumber(explicit.childrenBelowThree, toNumber(legacy["Children below 3 years"], toNumber(source.children, 0))),
+    budget: explicit.budget || legacy["Budget"] || "",
+    budgetMode: explicit.budgetMode || legacy["Budget Mode"] || "",
+    hotelPreference: explicit.hotelPreference || legacy["Hotel Preference"] || source.facilities?.hotelType || "",
+    vehiclePreference: explicit.vehiclePreference || legacy["Vehicle Preference"] || source.facilities?.vehicleType || "",
+    requirements: explicit.requirements || legacy["Requirements"] || source.specialRequirements || "",
+  };
+};
+
 const getSettings = async () => {
   let settings = await SiteSetting.findOne({ key: SETTINGS_KEY });
   if (!settings) settings = await SiteSetting.create({ key: SETTINGS_KEY });
@@ -24,8 +70,31 @@ const toBookingResponse = (booking) => ({
   customer: booking.customerName,
   email: booking.email,
   phone: booking.phone,
-  tour: booking.tour?.title || "",
+  tour: booking.tour?.title || (booking.bookingType === "custom" ? "Custom Booking Request" : ""),
   tourId: booking.tour?._id || booking.tour || null,
+  tourDetails: booking.tour
+    ? {
+        id: booking.tour?._id || booking.tour,
+        title: booking.tour?.title || "",
+        location: booking.tour?.location || "",
+        durationDays: booking.tour?.durationDays || 0,
+        durationLabel: booking.tour?.durationLabel || "",
+        price: booking.tour?.price || 0,
+        currency: "PKR",
+        shortDescription: booking.tour?.shortDescription || "",
+        description: booking.tour?.description || "",
+        itinerary: Array.isArray(booking.tour?.itinerary) ? booking.tour.itinerary : [],
+        availableOptions: booking.tour?.availableOptions || {},
+      }
+    : null,
+  designedTour: booking.designedTour
+    ? {
+        id: booking.designedTour?._id || booking.designedTour,
+        title: booking.designedTour?.title || "",
+        slug: booking.designedTour?.slug || "",
+        status: booking.designedTour?.status || "",
+      }
+    : null,
   date: booking.travelDate ? booking.travelDate.toISOString() : "",
   travelTime: booking.travelTime || "",
   endDate: booking.endDate ? booking.endDate.toISOString() : "",
@@ -47,11 +116,21 @@ const toBookingResponse = (booking) => ({
   paymentIntentId: booking.paymentIntentId,
   paymentVerified: Boolean(booking.paymentVerified),
   transactionReference: booking.transactionReference,
+  manualPayment: {
+    senderName: booking.manualPayment?.senderName || "",
+    senderNumber: booking.manualPayment?.senderNumber || "",
+    sentAmount: booking.manualPayment?.sentAmount || 0,
+    sentAt: booking.manualPayment?.sentAt ? booking.manualPayment.sentAt.toISOString() : "",
+    slip: booking.manualPayment?.slip || "",
+    slipName: booking.manualPayment?.slipName || "",
+  },
   paymentHistory: booking.paymentHistory || [],
   pricingBreakdown: booking.pricingBreakdown || {},
   bookingType: booking.bookingType || "standard",
   identity: booking.identity || {},
   facilities: booking.facilities || {},
+  customRequest: normalizeCustomRequest(booking, booking.tour?.title || ""),
+  customItinerary: booking.customItinerary || {},
   customRequirements: booking.customRequirements || "",
   specialRequirements: booking.specialRequirements,
   notes: booking.notes,
@@ -84,7 +163,7 @@ router.post(
 
     res.json({
       quote,
-      currency: tour.currency || settings.currency || "USD",
+      currency: "PKR",
       paymentConfig: settings.paymentConfig || {},
     });
   }),
@@ -93,12 +172,15 @@ router.post(
 router.post(
   "/public",
   asyncHandler(async (req, res) => {
-    const payload = req.body;
-    const [tour, settings] = await Promise.all([
-      Tour.findById(payload.tourId),
-      getSettings(),
-    ]);
-    if (!tour) return res.status(404).json({ message: "Tour not found" });
+    const payload = req.body || {};
+    const bookingType = payload.bookingType === "custom" || payload.isCustomTour ? "custom" : "standard";
+    const settings = await getSettings();
+    const safeTourId = typeof payload.tourId === "string" ? payload.tourId.trim() : payload.tourId;
+    const tour = safeTourId ? await Tour.findById(safeTourId) : null;
+
+    if (bookingType === "standard" && !tour) {
+      return res.status(404).json({ message: "Tour not found" });
+    }
     if (!payload.customerName?.trim() || !payload.email?.trim()) {
       return res.status(400).json({ message: "Customer name and email are required" });
     }
@@ -108,12 +190,25 @@ router.post(
       bookingCode = generateBookingCode();
     }
 
-    const quote = calculateBookingQuote({
-      tour,
-      settings,
-      payload,
-      enforceAllowedOptions: true,
-    });
+    const quote = bookingType === "custom"
+      ? {
+          adults: Math.max(1, Number(payload.adults || payload.groupSize || 1)),
+          children: Math.max(0, Number(payload.children || 0)),
+          guests:
+            Math.max(1, Number(payload.adults || payload.groupSize || 1)) +
+            Math.max(0, Number(payload.children || 0)),
+          totalAmount: Number(payload.totalAmount || 0),
+          advanceAmount: Number(payload.advanceAmount || 0),
+          days: 1,
+          selections: payload.facilities || {},
+          breakdown: {},
+        }
+      : calculateBookingQuote({
+          tour,
+          settings,
+          payload,
+          enforceAllowedOptions: true,
+        });
 
     const adults = quote.adults;
     const children = quote.children;
@@ -141,15 +236,24 @@ router.post(
     const paymentVerified = Boolean(payload.paymentVerified);
     const paidAmount = paymentVerified ? advanceAmount : 0;
     const remainingAmount = Math.max(0, totalAmount - paidAmount);
-    const paymentMethod = payload.paymentMethod || "visa_card";
-    const requireVerifiedCard = Boolean(settings.paymentConfig?.requireVerifiedPaymentForCard);
-
-    if (paymentMethod === "visa_card" && requireVerifiedCard && !paymentVerified) {
-      return res.status(400).json({
-        message: "Card payment must be verified before confirming booking.",
-      });
-    }
-
+    const paymentMethod = payload.paymentMethod || "pay_on_arrival";
+    const manualPayment = ["visa_card", "pay_on_arrival"].includes(paymentMethod)
+      ? {
+          senderName: "",
+          senderNumber: "",
+          sentAmount: 0,
+          sentAt: null,
+          slip: "",
+          slipName: "",
+        }
+      : {
+          senderName: payload.manualPayment?.senderName || "",
+          senderNumber: payload.manualPayment?.senderNumber || "",
+          sentAmount: Number(payload.manualPayment?.sentAmount || 0),
+          sentAt: payload.manualPayment?.sentAt || null,
+          slip: payload.manualPayment?.slip || "",
+          slipName: payload.manualPayment?.slipName || "",
+        };
     const hasManualReference = Boolean(payload.transactionReference?.trim());
     const paymentStatus = paymentVerified
       ? paidAmount >= totalAmount
@@ -160,11 +264,22 @@ router.post(
         : hasManualReference
           ? "Verification Pending"
           : "Pending";
-    const bookingType = payload.bookingType === "custom" || payload.isCustomTour ? "custom" : "standard";
+
+    const customRequest = bookingType === "custom"
+      ? normalizeCustomRequest({
+          ...payload,
+          customRequest: payload.customRequest || {},
+          customRequirements: payload.customRequirements || "",
+          groupSize,
+          children,
+          facilities: quote.selections,
+          specialRequirements: payload.specialRequirements || "",
+        }, tour?.title || "")
+      : {};
 
     const booking = await Booking.create({
       bookingCode,
-      tour: tour._id,
+      tour: tour?._id || null,
       customerName: payload.customerName,
       email: payload.email,
       phone: payload.phone || "",
@@ -179,11 +294,12 @@ router.post(
       advanceAmount,
       paidAmount,
       remainingAmount,
-      currency: payload.currency || tour.currency || "USD",
+      currency: "PKR",
       paymentMethod,
       paymentIntentId: payload.paymentIntentId || "",
       paymentVerified,
       transactionReference: payload.transactionReference || "",
+      manualPayment,
       paymentHistory:
         paymentVerified && advanceAmount > 0
           ? [
@@ -205,12 +321,13 @@ router.post(
       childrenAgeGroups,
       identity: payload.identity || {},
       facilities: quote.selections,
+      customRequest,
       customRequirements: payload.customRequirements || "",
       specialRequirements: payload.specialRequirements || "",
       notes: payload.notes || "",
       bookingType,
       isCustomTour: bookingType === "custom",
-      source: "website",
+      source: payload.source || "website",
       status: paymentVerified ? "confirmed" : "pending",
       paymentStatus,
     });
@@ -218,14 +335,14 @@ router.post(
     await Notification.create({
       type: "Bookings",
       title: "New Booking Alert",
-      message: `${booking.customerName} requested ${tour.title} (${booking.status}).`,
+      message: `${booking.customerName} requested ${tour?.title || "a custom booking"} (${booking.status}).`,
     });
 
     await sendBookingConfirmationEmail({
       to: booking.email,
       customerName: booking.customerName,
       bookingCode,
-      tourTitle: tour.title,
+      tourTitle: tour?.title || "Custom Booking Request",
       travelDate:
         booking.travelDate
           ? `${booking.travelDate.toDateString()} ${booking.travelTime || ""}`.trim()
@@ -252,11 +369,10 @@ router.post(
       });
     }
 
-    const populated = await booking.populate("tour");
+    const populated = await booking.populate(["tour", "designedTour"]);
     res.status(201).json({ item: toBookingResponse(populated) });
   }),
 );
-
 router.use(requireAuth, requireRole("Admin"));
 
 router.get(
@@ -272,7 +388,7 @@ router.get(
         { bookingCode: { $regex: q, $options: "i" } },
       ];
     }
-    const items = await Booking.find(query).populate("tour").sort({ createdAt: -1 });
+    const items = await Booking.find(query).populate(["tour", "designedTour"]).sort({ createdAt: -1 });
     res.json({ items: items.map(toBookingResponse) });
   }),
 );
@@ -280,7 +396,7 @@ router.get(
 router.get(
   "/:id",
   asyncHandler(async (req, res) => {
-    const item = await Booking.findById(req.params.id).populate("tour");
+    const item = await Booking.findById(req.params.id).populate(["tour", "designedTour"]);
     if (!item) return res.status(404).json({ message: "Booking not found" });
     res.json({ item: toBookingResponse(item) });
   }),
@@ -292,6 +408,31 @@ router.patch(
     const payload = { ...req.body };
     const current = await Booking.findById(req.params.id);
     if (!current) return res.status(404).json({ message: "Booking not found" });
+
+    if (payload.customItinerary) {
+      payload.customItinerary = {
+        ...current.customItinerary?.toObject?.(),
+        ...payload.customItinerary,
+        planDays: Array.isArray(payload.customItinerary.planDays)
+          ? payload.customItinerary.planDays
+              .map((item) => ({
+                title: String(item?.title || "").trim(),
+                plan: String(item?.plan || "").trim(),
+              }))
+              .filter((item) => item.title || item.plan)
+          : current.customItinerary?.planDays || [],
+        title: String(payload.customItinerary.title || current.customItinerary?.title || "").trim(),
+        route: String(payload.customItinerary.route || current.customItinerary?.route || "").trim(),
+        durationLabel: String(payload.customItinerary.durationLabel || current.customItinerary?.durationLabel || "").trim(),
+        finalBudget: Number(payload.customItinerary.finalBudget ?? current.customItinerary?.finalBudget ?? 0),
+        currency: "PKR",
+        hotelPlan: String(payload.customItinerary.hotelPlan || current.customItinerary?.hotelPlan || "").trim(),
+        vehiclePlan: String(payload.customItinerary.vehiclePlan || current.customItinerary?.vehiclePlan || "").trim(),
+        planDetails: String(payload.customItinerary.planDetails || current.customItinerary?.planDetails || "").trim(),
+        status: String(payload.customItinerary.status || current.customItinerary?.status || "draft").trim() || "draft",
+        savedAt: payload.customItinerary.savedAt || current.customItinerary?.savedAt || new Date(),
+      };
+    }
 
     if (payload.paymentVerified === true && payload.paidAmount === undefined) {
       payload.paidAmount = Number(current.paidAmount || 0) || Number(current.advanceAmount || 0);
@@ -309,14 +450,14 @@ router.patch(
     const booking = await Booking.findByIdAndUpdate(req.params.id, payload, {
       new: true,
       runValidators: true,
-    }).populate("tour");
+    }).populate(["tour", "designedTour"]);
     if (!booking) return res.status(404).json({ message: "Booking not found" });
 
-    if (payload.status || payload.paymentStatus) {
+    if (payload.status || payload.paymentStatus || payload.customItinerary) {
       await Notification.create({
         type: "Bookings",
-        title: "Booking Updated",
-        message: `${booking.bookingCode} updated.`,
+        title: payload.customItinerary ? "Custom Itinerary Updated" : "Booking Updated",
+        message: payload.customItinerary ? `${booking.bookingCode} itinerary saved.` : `${booking.bookingCode} updated.`,
       });
     }
 
@@ -334,3 +475,15 @@ router.delete(
 );
 
 export default router;
+
+
+
+
+
+
+
+
+
+
+
+

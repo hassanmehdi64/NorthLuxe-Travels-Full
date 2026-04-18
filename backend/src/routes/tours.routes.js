@@ -6,6 +6,12 @@ import { slugify } from "../utils/slugify.js";
 
 const router = express.Router();
 
+const normalizeDiscountPercent = (value) => {
+  const normalized = Number(value);
+  if (!Number.isFinite(normalized)) return 0;
+  return Math.max(0, Math.min(95, normalized));
+};
+
 const toTourResponse = (tour) => ({
   id: tour._id,
   title: tour.title,
@@ -14,6 +20,7 @@ const toTourResponse = (tour) => ({
   durationDays: tour.durationDays,
   durationLabel: tour.durationLabel || `${tour.durationDays} Days`,
   price: tour.price,
+  discountPercent: normalizeDiscountPercent(tour.discountPercent ?? 0),
   currency: tour.currency,
   image: tour.coverImage,
   gallery: tour.gallery,
@@ -27,7 +34,10 @@ const toTourResponse = (tour) => ({
   reviews: tour.reviewsCount,
   tags: tour.tags,
   itinerary: tour.itinerary,
-  availableOptions: tour.availableOptions || { hotelCategories: [], vehicleTypes: [] },
+  availableOptions: tour.availableOptions || {
+    hotelCategories: [],
+    vehicleTypes: [],
+  },
   createdAt: tour.createdAt,
   updatedAt: tour.updatedAt,
 });
@@ -47,7 +57,10 @@ router.get(
 router.get(
   "/:slug/public",
   asyncHandler(async (req, res) => {
-    const tour = await Tour.findOne({ slug: req.params.slug, status: "published" });
+    const tour = await Tour.findOne({
+      slug: req.params.slug,
+      status: "published",
+    });
     if (!tour) return res.status(404).json({ message: "Tour not found" });
     res.json({ item: toTourResponse(tour) });
   }),
@@ -84,7 +97,8 @@ router.post(
       durationDays: Number(payload.durationDays || 1),
       durationLabel: payload.durationLabel || "",
       price: Number(payload.price || 0),
-      currency: payload.currency || "USD",
+      discountPercent: normalizeDiscountPercent(payload.discountPercent ?? 0),
+      currency: "PKR",
       coverImage: payload.image || payload.coverImage || "",
       gallery: payload.gallery || [],
       shortDescription: payload.shortDescription || "",
@@ -113,10 +127,15 @@ router.patch(
       coverImage: payload.image || payload.coverImage,
       reviewsCount: payload.reviews,
       availableOptions: payload.availableOptions,
+      discountPercent:
+        payload.discountPercent === undefined
+          ? undefined
+          : normalizeDiscountPercent(payload.discountPercent),
     };
     delete update.image;
     delete update.reviews;
     if (update.availableOptions === undefined) delete update.availableOptions;
+    if (update.discountPercent === undefined) delete update.discountPercent;
 
     if (payload.title && !payload.slug) {
       update.slug = slugify(payload.title);

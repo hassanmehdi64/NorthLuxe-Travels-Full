@@ -11,6 +11,8 @@ import {
   useGallery,
   useUpdateGalleryItem,
 } from "../../hooks/useCms";
+import { useToast } from "../../context/ToastContext";
+import { getApiErrorMessage } from "../../lib/apiError";
 
 const initialForm = {
   title: "",
@@ -20,6 +22,7 @@ const initialForm = {
 };
 
 const GalleryList = () => {
+  const toast = useToast();
   const fileInputRef = useRef(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState("");
@@ -49,13 +52,18 @@ const GalleryList = () => {
       alt: form.alt.trim(),
     };
 
-    if (editingId) {
-      await updateGallery.mutateAsync({ id: editingId, ...payload });
-    } else {
-      await createGallery.mutateAsync(payload);
+    try {
+      if (editingId) {
+        await updateGallery.mutateAsync({ id: editingId, ...payload });
+        toast.success("Media updated", "Gallery item updated successfully.");
+      } else {
+        await createGallery.mutateAsync(payload);
+        toast.success("Media created", "Gallery item added successfully.");
+      }
+      resetForm();
+    } catch (error) {
+      toast.error("Save failed", getApiErrorMessage(error, "Could not save gallery item."));
     }
-
-    resetForm();
   };
 
   const startEdit = (item) => {
@@ -70,7 +78,11 @@ const GalleryList = () => {
   };
 
   const deleteImage = (id) => {
-    deleteGallery.mutate(id);
+    deleteGallery.mutate(id, {
+      onSuccess: () => toast.success("Media deleted", "Gallery item removed."),
+      onError: (error) =>
+        toast.error("Delete failed", getApiErrorMessage(error, "Could not delete gallery item.")),
+    });
   };
 
   const handleLocalFileSelect = (event) => {

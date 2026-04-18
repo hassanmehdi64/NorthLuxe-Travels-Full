@@ -50,3 +50,20 @@
 
 - On successful `POST /api/bookings/public`, the backend sends a confirmation email.
 - If SMTP env vars are missing, backend logs an email preview to console (safe fallback for local dev).
+- On successful `POST /api/contacts/public`, the backend sends a contact-message confirmation email.
+- Email sending is non-blocking for the user flow: if SMTP fails, the request still succeeds and the backend logs the mail error.
+
+### SMTP Setup
+
+Add these values to `backend/.env` and to your production host environment variables:
+
+```env
+EMAIL_FROM="North Luxe Travels <your-email@gmail.com>"
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+```
+
+For Gmail, enable 2-step verification and create an App Password. Use that App Password as `SMTP_PASS`; do not use your normal Gmail password.

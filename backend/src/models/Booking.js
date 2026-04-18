@@ -52,6 +52,63 @@ const facilitiesSchema = new mongoose.Schema(
   { _id: false },
 );
 
+const customRequestSchema = new mongoose.Schema(
+  {
+    preferredDestinations: { type: [String], default: [] },
+    sourceTourTitle: { type: String, default: "" },
+    startDate: { type: String, default: "" },
+    endDate: { type: String, default: "" },
+    persons: { type: Number, min: 0, default: 0 },
+    childrenBelowThree: { type: Number, min: 0, default: 0 },
+    budget: { type: String, default: "" },
+    budgetMode: { type: String, default: "" },
+    hotelPreference: { type: String, default: "" },
+    vehiclePreference: { type: String, default: "" },
+    requirements: { type: String, default: "" },
+  },
+  { _id: false },
+);
+
+const customItinerarySchema = new mongoose.Schema(
+  {
+    planDays: {
+      type: [
+        new mongoose.Schema(
+          {
+            title: { type: String, default: "" },
+            plan: { type: String, default: "" },
+          },
+          { _id: false },
+        ),
+      ],
+      default: [],
+    },
+    title: { type: String, default: "" },
+    route: { type: String, default: "" },
+    durationLabel: { type: String, default: "" },
+    finalBudget: { type: Number, default: 0 },
+    currency: { type: String, default: "PKR" },
+    hotelPlan: { type: String, default: "" },
+    vehiclePlan: { type: String, default: "" },
+    planDetails: { type: String, default: "" },
+    status: { type: String, default: "draft" },
+    savedAt: { type: Date, default: null },
+  },
+  { _id: false },
+);
+
+const manualPaymentSchema = new mongoose.Schema(
+  {
+    senderName: { type: String, default: "" },
+    senderNumber: { type: String, default: "" },
+    sentAmount: { type: Number, default: 0 },
+    sentAt: { type: Date, default: null },
+    slip: { type: String, default: "" },
+    slipName: { type: String, default: "" },
+  },
+  { _id: false },
+);
+
 const paymentHistorySchema = new mongoose.Schema(
   {
     amount: { type: Number, default: 0 },
@@ -82,7 +139,7 @@ const pricingBreakdownSchema = new mongoose.Schema(
 const bookingSchema = new mongoose.Schema(
   {
     bookingCode: { type: String, required: true, unique: true, uppercase: true },
-    tour: { type: mongoose.Schema.Types.ObjectId, ref: "Tour", required: true },
+    tour: { type: mongoose.Schema.Types.ObjectId, ref: "Tour", default: null },
     customerName: { type: String, required: true, trim: true },
     email: { type: String, required: true, lowercase: true, trim: true },
     phone: { type: String, default: "" },
@@ -98,7 +155,7 @@ const bookingSchema = new mongoose.Schema(
     advanceAmount: { type: Number, default: 0 },
     paidAmount: { type: Number, default: 0 },
     remainingAmount: { type: Number, default: 0 },
-    currency: { type: String, default: "USD" },
+    currency: { type: String, default: "PKR" },
     paymentStatus: {
       type: String,
       enum: ["Pending", "Verification Pending", "Partially Paid", "Paid", "Failed", "Refunded"],
@@ -121,6 +178,7 @@ const bookingSchema = new mongoose.Schema(
     paymentIntentId: { type: String, default: "" },
     paymentVerified: { type: Boolean, default: false },
     transactionReference: { type: String, default: "" },
+    manualPayment: { type: manualPaymentSchema, default: () => ({}) },
     paymentHistory: { type: [paymentHistorySchema], default: [] },
     pricingBreakdown: { type: pricingBreakdownSchema, default: () => ({}) },
     specialRequirements: { type: String, default: "" },
@@ -128,9 +186,12 @@ const bookingSchema = new mongoose.Schema(
     notes: { type: String, default: "" },
     identity: { type: identitySchema, default: () => ({}) },
     facilities: { type: facilitiesSchema, default: () => ({}) },
+    customRequest: { type: customRequestSchema, default: () => ({}) },
+    customItinerary: { type: customItinerarySchema, default: () => ({}) },
     groupSize: { type: Number, default: 1, min: 1 },
     bookingType: { type: String, enum: ["standard", "custom"], default: "standard" },
     isCustomTour: { type: Boolean, default: false },
+    designedTour: { type: mongoose.Schema.Types.ObjectId, ref: "Tour", default: null },
     status: {
       type: String,
       enum: ["pending", "confirmed", "completed", "cancelled"],
@@ -145,3 +206,7 @@ const bookingSchema = new mongoose.Schema(
 bookingSchema.index({ bookingCode: 1, email: 1, status: 1 });
 
 export const Booking = mongoose.model("Booking", bookingSchema);
+
+
+
+

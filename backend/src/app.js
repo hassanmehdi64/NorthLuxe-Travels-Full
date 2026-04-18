@@ -11,7 +11,7 @@ import contentRoutes from "./routes/content.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
 import galleryRoutes from "./routes/gallery.routes.js";
 import notificationsRoutes from "./routes/notifications.routes.js";
-import paymentsRoutes from "./routes/payments.routes.js";
+import paymentsRoutes, { paymentsWebhookRouter } from "./routes/payments.routes.js";
 import settingsRoutes from "./routes/settings.routes.js";
 import testimonialsRoutes from "./routes/testimonials.routes.js";
 import toursRoutes from "./routes/tours.routes.js";
@@ -22,10 +22,17 @@ const app = express();
 
 app.use(
   cors({
-    origin: env.clientOrigin,
+    origin: (origin, callback) => {
+      if (!origin || env.clientOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
     credentials: true,
   }),
 );
+app.use("/api/payments/webhook", express.raw({ type: "application/json" }), paymentsWebhookRouter);
+app.use(express.urlencoded({ extended: false }));
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 app.use(morgan("dev"));

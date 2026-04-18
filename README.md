@@ -34,6 +34,7 @@ Copy `backend/.env.example` to `backend/.env` and fill values:
 ```env
 PORT=5000
 MONGODB_URI=mongodb://127.0.0.1:27017/north-luxe
+MONGODB_URI_FALLBACK=
 CLIENT_ORIGIN=http://localhost:5173
 JWT_SECRET=change-me
 JWT_EXPIRES_IN=7d
@@ -47,11 +48,20 @@ SMTP_USER=
 SMTP_PASS=
 ```
 
+For MongoDB Atlas and Vercel, use:
+
+```env
+MONGODB_URI=mongodb+srv://<db-user>:<url-encoded-password>@northluxe.otjqkjp.mongodb.net/?retryWrites=true&w=majority&appName=NorthLuxe
+MONGODB_URI_FALLBACK=mongodb://<db-user>:<url-encoded-password>@ac-dgqedsy-shard-00-00.otjqkjp.mongodb.net:27017,ac-dgqedsy-shard-00-01.otjqkjp.mongodb.net:27017,ac-dgqedsy-shard-00-02.otjqkjp.mongodb.net:27017/?ssl=true&replicaSet=atlas-77hf7e-shard-0&authSource=admin&retryWrites=true&w=majority&appName=NorthLuxe
+CLIENT_ORIGIN=https://north-luxe-travels-frontend.vercel.app
+```
+
 ### Frontend (`Frontend/.env`)
 Copy `Frontend/.env.example` to `Frontend/.env`:
 
 ```env
-VITE_API_URL=http://localhost:5000/api
+VITE_API_URL=https://north-luxe-backend.vercel.app/api
+# VITE_API_URL=http://localhost:5000/api
 ```
 
 ## Local Development

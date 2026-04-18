@@ -29,6 +29,7 @@ import SearchPage from "./pages/features/Search";
 import WishlistPage from "./pages/features/Wishlist";
 import CartPage from "./pages/features/Cart";
 import CustomPlanRequest from "./pages/features/CustomPlanRequest";
+import PaymentStatus from "./pages/PaymentStatus";
 
 /* ===== ADMIN COMPONENTS ===== */
 import AdminLayout from "./admin/layout/AdminLayout";
@@ -41,8 +42,10 @@ import UserManagement from "./admin/users/UserList";
 import ContactManagement from "./admin/contact/ContactMessages";
 import SiteSettings from "./admin/settings/SiteSettings";
 import ContentManagement from "./admin/content/ContentManagement";
+import DestinationsManagement from "./admin/content/DestinationsManagement";
 import ActivitiesManagement from "./admin/content/ActivitiesManagement";
 import ServicesManagement from "./admin/content/ServicesManagement";
+import SeasonsManagement from "./admin/content/SeasonsManagement";
 import BlogForm from "./admin/blogs/BlogForm";
 import TourManagement from "./admin/tours/TourManagement";
 import TestimonialsManagement from "./admin/testimonials/TestimonialsManagement";
@@ -80,6 +83,17 @@ const RouteRevealObserver = () => {
   return null;
 };
 
+const RouteScrollToTop = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.hash) return;
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [location.pathname, location.search, location.hash]);
+
+  return null;
+};
+
 const AdminIndexGate = () => {
   const { user } = useAuth();
   if (user?.role === "Editor") return <ContentManagement fixedType="activity" />;
@@ -89,6 +103,7 @@ const AdminIndexGate = () => {
 const App = () => {
   return (
     <Router>
+      <RouteScrollToTop />
       <RouteRevealObserver />
       <Routes>
         {/* ========== ADMIN DASHBOARD (Nested Routes) ========== */}
@@ -119,8 +134,10 @@ const App = () => {
           <Route path="users" element={<RequireRole roles={["Admin"]} fallback="/admin/content"><UserManagement /></RequireRole>} />
           <Route path="contacts" element={<RequireRole roles={["Admin"]} fallback="/admin/content"><ContactManagement /></RequireRole>} />
           <Route path="content" element={<ContentManagement />} />
+          <Route path="destinations" element={<DestinationsManagement />} />
           <Route path="activities" element={<ActivitiesManagement />} />
           <Route path="services" element={<ServicesManagement />} />
+          <Route path="seasons" element={<SeasonsManagement />} />
           <Route path="settings" element={<RequireRole roles={["Admin"]} fallback="/admin/content"><SiteSettings /></RequireRole>} />
           <Route path="notifications" element={<RequireRole roles={["Admin"]} fallback="/admin/content"><Notifications /></RequireRole>} />
         </Route>
@@ -155,6 +172,8 @@ const App = () => {
           <Route path="book" element={<Booking />} />
           <Route path="book/:tourId" element={<Booking />} />
           <Route path="custom-booking" element={<Booking />} />
+          <Route path="payment/success" element={<PaymentStatus mode="success" />} />
+          <Route path="payment/cancel" element={<PaymentStatus mode="cancel" />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
@@ -163,3 +182,6 @@ const App = () => {
 };
 
 export default App;
+
+
+

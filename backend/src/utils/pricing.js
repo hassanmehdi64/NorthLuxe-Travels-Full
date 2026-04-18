@@ -24,9 +24,15 @@ const normalizePricedOptions = (items = []) =>
       dailyRate: toNumber(item.dailyRate, 0),
     }));
 
+const normalizeOptionKey = (value) =>
+  String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+
 const pickAllowedOptionKeys = ({ preferred = [], fallback = [] }) => {
   const list = Array.isArray(preferred) && preferred.length ? preferred : fallback;
-  return new Set(list);
+  return new Set(list.map(normalizeOptionKey));
 };
 
 export const calculateBookingQuote = ({
@@ -61,6 +67,8 @@ export const calculateBookingQuote = ({
   const selectedHotelKey = payload?.facilities?.hotelType || payload.hotelType || "no_hotel";
   const selectedVehicleKey =
     payload?.facilities?.vehicleType || payload.vehicleType || vehicleOptions[0]?.key || "";
+  const normalizedSelectedHotelKey = normalizeOptionKey(selectedHotelKey);
+  const normalizedSelectedVehicleKey = normalizeOptionKey(selectedVehicleKey);
   const mealsSelection = payload?.facilities?.meals ?? payload.meals ?? "no";
   const addOnsFromPayload = Array.isArray(payload?.facilities?.addOns)
     ? payload.facilities.addOns
@@ -68,16 +76,16 @@ export const calculateBookingQuote = ({
       ? payload.addOns
       : [];
 
-  if (enforceAllowedOptions && selectedHotelKey && !allowedHotels.has(selectedHotelKey)) {
+  if (enforceAllowedOptions && selectedHotelKey && !allowedHotels.has(normalizedSelectedHotelKey)) {
     throw new Error("Selected hotel category is not available for this tour.");
   }
 
-  if (enforceAllowedOptions && selectedVehicleKey && !allowedVehicles.has(selectedVehicleKey)) {
+  if (enforceAllowedOptions && selectedVehicleKey && !allowedVehicles.has(normalizedSelectedVehicleKey)) {
     throw new Error("Selected vehicle type is not available for this tour.");
   }
 
-  const selectedHotel = hotelOptions.find((x) => x.key === selectedHotelKey);
-  const selectedVehicle = vehicleOptions.find((x) => x.key === selectedVehicleKey);
+  const selectedHotel = hotelOptions.find((x) => normalizeOptionKey(x.key) === normalizedSelectedHotelKey);
+  const selectedVehicle = vehicleOptions.find((x) => normalizeOptionKey(x.key) === normalizedSelectedVehicleKey);
 
   const baseTourDailyRate = toNumber(tour?.price, 0);
   const dailyBaseFee = toNumber(pricing.dailyBaseFee, 0);
@@ -145,8 +153,8 @@ export const calculateBookingQuote = ({
     advanceAmount,
     remainingAmount,
     options: {
-      hotelCategories: hotelOptions.filter((x) => allowedHotels.has(x.key)),
-      vehicleTypes: vehicleOptions.filter((x) => allowedVehicles.has(x.key)),
+      hotelCategories: hotelOptions.filter((x) => allowedHotels.has(normalizeOptionKey(x.key))),
+      vehicleTypes: vehicleOptions.filter((x) => allowedVehicles.has(normalizeOptionKey(x.key))),
     },
   };
 };

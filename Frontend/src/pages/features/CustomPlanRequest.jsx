@@ -5,8 +5,9 @@ import { createPortal } from "react-dom";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
 import FeaturePageHeader from "../../components/features/FeaturePageHeader";
-import { useCreateContact } from "../../hooks/useCms";
+import { useCreatePublicBooking } from "../../hooks/useCms";
 import { useToast } from "../../context/ToastContext";
+import { formatCurrencyAmount } from "../../utils/currency";
 
 const DESTINATION_OPTIONS = [
   "Hunza",
@@ -328,18 +329,19 @@ const createInitialForm = (sourceTour = null) => ({
 const CustomPlanRequest = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const createContact = useCreateContact();
+  const createBooking = useCreatePublicBooking();
   const toast = useToast();
   const sourceTour = location.state?.sourceTour || null;
   const [form, setForm] = useState(() => ({
     ...createInitialForm(sourceTour),
     budget:
       sourceTour?.price && sourceTour?.currency
-        ? `${sourceTour.currency} ${sourceTour.price}`
+        ? formatCurrencyAmount(sourceTour.price, sourceTour.currency)
         : "",
   }));
   const [submitting, setSubmitting] = useState(false);
   const [submissionNotice, setSubmissionNotice] = useState(null);
+  const noticeRef = useRef(null);
 
   const subject = useMemo(
     () =>
@@ -364,7 +366,7 @@ const CustomPlanRequest = () => {
         ].filter(Boolean)
       : form.destinations;
 
-    const message = [
+    const customSummary = [
       `Source Tour: ${sourceTour?.title || "N/A"}`,
       `Preferred Destinations: ${selectedDestinations.length ? selectedDestinations.join(", ") : "Flexible"}`,
       `Start Date: ${form.startDate || "Flexible"}`,
@@ -380,23 +382,55 @@ const CustomPlanRequest = () => {
 
     setSubmitting(true);
     try {
-      await createContact.mutateAsync({
-        sender: form.name,
+      await createBooking.mutateAsync({
+        customerName: form.name,
         email: form.email,
-        subject,
-        message,
+        phone: form.phone,
+        ...(sourceTour?.id ? { tourId: sourceTour.id } : {}),
+        bookingType: "custom",
+        isCustomTour: true,
+        source: "website",
+        travelDate: form.startDate || "",
+        endDate: form.endDate || "",
+        flexibleDates: !form.startDate,
+        adults: Number(form.persons || 1),
+        children: Number(form.childrenBelowThree || 0),
+        groupSize: Number(form.persons || 1) + Number(form.childrenBelowThree || 0),
+        paymentMethod: "pay_on_arrival",
+        facilities: {
+          hotelType: form.hotelPreference,
+          vehicleType: form.vehiclePreference === "other" ? form.customVehicle || "other" : form.vehiclePreference,
+          meals: "",
+          addOns: [],
+        },
+        customRequest: {
+          preferredDestinations: selectedDestinations,
+          sourceTourTitle: sourceTour?.title || "",
+          startDate: form.startDate || "",
+          endDate: form.endDate || "",
+          persons: Number(form.persons || 1),
+          childrenBelowThree: Number(form.childrenBelowThree || 0),
+          budget: form.budget || "",
+          budgetMode: form.budgetMode || "",
+          hotelPreference: form.hotelPreference || "",
+          vehiclePreference: form.vehiclePreference === "other" ? form.customVehicle || "other" : form.vehiclePreference,
+          requirements: form.requirements || "",
+        },
+        customRequirements: customSummary,
+        specialRequirements: form.requirements || "",
+        notes: subject,
       });
-      toast.success("Request submitted", "Our travel specialist will contact you soon.");
+      toast.success("Request submitted", "Your custom booking request is now saved in bookings.");
       setSubmissionNotice({
-        title: "Request Submitted Successfully",
+        title: "Custom Plan Request Sent",
         message:
-          "Your custom tour plan request has been received. Our team will review your details and get back to you shortly with the next steps.",
+          "Your request has been received and a confirmation email has been sent to your inbox. Our team will review your preferences and contact you shortly with the next steps.",
       });
       setForm({
         ...createInitialForm(sourceTour),
         budget:
           sourceTour?.price && sourceTour?.currency
-            ? `${sourceTour.currency} ${sourceTour.price}`
+            ? formatCurrencyAmount(sourceTour.price, sourceTour.currency)
             : "",
       });
     } catch (error) {
@@ -408,6 +442,17 @@ const CustomPlanRequest = () => {
       setSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    if (!submissionNotice) return;
+
+    window.requestAnimationFrame(() => {
+      const top = noticeRef.current
+        ? noticeRef.current.getBoundingClientRect().top + window.scrollY - 96
+        : 0;
+      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+    });
+  }, [submissionNotice]);
 
   const toggleDestination = (value) => {
     setForm((prev) => {
@@ -449,7 +494,7 @@ const CustomPlanRequest = () => {
         />
 
         {submissionNotice ? (
-          <div className="ql-form-shell px-6 py-8 text-center">
+          <div ref={noticeRef} className="ql-form-shell px-6 py-8 text-center">
             <div className="mx-auto max-w-2xl rounded-[24px] border border-[rgba(123,231,196,0.34)] bg-[linear-gradient(180deg,rgba(234,253,245,0.96),rgba(255,255,255,0.98))] px-6 py-7 shadow-[0_14px_34px_rgba(123,231,196,0.16)]">
               <p className="text-lg font-semibold text-theme">{submissionNotice.title}</p>
               <p className="mt-3 text-sm leading-7 text-muted">{submissionNotice.message}</p>
@@ -696,3 +741,5 @@ const CustomPlanRequest = () => {
 };
 
 export default CustomPlanRequest;
+
+

@@ -6,47 +6,9 @@ import TestimonialCard from "./TestimonialCard";
 import { usePublicTestimonials } from "../../hooks/useCms";
 import { Sparkles, Star } from "lucide-react";
 
-const fallbackStories = [
-  {
-    id: "fallback-1",
-    name: "Areeba Malik",
-    role: "Family Traveler",
-    avatar: "https://i.pravatar.cc/160?img=32",
-    message:
-      "Everything felt well-managed from pickup to hotel stays. The route pacing was calm, the views were unforgettable, and our family stayed comfortable throughout the trip.",
-    rating: 5,
-    date: "March 2026",
-    locationLabel: "Hunza Valley",
-  },
-  {
-    id: "fallback-2",
-    name: "Hassan Raza",
-    role: "Adventure Guest",
-    avatar: "https://i.pravatar.cc/160?img=12",
-    message:
-      "Our Skardu journey had the right mix of sightseeing and downtime. Transport was reliable, timings were practical, and the support team stayed responsive the whole way.",
-    rating: 5,
-    date: "February 2026",
-    locationLabel: "Skardu",
-  },
-  {
-    id: "fallback-3",
-    name: "Maham Iqbal",
-    role: "Couple Tour",
-    avatar: "https://i.pravatar.cc/160?img=47",
-    message:
-      "The itinerary felt polished and premium without being rushed. We especially liked the hotel selection, scenic stops, and how smooth the full experience was from start to finish.",
-    rating: 4,
-    date: "January 2026",
-    locationLabel: "Nagar Valley",
-  },
-];
-
 const Testimonials = () => {
   const { data: testimonials = [] } = usePublicTestimonials();
-  const stories = testimonials.length >= 4
-    ? testimonials
-    : [...testimonials, ...fallbackStories.slice(0, Math.max(0, 4 - testimonials.length))];
+  const stories = testimonials;
 
   const avgRating = stories.length
     ? (
@@ -56,14 +18,14 @@ const Testimonials = () => {
     : "5.0";
 
   return (
-    <section className="relative py-12 lg:py-14 bg-theme-bg overflow-hidden">
+    <section className="relative py-8 lg:py-10 bg-theme-bg overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute -top-20 right-0 h-72 w-72 rounded-full bg-[var(--c-brand)]/12 blur-3xl" />
         <div className="absolute -bottom-20 left-0 h-72 w-72 rounded-full bg-[var(--c-brand)]/8 blur-3xl" />
       </div>
 
       <div className="relative w-full px-8 sm:px-10 lg:px-14 xl:px-16">
-        <div className="mb-10 lg:mb-12">
+        <div className="mb-6 lg:mb-8">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
             <div className="space-y-2 max-w-2xl">
               <div className="inline-flex items-center gap-3">
