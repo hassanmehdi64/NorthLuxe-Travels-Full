@@ -309,9 +309,17 @@ const seed = async () => {
       homeEnd: "rgba(5, 8, 12, 0.56)",
     },
     navbarColors: {
-      main: "rgba(9, 20, 41, 0.88)",
-      scrolled: "rgba(9, 20, 41, 0.94)",
-      mobile: "rgba(9, 20, 41, 0.985)",
+      main: "#1F7630",
+      scrolled: "#1F7630",
+      mobile: "#1F7630",
+      activeText: "#FF8F05",
+    },
+    navbarActiveTextColor: "#FF8F05",
+    footerColors: {
+      background: "#1F7630",
+      text: "#ffffff",
+      mutedText: "rgba(255, 255, 255, 0.78)",
+      accentText: "#13DDB4",
     },
   });
 

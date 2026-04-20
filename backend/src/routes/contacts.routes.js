@@ -3,7 +3,6 @@ import { asyncHandler } from "../middleware/asyncHandler.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { ContactMessage } from "../models/ContactMessage.js";
 import { Notification } from "../models/Notification.js";
-import { sendContactConfirmationEmail } from "../utils/email.js";
 
 const router = express.Router();
 
@@ -29,6 +28,7 @@ router.post(
       title: "New Contact Message",
       message: `${item.sender} sent a message.`,
     });
+    const { sendContactConfirmationEmail } = await import("../utils/email.js");
     await sendContactConfirmationEmail({
       to: item.email,
       sender: item.sender,

@@ -1,37 +1,223 @@
-import nodemailer from "nodemailer";
+import net from "node:net";
+import tls from "node:tls";
 import { env } from "../config/env.js";
 
 const hasSmtpConfig = Boolean(env.smtpHost && env.smtpUser && env.smtpPass);
 
-const transporter = hasSmtpConfig
-  ? nodemailer.createTransport({
+const maskEmail = (value = "") => {
+  const [name, domain] = String(value).split("@");
+  if (!name || !domain) return Boolean(value) ? "<set>" : "";
+  return `${name.slice(0, 2)}***@${domain}`;
+};
+
+export const getEmailConfigStatus = () => {
+  const from = env.emailFrom
+    ? env.emailFrom.replace(/<([^>]+)>/, (_match, email) => `<${maskEmail(email)}>`)
+    : "";
+
+  return {
+    configured: hasSmtpConfig,
+    hostSet: Boolean(env.smtpHost),
+    port: env.smtpPort,
+    secure: env.smtpSecure,
+    userSet: Boolean(env.smtpUser),
+    passSet: Boolean(env.smtpPass),
+    user: maskEmail(env.smtpUser),
+    fromSet: Boolean(env.emailFrom),
+    from,
+  };
+};
+
+const extractEmailAddress = (value = "") => {
+  const match = String(value).match(/<([^>]+)>/);
+  return (match?.[1] || value).trim();
+};
+
+const encodeBase64 = (value = "") => Buffer.from(String(value), "utf8").toString("base64");
+
+const normalizeSmtpText = (value = "") =>
+  String(value)
+    .replace(/\r?\n/g, "\r\n")
+    .split("\r\n")
+    .map((line) => (line.startsWith(".") ? `.${line}` : line))
+    .join("\r\n");
+
+const createResponseReader = (socket) => {
+  let buffer = "";
+  const waiters = [];
+
+  const flush = () => {
+    const match = buffer.match(/(?:^|\r\n)(\d{3}) [^\r\n]*(?:\r\n|$)/);
+    if (!match || !waiters.length) return;
+
+    const endIndex = match.index + match[0].length;
+    const response = buffer.slice(0, endIndex).trimEnd();
+    buffer = buffer.slice(endIndex);
+    const waiter = waiters.shift();
+    waiter.resolve(response);
+  };
+
+  const handleData = (chunk) => {
+    buffer += chunk;
+    flush();
+  };
+  const handleError = (error) => {
+    while (waiters.length) waiters.shift().reject(error);
+  };
+  const handleClose = () => {
+    while (waiters.length) waiters.shift().reject(new Error("SMTP connection closed."));
+  };
+
+  socket.setEncoding("utf8");
+  socket.on("data", handleData);
+  socket.on("error", handleError);
+  socket.on("close", handleClose);
+
+  const read = () =>
+    new Promise((resolve, reject) => {
+      waiters.push({ resolve, reject });
+      flush();
+    });
+
+  read.cleanup = () => {
+    socket.off("data", handleData);
+    socket.off("error", handleError);
+    socket.off("close", handleClose);
+  };
+
+  return read;
+};
+
+const assertSmtpCode = (response, expectedCodes, action) => {
+  const code = Number(String(response).slice(0, 3));
+  if (!expectedCodes.includes(code)) {
+    throw new Error(`SMTP ${action} failed with ${code || "unknown"}: ${response}`);
+  }
+};
+
+const writeSmtp = (socket, command) =>
+  new Promise((resolve, reject) => {
+    socket.write(`${command}\r\n`, (error) => (error ? reject(error) : resolve()));
+  });
+
+const connectSocket = (secure) =>
+  new Promise((resolve, reject) => {
+    const options = {
       host: env.smtpHost,
       port: env.smtpPort,
-      secure: env.smtpSecure,
-      auth: {
-        user: env.smtpUser,
-        pass: env.smtpPass,
-      },
-    })
-  : null;
+      servername: env.smtpHost,
+    };
+    const socket = secure ? tls.connect(options, () => resolve(socket)) : net.connect(options, () => resolve(socket));
+    socket.setTimeout(20000);
+    socket.once("timeout", () => {
+      socket.destroy();
+      reject(new Error("SMTP connection timed out."));
+    });
+    socket.once("error", reject);
+  });
+
+const upgradeToTls = (socket) =>
+  new Promise((resolve, reject) => {
+    const secureSocket = tls.connect({ socket, servername: env.smtpHost }, () => resolve(secureSocket));
+    secureSocket.once("error", reject);
+  });
+
+const createSmtpSession = async () => {
+  if (!hasSmtpConfig) {
+    throw new Error("SMTP is not configured. Add SMTP_HOST, SMTP_USER, and SMTP_PASS in the backend environment.");
+  }
+
+  let socket = await connectSocket(env.smtpSecure);
+  let readResponse = createResponseReader(socket);
+
+  assertSmtpCode(await readResponse(), [220], "greeting");
+  await writeSmtp(socket, "EHLO northluxe.local");
+  assertSmtpCode(await readResponse(), [250], "EHLO");
+
+  if (!env.smtpSecure) {
+    await writeSmtp(socket, "STARTTLS");
+    assertSmtpCode(await readResponse(), [220], "STARTTLS");
+    readResponse.cleanup?.();
+    socket = await upgradeToTls(socket);
+    readResponse = createResponseReader(socket);
+    await writeSmtp(socket, "EHLO northluxe.local");
+    assertSmtpCode(await readResponse(), [250], "EHLO after STARTTLS");
+  }
+
+  await writeSmtp(socket, "AUTH LOGIN");
+  assertSmtpCode(await readResponse(), [334], "AUTH LOGIN");
+  await writeSmtp(socket, encodeBase64(env.smtpUser));
+  assertSmtpCode(await readResponse(), [334], "SMTP username");
+  await writeSmtp(socket, encodeBase64(env.smtpPass));
+  assertSmtpCode(await readResponse(), [235], "SMTP password");
+
+  return { socket, readResponse };
+};
+
+const closeSmtpSession = async ({ socket, readResponse }) => {
+  try {
+    await writeSmtp(socket, "QUIT");
+    await readResponse();
+  } catch {
+    // The message has already been sent or the verify flow has completed.
+  } finally {
+    socket.end();
+  }
+};
+
+export const verifyEmailTransport = async () => {
+  const session = await createSmtpSession();
+  await closeSmtpSession(session);
+  return true;
+};
 
 const deliverMail = async ({ to, subject, text, html }) => {
-  if (!transporter) {
-    console.log(`[Email preview] To: ${to}\nSubject: ${subject}\n${text}`);
-    return;
+  const session = await createSmtpSession();
+  const { socket, readResponse } = session;
+  const fromAddress = extractEmailAddress(env.emailFrom);
+  const toAddress = extractEmailAddress(to);
+  const boundary = `northluxe-${Date.now()}`;
+  const message = [
+    `From: ${env.emailFrom}`,
+    `To: ${toAddress}`,
+    `Subject: ${subject}`,
+    "MIME-Version: 1.0",
+    `Content-Type: multipart/alternative; boundary="${boundary}"`,
+    "",
+    `--${boundary}`,
+    "Content-Type: text/plain; charset=UTF-8",
+    "Content-Transfer-Encoding: 8bit",
+    "",
+    normalizeSmtpText(text),
+    "",
+    `--${boundary}`,
+    "Content-Type: text/html; charset=UTF-8",
+    "Content-Transfer-Encoding: 8bit",
+    "",
+    normalizeSmtpText(html || text),
+    "",
+    `--${boundary}--`,
+    ".",
+  ].join("\r\n");
+
+  try {
+    await writeSmtp(socket, `MAIL FROM:<${fromAddress}>`);
+    assertSmtpCode(await readResponse(), [250], "MAIL FROM");
+    await writeSmtp(socket, `RCPT TO:<${toAddress}>`);
+    assertSmtpCode(await readResponse(), [250, 251], "RCPT TO");
+    await writeSmtp(socket, "DATA");
+    assertSmtpCode(await readResponse(), [354], "DATA");
+    await writeSmtp(socket, message);
+    assertSmtpCode(await readResponse(), [250], "message delivery");
+  } finally {
+    await closeSmtpSession(session);
   }
-  await transporter.sendMail({
-    from: env.emailFrom,
-    to,
-    subject,
-    text,
-    html,
-  });
 };
 
 export const sendMailSafely = async (mailOptions) => {
   try {
     await deliverMail(mailOptions);
+    console.log(`[Email sent] To: ${mailOptions.to} | Subject: ${mailOptions.subject}`);
     return true;
   } catch (error) {
     console.error("[Email failed]", error?.message || error);

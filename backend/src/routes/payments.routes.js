@@ -5,7 +5,6 @@ import { env } from "../config/env.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { Booking } from "../models/Booking.js";
 import { Notification } from "../models/Notification.js";
-import { sendPaymentConfirmationEmail } from "../utils/email.js";
 
 const router = express.Router();
 export const paymentsWebhookRouter = express.Router();
@@ -183,6 +182,7 @@ const recordConfirmedPayment = async ({
     message: `${booking.bookingCode} paid ${booking.currency} ${normalizedAmount} via ${provider}.`,
   });
 
+  const { sendPaymentConfirmationEmail } = await import("../utils/email.js");
   await sendPaymentConfirmationEmail({
     to: booking.email,
     customerName: booking.customerName,

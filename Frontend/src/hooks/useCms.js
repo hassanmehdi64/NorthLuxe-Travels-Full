@@ -93,6 +93,7 @@ const keys = {
   galleryAdmin: ["gallery", "admin"],
   settingsPublic: ["settings", "public"],
   settingsAdmin: ["settings", "admin"],
+  emailStatus: ["settings", "email", "status"],
   contentPublic: (type) => ["content", "public", type],
   contentPublicItem: (type, slug) => ["content", "public", type, slug],
   contentAdmin: (type) => ["content", "admin", type],
@@ -597,12 +598,57 @@ export const useUpdateSettings = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload) => apiClient.patch("/settings", payload).then(unwrap).then((d) => d.item),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: keys.settingsAdmin });
-      qc.invalidateQueries({ queryKey: keys.settingsPublic });
+    onSuccess: (item, payload) => {
+      const mergeSettings = (current = {}) => ({
+        ...current,
+        ...item,
+        ...payload,
+        navbarTextColor: payload?.navbarTextColor || item?.navbarTextColor || current?.navbarTextColor,
+        navbarMutedTextColor: payload?.navbarMutedTextColor || item?.navbarMutedTextColor || current?.navbarMutedTextColor,
+        navbarActiveTextColor: payload?.navbarActiveTextColor || item?.navbarActiveTextColor || current?.navbarActiveTextColor,
+        navbarColors: {
+          ...(current.navbarColors || {}),
+          ...(item?.navbarColors || {}),
+          ...(payload?.navbarColors || {}),
+        },
+        footerColors: {
+          ...(current.footerColors || {}),
+          ...(item?.footerColors || {}),
+          ...(payload?.footerColors || {}),
+        },
+        heroColors: {
+          ...(current.heroColors || {}),
+          ...(item?.heroColors || {}),
+          ...(payload?.heroColors || {}),
+        },
+        pageHeroImages: {
+          ...(current.pageHeroImages || {}),
+          ...(item?.pageHeroImages || {}),
+          ...(payload?.pageHeroImages || {}),
+        },
+      });
+
+      qc.setQueryData(keys.settingsAdmin, mergeSettings);
+      qc.setQueryData(keys.settingsPublic, mergeSettings);
     },
   });
 };
+
+export const useEmailStatus = () =>
+  useQuery({
+    queryKey: keys.emailStatus,
+    queryFn: () => apiClient.get("/settings/email/status").then(unwrap).then((d) => d.item),
+  });
+
+export const useVerifyEmailTransport = () =>
+  useMutation({
+    mutationFn: () => apiClient.post("/settings/email/verify").then(unwrap),
+  });
+
+export const useSendTestEmail = () =>
+  useMutation({
+    mutationFn: (payload) => apiClient.post("/settings/email/test", payload).then(unwrap),
+  });
 
 export const useNotifications = (enabled = true) =>
   useQuery({

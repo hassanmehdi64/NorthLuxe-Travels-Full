@@ -47,3 +47,18 @@ export const connectDb = async () => {
     throw error;
   }
 };
+
+export const getDbStatus = () => ({
+  configured: Boolean(env.mongoUri),
+  fallbackConfigured: Boolean(env.mongoUriFallback),
+  readyState: mongoose.connection.readyState,
+  readyStateLabel:
+    {
+      0: "disconnected",
+      1: "connected",
+      2: "connecting",
+      3: "disconnecting",
+    }[mongoose.connection.readyState] || "unknown",
+  host: mongoose.connection.host || "",
+  name: mongoose.connection.name || "",
+});

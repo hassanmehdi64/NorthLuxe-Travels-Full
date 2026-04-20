@@ -6,7 +6,6 @@ import { Notification } from "../models/Notification.js";
 import { SiteSetting } from "../models/SiteSetting.js";
 import { Tour } from "../models/Tour.js";
 import { generateBookingCode } from "../utils/bookingCode.js";
-import { sendBookingConfirmationEmail, sendPaymentConfirmationEmail } from "../utils/email.js";
 import { calculateBookingQuote } from "../utils/pricing.js";
 
 const router = express.Router();
@@ -338,6 +337,7 @@ router.post(
       message: `${booking.customerName} requested ${tour?.title || "a custom booking"} (${booking.status}).`,
     });
 
+    const { sendBookingConfirmationEmail, sendPaymentConfirmationEmail } = await import("../utils/email.js");
     await sendBookingConfirmationEmail({
       to: booking.email,
       customerName: booking.customerName,
