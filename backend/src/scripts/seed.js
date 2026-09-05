@@ -14,6 +14,30 @@ import { destinationSeedData } from "./data/destinationSeedData.js";
 import { activitySeedData } from "./data/activitySeedData.js";
 import { serviceSeedData } from "./data/serviceSeedData.js";
 
+const defaultTourReviewItems = [
+  {
+    name: "Ayesha Khan",
+    rating: 5,
+    date: "Jan 2026",
+    tag: "Family Trip",
+    comment: "Very smooth coordination, reliable stays, and great route planning.",
+  },
+  {
+    name: "Omar Ahmed",
+    rating: 4,
+    date: "Dec 2025",
+    tag: "Friends Group",
+    comment: "Clean itinerary and good support. Overall experience was excellent.",
+  },
+  {
+    name: "Nida Fatima",
+    rating: 5,
+    date: "Nov 2025",
+    tag: "Couple Tour",
+    comment: "Loved the balance of comfort and exploration. Team stayed responsive.",
+  },
+];
+
 const seed = async () => {
   await connectDb();
 
@@ -63,6 +87,7 @@ const seed = async () => {
       featured: true,
       status: "published",
       availableSeats: 12,
+      reviewItems: defaultTourReviewItems,
     },
     {
       title: "Skardu Explorer Tour",
@@ -79,6 +104,7 @@ const seed = async () => {
       featured: true,
       status: "published",
       availableSeats: 18,
+      reviewItems: defaultTourReviewItems,
     },
     {
       title: "Nagar and Hunza Panorama",
@@ -95,6 +121,7 @@ const seed = async () => {
       status: "published",
       availableSeats: 14,
       tags: ["Scenic", "Family", "Heritage"],
+      reviewItems: defaultTourReviewItems,
     },
     {
       title: "Khaplu and Shigar Heritage Route",
@@ -111,6 +138,7 @@ const seed = async () => {
       status: "published",
       availableSeats: 10,
       tags: ["Culture", "Premium", "History"],
+      reviewItems: defaultTourReviewItems,
     },
     {
       title: "Astore and Deosai Summer Escape",
@@ -127,6 +155,7 @@ const seed = async () => {
       status: "published",
       availableSeats: 16,
       tags: ["Nature", "Summer", "Photography"],
+      reviewItems: defaultTourReviewItems,
     },
     {
       title: "Fairy Meadows Signature Trek",
@@ -144,6 +173,7 @@ const seed = async () => {
       status: "published",
       availableSeats: 12,
       tags: ["Trekking", "Adventure", "Mountains"],
+      reviewItems: defaultTourReviewItems,
     },
   ]);
 
@@ -287,7 +317,8 @@ const seed = async () => {
     sitePhone: "+92 300 1234567",
     address: "Main Chowk Danyore, Gilgit-Baltistan",
     currency: "PKR",
-    primaryColor: "#13DDB4",
+    primaryColor: "#20b77a",
+    logoUrl: "/north-luxe-logo.png",
     homeHeroImages: [
       "/gb.jpg",
       "https://res.cloudinary.com/www-travelpakistani-com/image/upload/v1670002655/Roundu_Valley_pakistan.jpg",
@@ -302,24 +333,24 @@ const seed = async () => {
     },
     heroColors: {
       overlay: "rgba(0, 0, 0, 0.45)",
-      start: "rgba(7, 19, 38, 0.9)",
-      middle: "rgba(7, 19, 38, 0.6)",
-      end: "rgba(7, 19, 38, 0.2)",
+      start: "rgba(15, 47, 87, 0.9)",
+      middle: "rgba(15, 47, 87, 0.6)",
+      end: "rgba(15, 47, 87, 0.2)",
       homeStart: "rgba(5, 8, 12, 0.24)",
       homeEnd: "rgba(5, 8, 12, 0.56)",
     },
     navbarColors: {
-      main: "#1F7630",
-      scrolled: "#1F7630",
-      mobile: "#1F7630",
-      activeText: "#FF8F05",
+      main: "#061B3A",
+      scrolled: "#061B3A",
+      mobile: "#061B3A",
+      activeText: "#20b77a",
     },
-    navbarActiveTextColor: "#FF8F05",
+    navbarActiveTextColor: "#20b77a",
     footerColors: {
-      background: "#1F7630",
+      background: "#061B3A",
       text: "#ffffff",
       mutedText: "rgba(255, 255, 255, 0.78)",
-      accentText: "#13DDB4",
+      accentText: "#20b77a",
     },
   });
 

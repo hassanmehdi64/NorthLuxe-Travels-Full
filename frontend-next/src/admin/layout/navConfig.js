@@ -1,0 +1,50 @@
+import {
+  LayoutDashboard,
+  Briefcase,
+  Compass,
+  Image,
+  MapPin,
+  BookOpen,
+  Star,
+  Users,
+  MessageSquare,
+  FilePenLine,
+  Settings,
+} from "lucide-react";
+
+export const adminNavItems = [
+  { id: "overview", label: "Overview", path: "/admin", icon: LayoutDashboard, roles: ["Admin"] },
+  {
+    id: "bookings",
+    label: "Bookings",
+    path: "/admin/bookings",
+    icon: Briefcase,
+    roles: ["Admin"],
+  },
+  { id: "tours", label: "Tours", path: "/admin/tours", icon: Compass, roles: ["Admin", "Editor"] },
+  { id: "gallery", label: "Gallery", path: "/admin/gallery", icon: Image, roles: ["Admin", "Editor"] },
+  { id: "blogs", label: "Blogs", path: "/admin/blogs", icon: BookOpen, roles: ["Admin", "Editor"] },
+  { id: "testimonials", label: "Testimonials", path: "/admin/testimonials", icon: Star, roles: ["Admin", "Editor"] },
+  { id: "users", label: "Users", path: "/admin/users", icon: Users, roles: ["Admin"] },
+  {
+    id: "contacts",
+    label: "Inquiries",
+    path: "/admin/contacts",
+    icon: MessageSquare,
+    roles: ["Admin"],
+  },
+  {
+    id: "content",
+    label: "Content",
+    path: "/admin/content",
+    icon: FilePenLine,
+    roles: ["Admin", "Editor"],
+  },
+  {
+    id: "settings",
+    label: "Settings",
+    path: "/admin/settings",
+    icon: Settings,
+    roles: ["Admin"],
+  },
+];

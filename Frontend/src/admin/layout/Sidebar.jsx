@@ -4,8 +4,13 @@ import { LogOut, X } from "lucide-react";
 import { adminNavItems } from "./navConfig";
 import { useAuth } from "../../context/useAuth";
 import { useNotifications } from "../../hooks/useCms";
+import { getUserAvatar } from "../utils/userAvatar";
 
-const playAdminNotificationSound = async ({ audioContextRef, audioUnlockedRef, force = false } = {}) => {
+const playAdminNotificationSound = async ({
+  audioContextRef,
+  audioUnlockedRef,
+  force = false,
+} = {}) => {
   if (typeof window === "undefined") return false;
 
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -54,7 +59,13 @@ const playAdminNotificationSound = async ({ audioContextRef, audioUnlockedRef, f
   }
 };
 
-const Sidebar = ({ isSidebarOpen, setSidebarOpen, theme }) => {
+const Sidebar = ({
+  isSidebarOpen,
+  setSidebarOpen,
+  isSidebarCollapsed,
+  setSidebarCollapsed,
+  theme,
+}) => {
   const { user, logout } = useAuth();
   const isDark = theme === "dark";
   const role = user?.role;
@@ -107,7 +118,9 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen, theme }) => {
 
     const unreadItems = notifications.filter((n) => !n?.isRead);
     const currentUnreadCount = unreadItems.length;
-    const currentIds = new Set(unreadItems.map((item) => String(item?.id || "")));
+    const currentIds = new Set(
+      unreadItems.map((item) => String(item?.id || "")),
+    );
 
     if (previousUnreadRef.current === null) {
       previousUnreadRef.current = currentUnreadCount;
@@ -127,11 +140,14 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen, theme }) => {
       if ("Notification" in window && Notification.permission === "granted") {
         newItems.slice(0, 2).forEach((item) => {
           try {
-            const notification = new Notification(item?.title || "New admin update", {
-              body: item?.message || "A new update has arrived.",
-              tag: `northluxe-${item?.id || Date.now()}`,
-              renotify: true,
-            });
+            const notification = new Notification(
+              item?.title || "New admin update",
+              {
+                body: item?.message || "A new update has arrived.",
+                tag: `northluxe-${item?.id || Date.now()}`,
+                renotify: true,
+              },
+            );
             notification.onclick = () => {
               window.focus();
               notification.close();
@@ -153,7 +169,10 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen, theme }) => {
   ).length;
   const unreadContactAlerts = unreadNotifications.filter((n) => {
     const text = `${n?.title || ""} ${n?.message || ""}`.toLowerCase();
-    return String(n?.type || "") === "System" && (text.includes("contact") || text.includes("inquiry"));
+    return (
+      String(n?.type || "") === "System" &&
+      (text.includes("contact") || text.includes("inquiry"))
+    );
   }).length;
 
   const badgeCounts = {
@@ -166,78 +185,106 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen, theme }) => {
     (item) => !item.roles?.length || item.roles.includes(role),
   );
 
-  const mobileVisibility = isSidebarOpen
+  const visibilityClass = isSidebarOpen
     ? "translate-x-0"
-    : "-translate-x-full md:translate-x-0";
+    : "-translate-x-full sm:translate-x-0";
+  const desktopWidth = isSidebarCollapsed ? "sm:w-24" : "sm:w-72";
 
   return (
     <aside
       className={`
-        fixed inset-y-0 left-0 z-50 w-72 transform transition-transform duration-300 ease-in-out md:static md:inset-0 md:shrink-0
-        ${isDark ? "bg-slate-950 border-r border-slate-800 text-white" : "bg-white border-r border-slate-200 text-slate-900"}
-        ${mobileVisibility}
-      `}
-    >
+        admin-soft-sidebar fixed inset-y-0 left-0 z-50 w-72 overflow-hidden transform transition-[width,transform] duration-180 ease-out will-change-[width,transform] sm:static sm:inset-0 sm:shrink-0
+        ${desktopWidth}
+        ${isDark ? "text-white" : "text-slate-900"}
+        ${visibilityClass}
+      `}>
       <div className="flex flex-col h-full">
-        <div
-          className={`h-20 flex items-center justify-between px-8 border-b ${
-            isDark ? "border-slate-800" : "border-slate-200"
-          }`}
-        >
-          <span className="text-xl font-black tracking-tighter italic">
-            NORTH<span className={isDark ? "text-accent" : "text-[var(--c-brand)]"}>LUXE</span>
-          </span>
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className={`md:hidden p-2 ${isDark ? "text-white/80" : "text-slate-500"}`}
-          >
-            <X size={20} />
-          </button>
+        <div className="relative border-b border-white/30 px-4 py-4">
+          <div
+            className={`flex min-w-0 items-center px-4 ${
+              isSidebarCollapsed ? "justify-center sm:px-0" : "justify-start"
+            }`}>
+            <img
+              src="/logo-light.png"
+              alt="North Luxe"
+              className="h-16 w-auto object-contain lg:h-20"
+            />
+          </div>
         </div>
 
-        <nav className="flex-1 px-3 py-6 overflow-y-auto">
+        <div className="px-4 pt-4">
+          <div
+            className={`rounded-[1.3rem] border border-white/35 bg-white/74 px-4 py-4 shadow-[0_10px_24px_rgba(148,163,184,0.08)] backdrop-blur-xl ${isSidebarCollapsed ? "sm:px-2.5" : ""}`}>
+            <div
+              className={`flex items-center gap-3 ${isSidebarCollapsed ? "sm:flex-col sm:justify-center" : ""}`}>
+              <div className="relative shrink-0">
+                <img
+                  src={getUserAvatar(user)}
+                  alt={user?.name || "North Luxe Team"}
+                  className="h-12 w-12 rounded-[1rem] border-2 border-white/80 object-cover shadow-[0_10px_24px_rgba(15,23,42,0.14)]"
+                />
+                <span className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-[var(--admin-accent)]" />
+              </div>
+              <div
+                className={`${isSidebarCollapsed ? "sm:hidden" : "min-w-0"}`}>
+                <p className="truncate text-[14px] font-black text-[var(--admin-text)]">
+                  {user?.name || "North Luxe Team"}
+                </p>
+                <p className="mt-1 text-[11px] font-semibold text-[var(--admin-muted)]">
+                  {role || "Editor Access"}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto px-4 py-4">
           {visibleNavItems.map((item) => (
             <NavLink
               key={item.id}
               to={item.path}
               end={item.path === "/admin"}
-              className={({ isActive }) => `
-                flex items-center justify-between gap-3 px-4 py-2.5 rounded-lg font-bold text-sm transition-all duration-200 mb-1
-                ${
-                  isActive
-                    ? isDark
-                      ? "bg-white/12 text-white border border-white/20"
-                      : "bg-[var(--c-brand)]/16 text-slate-900 border border-[var(--c-brand)]/35"
-                    : isDark
-                      ? "text-white/85 border border-transparent hover:text-white"
-                      : "text-slate-700 border border-transparent hover:text-slate-900"
-                }
-              `}
-            >
-              <span className="inline-flex items-center gap-3 min-w-0">
-                <item.icon size={20} />
-                <span className="truncate">{item.label}</span>
-              </span>
-              {badgeCounts[item.id] > 0 ? (
-                <span className="inline-flex min-w-5 h-5 px-1.5 items-center justify-center rounded-full text-[10px] leading-5 font-black bg-[var(--c-brand)] text-slate-900 shadow-[0_0_0_4px_rgba(19,221,180,0.16)] animate-pulse">
-                  {badgeCounts[item.id] > 99 ? "99+" : badgeCounts[item.id]}
-                </span>
-              ) : null}
+              className="mb-1.5">
+              {({ isActive }) => (
+                <div
+                  className="admin-soft-nav-link flex items-center justify-between gap-3 px-4 py-3 text-sm font-bold"
+                  data-active={isActive ? "true" : "false"}
+                  title={isSidebarCollapsed ? item.label : undefined}>
+                  <span
+                    className={`inline-flex min-w-0 items-center gap-3 ${isSidebarCollapsed ? "sm:w-full sm:justify-center" : ""}`}>
+                    <span
+                      className={`inline-flex h-10 w-10 items-center justify-center rounded-2xl ${
+                        isActive
+                          ? "bg-[rgba(var(--c-brand-rgb),0.12)] text-[var(--admin-accent)] shadow-[0_10px_22px_rgba(15,23,42,0.05)]"
+                          : "bg-white/70 text-[var(--admin-muted)]"
+                      }`}>
+                      <item.icon size={18} />
+                    </span>
+                    <span
+                      className={`${isSidebarCollapsed ? "sm:hidden" : "truncate"}`}>
+                      {item.label}
+                    </span>
+                  </span>
+                  {badgeCounts[item.id] > 0 && !isSidebarCollapsed ? (
+                    <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-[var(--admin-accent)] px-2 py-1 text-[10px] font-black leading-none text-white shadow-[0_10px_22px_rgba(155,108,255,0.26)]">
+                      {badgeCounts[item.id] > 99 ? "99+" : badgeCounts[item.id]}
+                    </span>
+                  ) : null}
+                </div>
+              )}
             </NavLink>
           ))}
         </nav>
 
-        <div className={`p-4 border-t ${isDark ? "border-slate-800" : "border-slate-200"}`}>
+        <div className="border-t border-white/30 p-4">
           <button
             onClick={logout}
-            className={`flex items-center gap-3 w-full px-4 py-3 font-bold text-sm rounded-xl transition-colors ${
-              isDark
-                ? "text-white hover:bg-white/10"
-                : "text-rose-600 hover:bg-rose-50"
-            }`}
-          >
+            className={`admin-soft-button-ghost w-full text-rose-500 ${isSidebarCollapsed ? "justify-center sm:px-0" : "justify-start"}`}
+            title={isSidebarCollapsed ? "Sign Out" : undefined}>
             <LogOut size={20} />
-            Sign Out
+            <span className={`${isSidebarCollapsed ? "sm:hidden" : ""}`}>
+              Sign Out
+            </span>
           </button>
         </div>
       </div>

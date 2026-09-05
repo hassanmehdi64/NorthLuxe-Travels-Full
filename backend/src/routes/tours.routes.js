@@ -12,6 +12,39 @@ const normalizeDiscountPercent = (value) => {
   return Math.max(0, Math.min(95, normalized));
 };
 
+const sanitizeReviewItems = (items = []) => {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((item) => ({
+      name: String(item?.name || "").trim(),
+      rating: Math.max(1, Math.min(5, Number(item?.rating || 5))),
+      date: String(item?.date || "").trim(),
+      tag: String(item?.tag || "").trim(),
+      comment: String(item?.comment || "").trim(),
+    }))
+    .filter((item) => item.name || item.comment || item.tag || item.date);
+};
+
+const sanitizeStringList = (items = []) =>
+  (Array.isArray(items) ? items : [])
+    .map((item) => String(item || "").trim())
+    .filter(Boolean);
+
+const getReviewStats = (items = [], fallbackRating = 4.8, fallbackCount = 0) => {
+  if (!items.length) {
+    return {
+      rating: Number(fallbackRating || 4.8),
+      count: Number(fallbackCount || 0),
+    };
+  }
+
+  const total = items.reduce((sum, item) => sum + Number(item.rating || 0), 0);
+  return {
+    rating: Number((total / items.length).toFixed(1)),
+    count: items.length,
+  };
+};
+
 const toTourResponse = (tour) => ({
   id: tour._id,
   title: tour.title,
@@ -32,6 +65,7 @@ const toTourResponse = (tour) => ({
   status: tour.status,
   rating: tour.rating,
   reviews: tour.reviewsCount,
+  reviewItems: tour.reviewItems || [],
   tags: tour.tags,
   itinerary: tour.itinerary,
   availableOptions: tour.availableOptions || {
@@ -80,8 +114,14 @@ router.post(
   "/",
   asyncHandler(async (req, res) => {
     const payload = req.body;
+    const syncedSeats = Number(payload.availableSeats ?? payload.capacity ?? 20);
+    const reviewItems = sanitizeReviewItems(payload.reviewItems);
+    const reviewStats = getReviewStats(reviewItems, payload.rating, payload.reviews);
     const title = payload.title?.trim();
+    const coverImage = String(payload.image || payload.coverImage || "").trim();
+    const gallery = sanitizeStringList(payload.gallery);
     if (!title) return res.status(400).json({ message: "Title is required" });
+    if (!coverImage) return res.status(400).json({ message: "Cover image is required" });
 
     const baseSlug = slugify(payload.slug || title);
     let slug = baseSlug;
@@ -95,20 +135,21 @@ router.post(
       slug,
       location: payload.location || "",
       durationDays: Number(payload.durationDays || 1),
-      durationLabel: payload.durationLabel || "",
+      durationLabel: String(payload.durationLabel || "").trim(),
       price: Number(payload.price || 0),
       discountPercent: normalizeDiscountPercent(payload.discountPercent ?? 0),
-      currency: "PKR",
-      coverImage: payload.image || payload.coverImage || "",
-      gallery: payload.gallery || [],
+      currency: String(payload.currency || "PKR").trim() || "PKR",
+      coverImage,
+      gallery,
       shortDescription: payload.shortDescription || "",
       description: payload.description || "",
-      capacity: Number(payload.capacity || 20),
-      availableSeats: Number(payload.availableSeats || payload.capacity || 20),
+      capacity: syncedSeats,
+      availableSeats: syncedSeats,
       featured: Boolean(payload.featured),
       status: payload.status || "draft",
-      rating: Number(payload.rating || 4.8),
-      reviewsCount: Number(payload.reviews || 0),
+      rating: reviewStats.rating,
+      reviewsCount: reviewStats.count,
+      reviewItems,
       tags: payload.tags || [],
       itinerary: payload.itinerary || [],
       availableOptions: payload.availableOptions || {},
@@ -122,19 +163,43 @@ router.patch(
   "/:id",
   asyncHandler(async (req, res) => {
     const payload = req.body;
+    const reviewItems = payload.reviewItems !== undefined ? sanitizeReviewItems(payload.reviewItems) : undefined;
+    const reviewStats = reviewItems !== undefined
+      ? getReviewStats(reviewItems, payload.rating, payload.reviews)
+      : null;
     const update = {
       ...payload,
       coverImage: payload.image || payload.coverImage,
       reviewsCount: payload.reviews,
       availableOptions: payload.availableOptions,
+      gallery: payload.gallery !== undefined ? sanitizeStringList(payload.gallery) : undefined,
+      currency: payload.currency !== undefined ? String(payload.currency || "PKR").trim() || "PKR" : undefined,
+      durationLabel:
+        payload.durationLabel !== undefined ? String(payload.durationLabel || "").trim() : undefined,
       discountPercent:
         payload.discountPercent === undefined
           ? undefined
           : normalizeDiscountPercent(payload.discountPercent),
     };
+
+    if (reviewItems !== undefined) {
+      update.reviewItems = reviewItems;
+      update.rating = reviewStats.rating;
+      update.reviewsCount = reviewStats.count;
+    }
+
+    if (payload.availableSeats !== undefined || payload.capacity !== undefined) {
+      const syncedSeats = Number(payload.availableSeats ?? payload.capacity ?? 0);
+      update.capacity = syncedSeats;
+      update.availableSeats = syncedSeats;
+    }
+
     delete update.image;
     delete update.reviews;
     if (update.availableOptions === undefined) delete update.availableOptions;
+    if (update.gallery === undefined) delete update.gallery;
+    if (update.currency === undefined) delete update.currency;
+    if (update.durationLabel === undefined) delete update.durationLabel;
     if (update.discountPercent === undefined) delete update.discountPercent;
 
     if (payload.title && !payload.slug) {

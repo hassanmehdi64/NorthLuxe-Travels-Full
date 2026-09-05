@@ -6,6 +6,8 @@ const galleryItemSchema = new mongoose.Schema(
     category: { type: String, required: true, trim: true },
     url: { type: String, required: true },
     alt: { type: String, default: "" },
+    status: { type: String, enum: ["draft", "published"], default: "published" },
+    sortOrder: { type: Number, default: 0 },
   },
   { timestamps: true },
 );

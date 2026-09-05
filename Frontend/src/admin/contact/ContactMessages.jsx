@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Mail,
   MessageSquare,
@@ -20,6 +21,7 @@ import {
   useNotifications,
   useUpdateNotification,
 } from "../../hooks/useCms";
+import { useToast } from "../../context/ToastContext";
 
 const isRecentlyReceived = (value) => {
   if (!value) return false;
@@ -30,22 +32,49 @@ const isRecentlyReceived = (value) => {
 };
 
 const ContactMessages = () => {
+  const toast = useToast();
   const { data: messages = [] } = useContacts();
   const { data: notifications = [] } = useNotifications();
   const deleteContact = useDeleteContact();
   const updateContact = useUpdateContact();
   const replyContact = useReplyContact();
   const updateNotification = useUpdateNotification();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(() => searchParams.get("search") || "");
   const [selectedMessage, setSelectedMessage] = useState(null);
+
+  useEffect(() => {
+    const next = searchParams.get("search") || "";
+    setSearchTerm((current) => (current === next ? current : next));
+  }, [searchParams]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    if (searchTerm.trim()) params.set("search", searchTerm.trim());
+    else params.delete("search");
+    if (params.toString() !== searchParams.toString()) {
+      setSearchParams(params, { replace: true });
+    }
+  }, [searchParams, searchTerm, setSearchParams]);
 
   // --- HANDLERS ---
   const deleteMessage = (id) => {
-    if (window.confirm("Delete this message?")) {
-      deleteContact.mutate(id);
-      if (selectedMessage?.id === id) setSelectedMessage(null);
-    }
+    toast.confirm(
+      "Delete Message?",
+      "This will permanently remove this inquiry.",
+      () =>
+        deleteContact.mutate(id, {
+          onSuccess: () => {
+            toast.success("Deleted", "Inquiry removed successfully.");
+            if (selectedMessage?.id === id) setSelectedMessage(null);
+          },
+        }),
+      {
+        confirmLabel: "Delete",
+        tone: "danger",
+      },
+    );
   };
 
   const markAsStatus = (id, newStatus) => {
@@ -62,7 +91,11 @@ const ContactMessages = () => {
       if (isCustomPlan) return false;
 
       const query = searchTerm.toLowerCase();
-      return m.sender.toLowerCase().includes(query) || m.subject.toLowerCase().includes(query);
+      return [m.sender, m.subject, m.email, m.message, m.status]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(query);
     })
     .sort((a, b) => {
       const aTime = new Date(a?.date || a?.createdAt || 0).getTime();
@@ -93,31 +126,28 @@ const ContactMessages = () => {
   }, [notifications, updateNotification]);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-180px)]">
+    <div className="flex h-[calc(100vh-180px)] flex-col gap-4 lg:flex-row">
       {/* LEFT: Messages List */}
       <div
-        className={`flex-1 space-y-4 overflow-y-auto pr-2 custom-scrollbar ${selectedMessage ? "hidden lg:block" : "block"}`}
+        className={`flex-1 space-y-3 overflow-y-auto pr-2 custom-scrollbar ${selectedMessage ? "hidden lg:block" : "block"}`}
       >
-        <div className="flex justify-between items-center mb-6">
-            <h1 className=" text-xl xl:3xl font-black text-slate-900 tracking-tighter uppercase">
-            <Inbox size={24} className="text-blue-600" /> Inbox
+        <div className="mb-4 flex items-center justify-between">
+            <h1 className="admin-page-title flex items-center gap-2 normal-case">
+            <Inbox size={20} className="text-blue-600" /> Inbox
           </h1>
           <div className="flex gap-2">
-            <button className="p-2 bg-white border border-slate-100 rounded-xl text-slate-400 hover:text-slate-600 transition-all shadow-sm">
-              <Archive size={18} />
+            <button className="rounded-xl border border-slate-100 bg-white p-2 text-slate-400 shadow-sm transition-all hover:text-slate-600">
+              <Archive size={16} />
             </button>
           </div>
         </div>
 
-        <div className="relative mb-6">
-          <Search
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-            size={18}
-          />
+        <div className="mb-4">
           <input
             type="text"
-            placeholder="Search inquiries..."
-            className="w-full pl-12 pr-4 py-3 bg-white border border-slate-100 rounded-2xl outline-none focus:ring-4 focus:ring-slate-50 transition-all font-medium text-sm shadow-sm"
+            placeholder="Search sender, subject, email, message, or status..."
+            className="w-full rounded-2xl border border-slate-100 bg-white px-4 py-2.5 text-sm font-medium shadow-sm outline-none transition-all focus:ring-4 focus:ring-slate-50"
+            value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
@@ -129,7 +159,7 @@ const ContactMessages = () => {
               <div
                 key={msg.id}
                 onClick={() => openMessage(msg)}
-                className={`cursor-pointer transition-all rounded-[2rem] p-5 border-2 ${
+                className={`cursor-pointer rounded-[1.6rem] border-2 p-4 transition-all ${
                   selectedMessage?.id === msg.id
                     ? "border-blue-500 bg-blue-50/30"
                     : isLatest
@@ -137,7 +167,7 @@ const ContactMessages = () => {
                       : "border-white bg-white hover:border-slate-100 shadow-sm"
                 }`}
               >
-                <div className="flex justify-between items-start mb-2">
+                <div className="mb-1.5 flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <div
                       className={`w-2 h-2 rounded-full ${
@@ -146,23 +176,23 @@ const ContactMessages = () => {
                           : "bg-transparent"
                       }`}
                     />
-                    <span className="font-black text-slate-900 text-sm">
+                    <span className="text-sm font-black text-slate-900">
                       {msg.sender}
                     </span>
                     {isLatest ? (
-                      <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wide bg-blue-100 text-blue-700">
+                      <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.14em] text-blue-700">
                         New
                       </span>
                     ) : null}
                   </div>
-                  <span className="text-[10px] text-slate-400 font-bold">
+                  <span className="text-[10px] font-bold text-slate-400">
                     {new Date(msg.date).toLocaleDateString()}
                   </span>
                 </div>
-                <h4 className="text-xs font-bold text-slate-700 truncate mb-1">
+                <h4 className="mb-1 text-[11px] font-bold text-slate-700 truncate">
                   {msg.subject}
                 </h4>
-                <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                <p className="line-clamp-3 text-[13px] leading-5 text-slate-500">
                   {msg.message}
                 </p>
               </div>
@@ -173,7 +203,7 @@ const ContactMessages = () => {
 
       {/* RIGHT: Detail View */}
       <div
-        className={`lg:w-[450px] xl:w-[600px] h-full ${!selectedMessage ? "hidden lg:flex" : "flex"}`}
+        className={`h-full lg:w-[520px] xl:w-[680px] ${!selectedMessage ? "hidden lg:flex" : "flex"}`}
       >
         {selectedMessage ? (
           <MessageDetail
@@ -183,14 +213,14 @@ const ContactMessages = () => {
             onMarkReplied={(id, reply) => replyContact.mutate({ id, message: reply })}
           />
         ) : (
-          <div className="flex-1 bg-white rounded-[3rem] border-2 border-dashed border-slate-100 flex flex-col items-center justify-center text-center p-10">
-            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4 text-slate-200">
-              <Mail size={40} />
+          <div className="flex flex-1 flex-col items-center justify-center rounded-[3rem] border-2 border-dashed border-slate-100 bg-white p-10 text-center">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-50 text-slate-200">
+              <Mail size={32} />
             </div>
-            <h3 className="font-black text-slate-400 uppercase tracking-widest text-sm">
+            <h3 className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
               Select a message
             </h3>
-            <p className="text-slate-300 text-xs font-medium max-w-[200px] mt-2">
+            <p className="mt-2 max-w-[200px] text-xs font-medium text-slate-300">
               Choose an inquiry from the left to read or reply.
             </p>
           </div>

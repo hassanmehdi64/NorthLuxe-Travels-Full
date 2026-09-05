@@ -9,6 +9,17 @@ const itineraryItemSchema = new mongoose.Schema(
   { _id: false },
 );
 
+const reviewItemSchema = new mongoose.Schema(
+  {
+    name: { type: String, default: "", trim: true },
+    rating: { type: Number, default: 5, min: 1, max: 5 },
+    date: { type: String, default: "", trim: true },
+    tag: { type: String, default: "", trim: true },
+    comment: { type: String, default: "", trim: true },
+  },
+  { _id: false },
+);
+
 const availableOptionsSchema = new mongoose.Schema(
   {
     hotelCategories: { type: [String], default: [] },
@@ -37,6 +48,7 @@ const tourSchema = new mongoose.Schema(
     status: { type: String, enum: ["draft", "published"], default: "published" },
     rating: { type: Number, default: 4.8 },
     reviewsCount: { type: Number, default: 0 },
+    reviewItems: { type: [reviewItemSchema], default: [] },
     tags: { type: [String], default: [] },
     itinerary: { type: [itineraryItemSchema], default: [] },
     availableOptions: { type: availableOptionsSchema, default: () => ({}) },

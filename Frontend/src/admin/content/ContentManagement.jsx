@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Edit2, Plus, Trash2, Upload, X } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import {
   useAdminContentList,
   useCreateContent,
@@ -266,8 +267,9 @@ const typeText = {
 
 const ContentManagement = ({ fixedType = null }) => {
   const toast = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedType, setSelectedType] = useState(fixedType || "destination");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => searchParams.get("search") || "");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(initialForm);
@@ -278,13 +280,31 @@ const ContentManagement = ({ fixedType = null }) => {
   const updateContent = useUpdateContent();
   const deleteContent = useDeleteContent();
 
+  useEffect(() => {
+    const next = searchParams.get("search") || "";
+    setSearch((current) => (current === next ? current : next));
+  }, [searchParams]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    if (search.trim()) params.set("search", search.trim());
+    else params.delete("search");
+    if (params.toString() !== searchParams.toString()) {
+      setSearchParams(params, { replace: true });
+    }
+  }, [search, searchParams, setSearchParams]);
+
   const filtered = useMemo(
     () =>
       items.filter((item) => {
         const q = search.toLowerCase();
         return (
-          String(item.title || "").toLowerCase().includes(q) ||
-          String(item.slug || "").toLowerCase().includes(q)
+          !q ||
+          [item.title, item.slug, item.status, item.location, item.category, item.type]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase()
+            .includes(q)
         );
       }),
     [items, search],
@@ -359,12 +379,20 @@ const ContentManagement = ({ fixedType = null }) => {
   };
 
   const removeItem = (id) => {
-    if (!window.confirm("Delete this content entry?")) return;
-    deleteContent.mutate(id, {
-      onSuccess: () => toast.success("Content deleted", "The item has been removed."),
-      onError: (error) =>
-        toast.error("Delete failed", getApiErrorMessage(error, "Could not delete content.")),
-    });
+    toast.confirm(
+      "Delete Entry?",
+      "This will permanently remove this content entry.",
+      () =>
+        deleteContent.mutate(id, {
+          onSuccess: () => toast.success("Deleted", "The item has been removed."),
+          onError: (error) =>
+            toast.error("Delete failed", getApiErrorMessage(error, "Could not delete content.")),
+        }),
+      {
+        confirmLabel: "Delete",
+        tone: "danger",
+      },
+    );
   };
 
   const addLabel = `Add ${typeText[activeType] || "Content"}`;
@@ -374,10 +402,10 @@ const ContentManagement = ({ fixedType = null }) => {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-xl xl:3xl font-black tracking-tighter text-slate-900 uppercase dark:text-slate-100">
+          <h1 className="admin-page-title">
             {fixedType ? `${typeText[activeType] || "Content"} Management` : "Content Management"}
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-300">
+          <p className="admin-soft-muted text-sm">
             {fixedType
               ? `Add, update, and manage ${String(typeText[activeType] || "content").toLowerCase()} entries for future site updates.`
               : "Update destinations, activities, services, seasonal journeys, careers, and support pages from one place."}
@@ -390,7 +418,7 @@ const ContentManagement = ({ fixedType = null }) => {
             setForm(initialForm);
             setIsFormOpen((v) => !v);
           }}
-          className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white"
+          className="admin-soft-button"
         >
           <Plus size={16} />
           {isFormOpen ? "Close Form" : addLabel}
@@ -400,7 +428,7 @@ const ContentManagement = ({ fixedType = null }) => {
       <div className="flex flex-col gap-3 md:flex-row">
         {!fixedType ? (
           <select
-            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+            className="rounded-2xl px-4 py-3 text-sm font-semibold"
             value={selectedType}
             onChange={(e) => {
               setSelectedType(e.target.value);
@@ -415,8 +443,8 @@ const ContentManagement = ({ fixedType = null }) => {
           </select>
         ) : null}
         <input
-          className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-          placeholder="Search by title or slug..."
+          className="flex-1 rounded-2xl px-4 py-3 text-sm font-medium"
+          placeholder="Search title, slug, type, category, location, or status..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -425,7 +453,7 @@ const ContentManagement = ({ fixedType = null }) => {
       {isFormOpen ? (
         <form
           onSubmit={onSubmit}
-          className="grid gap-4 rounded-3xl border border-slate-100 bg-white p-6 md:grid-cols-2 dark:border-slate-700 dark:bg-slate-900"
+          className="admin-soft-form grid gap-4 p-6 md:grid-cols-2"
         >
           {!isFaq ? (
             <label className="space-y-2">
@@ -537,15 +565,15 @@ const ContentManagement = ({ fixedType = null }) => {
           ) : null}
 
           <div className="flex gap-3 md:col-span-2">
-            <button type="submit" className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white">{editing ? updateLabel : addLabel}</button>
-            {editing ? (<button type="button" onClick={resetForm} className="rounded-2xl bg-slate-100 px-5 py-3 text-sm font-bold text-slate-700">Cancel</button>) : null}
+            <button type="submit" className="admin-soft-button">{editing ? updateLabel : addLabel}</button>
+            {editing ? (<button type="button" onClick={resetForm} className="admin-soft-button-ghost">Cancel</button>) : null}
           </div>
         </form>
       ) : null}
 
-      <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white dark:border-slate-700 dark:bg-slate-900">
+      <div className="admin-soft-table overflow-hidden">
         <table className="w-full text-left">
-          <thead className="bg-slate-50 dark:bg-slate-800/50">
+          <thead>
             <tr>
               <th className="px-6 py-4 text-xs font-black uppercase text-slate-400">Title</th>
               <th className="px-6 py-4 text-xs font-black uppercase text-slate-400">Slug</th>

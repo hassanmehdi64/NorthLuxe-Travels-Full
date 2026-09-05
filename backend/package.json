@@ -7,6 +7,7 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "seed": "node src/scripts/seed.js",
+    "seed:tour-reviews": "node src/scripts/backfill-tour-reviews.js",
     "seed:destinations": "node src/scripts/seed-destinations.js",
     "seed:activities": "node src/scripts/seed-activities.js",
     "seed:services": "node src/scripts/seed-services.js",

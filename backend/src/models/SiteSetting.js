@@ -54,7 +54,7 @@ const siteSettingSchema = new mongoose.Schema(
     googleMapUrl: { type: String, default: "" },
     currency: { type: String, default: "PKR" },
     maintenanceMode: { type: Boolean, default: false },
-    primaryColor: { type: String, default: "#13DDB4" },
+    primaryColor: { type: String, default: "#20b77a" },
     seoTitle: { type: String, default: "North Luxe | Luxury Travel" },
     seoDescription: { type: String, default: "" },
     socialLinks: {
@@ -64,7 +64,7 @@ const siteSettingSchema = new mongoose.Schema(
       twitter: { type: String, default: "" },
       linkedin: { type: String, default: "" },
     },
-    logoUrl: { type: String, default: "" },
+    logoUrl: { type: String, default: "/north-luxe-logo.png" },
     faviconUrl: { type: String, default: "" },
     homeHeroImages: {
       type: [String],
@@ -83,28 +83,28 @@ const siteSettingSchema = new mongoose.Schema(
     },
     heroColors: {
       overlay: { type: String, default: "rgba(0, 0, 0, 0.45)" },
-      start: { type: String, default: "rgba(7, 19, 38, 0.9)" },
-      middle: { type: String, default: "rgba(7, 19, 38, 0.6)" },
-      end: { type: String, default: "rgba(7, 19, 38, 0.2)" },
+      start: { type: String, default: "rgba(15, 47, 87, 0.9)" },
+      middle: { type: String, default: "rgba(15, 47, 87, 0.6)" },
+      end: { type: String, default: "rgba(15, 47, 87, 0.2)" },
       homeStart: { type: String, default: "rgba(5, 8, 12, 0.24)" },
       homeEnd: { type: String, default: "rgba(5, 8, 12, 0.56)" },
     },
     navbarColors: {
-      main: { type: String, default: "#1F7630" },
-      scrolled: { type: String, default: "#1F7630" },
-      mobile: { type: String, default: "#1F7630" },
+      main: { type: String, default: "#061B3A" },
+      scrolled: { type: String, default: "#061B3A" },
+      mobile: { type: String, default: "#061B3A" },
       text: { type: String, default: "#ffffff" },
       mutedText: { type: String, default: "rgba(255, 255, 255, 0.9)" },
-      activeText: { type: String, default: "#FF8F05" },
+      activeText: { type: String, default: "#20b77a" },
     },
     navbarTextColor: { type: String, default: "#ffffff" },
     navbarMutedTextColor: { type: String, default: "rgba(255, 255, 255, 0.9)" },
-    navbarActiveTextColor: { type: String, default: "#FF8F05" },
+    navbarActiveTextColor: { type: String, default: "#20b77a" },
     footerColors: {
-      background: { type: String, default: "#1F7630" },
+      background: { type: String, default: "#061B3A" },
       text: { type: String, default: "#ffffff" },
       mutedText: { type: String, default: "rgba(255, 255, 255, 0.78)" },
-      accentText: { type: String, default: "#13DDB4" },
+      accentText: { type: String, default: "#20b77a" },
     },
     bookingPricing: {
       dailyBaseFee: { type: Number, default: 0, min: 0 },
@@ -112,6 +112,11 @@ const siteSettingSchema = new mongoose.Schema(
       mealsDailyRate: { type: Number, default: 0, min: 0 },
       insuranceRate: { type: Number, default: 0, min: 0 },
       airportTransferRate: { type: Number, default: 0, min: 0 },
+      transportNote: {
+        type: String,
+        default:
+          "Prices are for transport only. Hotels, meals, boating, entry tickets, jeep charges, and personal expenses are not included.",
+      },
       hotelCategories: {
         type: [pricedOptionSchema],
         default: [

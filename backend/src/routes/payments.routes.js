@@ -104,12 +104,12 @@ const renderJazzCashReturnPage = ({ success, heading, message, bookingCode, refe
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${success ? "Payment Successful" : "Payment Status"}</title>
     <style>
-      body { font-family: Arial, sans-serif; background:#f8fafc; color:#0f172a; margin:0; padding:24px; }
+      body { font-family: Arial, sans-serif; background:#f8fafc; color:#2B2B2B; margin:0; padding:24px; }
       .card { max-width:640px; margin:40px auto; background:#fff; border:1px solid #e2e8f0; border-radius:20px; padding:28px; box-shadow:0 10px 30px rgba(15,23,42,.08); }
       h1 { margin:0 0 12px; font-size:28px; }
       p { margin:0 0 12px; line-height:1.6; }
       .meta { margin-top:18px; padding:14px 16px; border-radius:14px; background:#f8fafc; border:1px solid #e2e8f0; }
-      a { display:inline-block; margin-top:18px; text-decoration:none; background:#0f172a; color:#fff; padding:12px 18px; border-radius:12px; font-weight:700; }
+      a { display:inline-block; margin-top:18px; text-decoration:none; background:#0F2F57; color:#fff; padding:12px 18px; border-radius:12px; font-weight:700; }
     </style>
   </head>
   <body>

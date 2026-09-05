@@ -6,6 +6,13 @@ import { getEmailConfigStatus, sendMailSafely, verifyEmailTransport } from "../u
 
 const router = express.Router();
 const SETTINGS_KEY = "default";
+const DEFAULT_LOGO_URL = "/north-luxe-logo.png";
+const BRAND_COLOR = "#20b77a";
+const BRAND_HOVER_COLOR = "#159f6a";
+const NAVY_COLOR = "#061B3A";
+const NAV_TEXT_COLOR = "#ffffff";
+const NAV_MUTED_TEXT_COLOR = "rgba(255, 255, 255, 0.9)";
+const FOOTER_MUTED_TEXT_COLOR = "rgba(255, 255, 255, 0.78)";
 const SUPPORTED_PAYMENT_METHOD_KEYS = new Set([
   "visa_card",
   "easypaisa",
@@ -19,28 +26,23 @@ const getOrCreateSettings = async () => {
   if (!settings) settings = await SiteSetting.create({ key: SETTINGS_KEY });
 
   const navbarColors = settings.navbarColors || {};
-  const missingNavbarColorDefaults = {};
-  if (!navbarColors.main || navbarColors.main === "rgba(9, 20, 41, 0.88)") missingNavbarColorDefaults["navbarColors.main"] = "#1F7630";
-  if (!navbarColors.scrolled || navbarColors.scrolled === "rgba(9, 20, 41, 0.94)") missingNavbarColorDefaults["navbarColors.scrolled"] = "#1F7630";
-  if (!navbarColors.mobile || navbarColors.mobile === "rgba(9, 20, 41, 0.985)") missingNavbarColorDefaults["navbarColors.mobile"] = "#1F7630";
-  const textColor = settings.navbarTextColor || navbarColors.text || "#ffffff";
-  const mutedTextColor = settings.navbarMutedTextColor || navbarColors.mutedText || "rgba(255, 255, 255, 0.9)";
-  const activeTextColor =
-    settings.navbarActiveTextColor === "#13DDB4" || navbarColors.activeText === "#13DDB4"
-      ? "#FF8F05"
-      : settings.navbarActiveTextColor || navbarColors.activeText || "#FF8F05";
-  if (!navbarColors.text) missingNavbarColorDefaults["navbarColors.text"] = textColor;
-  if (!navbarColors.mutedText) missingNavbarColorDefaults["navbarColors.mutedText"] = mutedTextColor;
-  if (!navbarColors.activeText || navbarColors.activeText === "#13DDB4") missingNavbarColorDefaults["navbarColors.activeText"] = activeTextColor;
-  if (!settings.navbarTextColor) missingNavbarColorDefaults.navbarTextColor = textColor;
-  if (!settings.navbarMutedTextColor) missingNavbarColorDefaults.navbarMutedTextColor = mutedTextColor;
-  if (!settings.navbarActiveTextColor || settings.navbarActiveTextColor === "#13DDB4") missingNavbarColorDefaults.navbarActiveTextColor = activeTextColor;
-
   const footerColors = settings.footerColors || {};
-  if (!footerColors.background || footerColors.background === "#0F172A") missingNavbarColorDefaults["footerColors.background"] = "#1F7630";
-  if (!footerColors.text) missingNavbarColorDefaults["footerColors.text"] = "#ffffff";
-  if (!footerColors.mutedText) missingNavbarColorDefaults["footerColors.mutedText"] = "rgba(255, 255, 255, 0.78)";
-  if (!footerColors.accentText) missingNavbarColorDefaults["footerColors.accentText"] = "#13DDB4";
+  const missingNavbarColorDefaults = {};
+  if (!settings.logoUrl) missingNavbarColorDefaults.logoUrl = DEFAULT_LOGO_URL;
+  if (!settings.primaryColor) missingNavbarColorDefaults.primaryColor = BRAND_COLOR;
+  if (!navbarColors.main) missingNavbarColorDefaults["navbarColors.main"] = NAVY_COLOR;
+  if (!navbarColors.scrolled) missingNavbarColorDefaults["navbarColors.scrolled"] = NAVY_COLOR;
+  if (!navbarColors.mobile) missingNavbarColorDefaults["navbarColors.mobile"] = NAVY_COLOR;
+  if (!navbarColors.text) missingNavbarColorDefaults["navbarColors.text"] = NAV_TEXT_COLOR;
+  if (!navbarColors.mutedText) missingNavbarColorDefaults["navbarColors.mutedText"] = NAV_MUTED_TEXT_COLOR;
+  if (!navbarColors.activeText) missingNavbarColorDefaults["navbarColors.activeText"] = BRAND_COLOR;
+  if (!settings.navbarTextColor) missingNavbarColorDefaults.navbarTextColor = NAV_TEXT_COLOR;
+  if (!settings.navbarMutedTextColor) missingNavbarColorDefaults.navbarMutedTextColor = NAV_MUTED_TEXT_COLOR;
+  if (!settings.navbarActiveTextColor) missingNavbarColorDefaults.navbarActiveTextColor = BRAND_COLOR;
+  if (!footerColors.background) missingNavbarColorDefaults["footerColors.background"] = NAVY_COLOR;
+  if (!footerColors.text) missingNavbarColorDefaults["footerColors.text"] = NAV_TEXT_COLOR;
+  if (!footerColors.mutedText) missingNavbarColorDefaults["footerColors.mutedText"] = FOOTER_MUTED_TEXT_COLOR;
+  if (!footerColors.accentText) missingNavbarColorDefaults["footerColors.accentText"] = BRAND_COLOR;
 
   if (Object.keys(missingNavbarColorDefaults).length) {
     settings = await SiteSetting.findOneAndUpdate(
@@ -55,28 +57,28 @@ const getOrCreateSettings = async () => {
 
 const toSettingsResponse = (settings) => {
   const item = settings?.toObject ? settings.toObject() : { ...(settings || {}) };
-  const navbarColors = item.navbarColors || {};
-  const footerColors = item.footerColors || {};
-  const navbarTextColor = item.navbarTextColor || navbarColors.text || "#ffffff";
-  const navbarMutedTextColor = item.navbarMutedTextColor || navbarColors.mutedText || "rgba(255, 255, 255, 0.9)";
-  const navbarActiveTextColor = item.navbarActiveTextColor || navbarColors.activeText || "#FF8F05";
 
   return {
     ...item,
-    navbarTextColor,
-    navbarMutedTextColor,
-    navbarActiveTextColor,
+    logoUrl: item.logoUrl || DEFAULT_LOGO_URL,
+    primaryColor: item.primaryColor || BRAND_COLOR,
+    brandHoverColor: item.brandHoverColor || BRAND_HOVER_COLOR,
+    navbarTextColor: item.navbarTextColor || NAV_TEXT_COLOR,
+    navbarMutedTextColor: item.navbarMutedTextColor || NAV_MUTED_TEXT_COLOR,
+    navbarActiveTextColor: item.navbarActiveTextColor || BRAND_COLOR,
     navbarColors: {
-      ...navbarColors,
-      text: navbarTextColor,
-      mutedText: navbarMutedTextColor,
-      activeText: navbarActiveTextColor,
+      main: item.navbarColors?.main || NAVY_COLOR,
+      scrolled: item.navbarColors?.scrolled || NAVY_COLOR,
+      mobile: item.navbarColors?.mobile || NAVY_COLOR,
+      text: item.navbarColors?.text || NAV_TEXT_COLOR,
+      mutedText: item.navbarColors?.mutedText || NAV_MUTED_TEXT_COLOR,
+      activeText: item.navbarColors?.activeText || BRAND_COLOR,
     },
     footerColors: {
-      background: footerColors.background || "#1F7630",
-      text: footerColors.text || "#ffffff",
-      mutedText: footerColors.mutedText || "rgba(255, 255, 255, 0.78)",
-      accentText: footerColors.accentText || "#13DDB4",
+      background: item.footerColors?.background || NAVY_COLOR,
+      text: item.footerColors?.text || NAV_TEXT_COLOR,
+      mutedText: item.footerColors?.mutedText || FOOTER_MUTED_TEXT_COLOR,
+      accentText: item.footerColors?.accentText || BRAND_COLOR,
     },
   };
 };
@@ -202,12 +204,8 @@ const buildSettingsUpdate = (payload = {}) => {
     "currency",
     "seoTitle",
     "seoDescription",
-    "primaryColor",
     "logoUrl",
     "faviconUrl",
-    "navbarTextColor",
-    "navbarMutedTextColor",
-    "navbarActiveTextColor",
   ];
 
   for (const field of stringFields) {
@@ -246,33 +244,6 @@ const buildSettingsUpdate = (payload = {}) => {
     }
   }
 
-  if (isObject(payload.heroColors)) {
-    update.heroColors = {};
-    for (const key of ["overlay", "start", "middle", "end", "homeStart", "homeEnd"]) {
-      if (payload.heroColors[key] !== undefined) {
-        update.heroColors[key] = cleanString(payload.heroColors[key]);
-      }
-    }
-  }
-
-  if (isObject(payload.navbarColors)) {
-    update.navbarColors = {};
-    for (const key of ["main", "scrolled", "mobile", "text", "mutedText", "activeText"]) {
-      if (payload.navbarColors[key] !== undefined) {
-        update.navbarColors[key] = cleanString(payload.navbarColors[key]);
-      }
-    }
-  }
-
-  if (isObject(payload.footerColors)) {
-    update.footerColors = {};
-    for (const key of ["background", "text", "mutedText", "accentText"]) {
-      if (payload.footerColors[key] !== undefined) {
-        update.footerColors[key] = cleanString(payload.footerColors[key]);
-      }
-    }
-  }
-
   if (isObject(payload.paymentConfig)) {
     update.paymentConfig = {};
     for (const key of ["allowManualVerification", "requireVerifiedPaymentForCard"]) {
@@ -301,6 +272,9 @@ const buildSettingsUpdate = (payload = {}) => {
         const number = Number(payload.bookingPricing[key]);
         update.bookingPricing[key] = Number.isFinite(number) ? Math.max(0, number) : 0;
       }
+    }
+    if (payload.bookingPricing.transportNote !== undefined) {
+      update.bookingPricing.transportNote = cleanString(payload.bookingPricing.transportNote) || "";
     }
     if (payload.bookingPricing.hotelCategories !== undefined) {
       update.bookingPricing.hotelCategories = sanitizePricedOptions(payload.bookingPricing.hotelCategories);

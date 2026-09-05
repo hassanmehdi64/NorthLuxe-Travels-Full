@@ -13,13 +13,17 @@ const toUser = (user) => ({
   status: user.status,
   avatar: user.avatar,
   joined: user.createdAt,
+  createdAt: user.createdAt,
+  updatedAt: user.updatedAt,
+  avatarUpdatedAt: user.updatedAt,
   lastLoginAt: user.lastLoginAt,
 });
 
-router.use(requireAuth, requireRole("Admin"));
+router.use(requireAuth);
 
 router.get(
   "/",
+  requireRole("Admin"),
   asyncHandler(async (_req, res) => {
     const users = await User.find().select("-passwordHash").sort({ createdAt: -1 });
     res.json({ items: users.map(toUser) });
@@ -28,6 +32,7 @@ router.get(
 
 router.post(
   "/",
+  requireRole("Admin"),
   asyncHandler(async (req, res) => {
     const name = String(req.body.name || "").trim();
     const email = String(req.body.email || "").toLowerCase().trim();
@@ -49,7 +54,7 @@ router.post(
       passwordHash,
       role: req.body.role || "Editor",
       status: req.body.status || "Active",
-      avatar: req.body.avatar || "",
+      avatar: String(req.body.avatar || "").trim(),
     });
     res.status(201).json({ item: toUser(user) });
   }),
@@ -58,6 +63,12 @@ router.post(
 router.patch(
   "/:id",
   asyncHandler(async (req, res) => {
+    const isSelf = String(req.user?._id) === String(req.params.id);
+    const isAdmin = req.user?.role === "Admin";
+    if (!isSelf && !isAdmin) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
     const targetUser = await User.findById(req.params.id).select("role");
     if (!targetUser) return res.status(404).json({ message: "User not found" });
 
@@ -78,6 +89,10 @@ router.patch(
       if (!payload.name) return res.status(400).json({ message: "Name is required" });
     }
 
+    if (payload.avatar !== undefined) {
+      payload.avatar = String(payload.avatar || "").trim();
+    }
+
     if (payload.password) {
       if (String(payload.password).length < 8) {
         return res.status(400).json({ message: "Password must be at least 8 characters" });
@@ -86,7 +101,6 @@ router.patch(
       delete payload.password;
     }
 
-    const isSelf = String(req.user?._id) === String(req.params.id);
     if (isSelf && payload.status === "Suspended") {
       return res.status(400).json({ message: "You cannot suspend your own account" });
     }
@@ -116,6 +130,7 @@ router.patch(
 
 router.delete(
   "/:id",
+  requireRole("Admin"),
   asyncHandler(async (req, res) => {
     const isSelf = String(req.user?._id) === String(req.params.id);
     if (isSelf) {

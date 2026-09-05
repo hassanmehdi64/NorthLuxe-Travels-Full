@@ -20,6 +20,10 @@ export const tourPackageSeedData = [
     status: "published",
     rating: 4.9,
     reviewsCount: 18,
+    reviewItems: [
+      { name: "Ayesha Khan", rating: 5, date: "Jan 2026", tag: "Family Trip", comment: "Very smooth coordination, reliable stays, and great route planning." },
+      { name: "Usman Raza", rating: 5, date: "Dec 2025", tag: "Parents with Kids", comment: "The pacing was comfortable and the family-friendly stops were chosen really well." },
+    ],
     tags: ["family", "kids", "children", "comfort", "hunza"],
     itinerary: [
       { day: 1, title: "Arrival and scenic transfer", description: "Arrival, hotel check-in, and soft evening orientation." },
@@ -49,6 +53,10 @@ export const tourPackageSeedData = [
     status: "published",
     rating: 4.8,
     reviewsCount: 14,
+    reviewItems: [
+      { name: "Nida Fatima", rating: 5, date: "Nov 2025", tag: "Family Retreat", comment: "Clean resorts, beautiful lake days, and really responsive support throughout the trip." },
+      { name: "Faisal Ahmed", rating: 4, date: "Oct 2025", tag: "Children Friendly", comment: "Good coordination and easy sightseeing windows that worked well for our whole family." },
+    ],
     tags: ["family", "families", "child", "children", "resort", "skardu"],
     itinerary: [
       { day: 1, title: "Skardu arrival", description: "Airport pickup, resort stay, and easy evening unwind." },
@@ -78,6 +86,10 @@ export const tourPackageSeedData = [
     status: "published",
     rating: 4.8,
     reviewsCount: 11,
+    reviewItems: [
+      { name: "Omar Ahmed", rating: 4, date: "Dec 2025", tag: "Corporate Group", comment: "Well-managed timing, smooth rooming, and strong group coordination from start to finish." },
+      { name: "Hassan Ali", rating: 5, date: "Nov 2025", tag: "Friends Group", comment: "Everything felt organized and the transport setup was ideal for a larger team trip." },
+    ],
     tags: ["group", "groups", "friends", "team", "corporate"],
     itinerary: [
       { day: 1, title: "Team arrival and coordination", description: "Arrival logistics, rooming, and evening welcome setup." },
@@ -107,6 +119,10 @@ export const tourPackageSeedData = [
     status: "published",
     rating: 4.9,
     reviewsCount: 9,
+    reviewItems: [
+      { name: "Bilal Khan", rating: 5, date: "Sep 2025", tag: "Friends Group", comment: "The desert and lake days were amazing, and the planning kept the whole group moving smoothly." },
+      { name: "Sana Javed", rating: 5, date: "Aug 2025", tag: "Team Tour", comment: "Loved the adventure flow and how flexible the team stayed with our group energy." },
+    ],
     tags: ["group", "friends", "team", "groups", "skardu"],
     itinerary: [
       { day: 1, title: "Arrival and setup", description: "Group transfer, rooming, and trip briefing." },
@@ -136,6 +152,10 @@ export const tourPackageSeedData = [
     status: "published",
     rating: 4.9,
     reviewsCount: 13,
+    reviewItems: [
+      { name: "Maham Noor", rating: 5, date: "Apr 2025", tag: "Spring Escape", comment: "The blossom views were beautiful and the route felt very well timed for photos and rest." },
+      { name: "Danish Ali", rating: 4, date: "Mar 2025", tag: "Couple Tour", comment: "Great short trip with scenic stops and a very comfortable overall arrangement." },
+    ],
     tags: ["seasonal", "spring", "season", "deal", "blossom"],
     itinerary: [
       { day: 1, title: "Blossom route arrival", description: "Arrival and first scenic blossom stops." },
@@ -165,6 +185,10 @@ export const tourPackageSeedData = [
     status: "published",
     rating: 4.8,
     reviewsCount: 10,
+    reviewItems: [
+      { name: "Zara Malik", rating: 5, date: "Jul 2025", tag: "Summer Tour", comment: "Amazing landscape coverage and the route planning made the long day feel manageable." },
+      { name: "Hamza Tariq", rating: 4, date: "Jun 2025", tag: "Nature Trip", comment: "Strong logistics for a seasonal route and really nice scenic timing across the plateau." },
+    ],
     tags: ["seasonal", "summer", "season", "deal", "deosai"],
     itinerary: [
       { day: 1, title: "Astore arrival", description: "Road approach, rest stop flow, and overnight setup." },

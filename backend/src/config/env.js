@@ -9,6 +9,8 @@ const configuredOrigins = String(process.env.CLIENT_ORIGIN || "")
   .filter(Boolean);
 const defaultOrigins = [
   "http://localhost:5173",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
   "https://north-luxe-travels-frontend.vercel.app",
   "https://north-luxe.vercel.app",
   "https://northluxe.vercel.app",

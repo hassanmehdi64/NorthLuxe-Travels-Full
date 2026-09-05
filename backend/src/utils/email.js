@@ -240,7 +240,7 @@ const baseEmailHtml = ({ title, intro, rows = [], footer = "North Luxe Travels" 
     <div style="max-width:620px;margin:0 auto;background:#ffffff;border:1px solid #cbece3;border-radius:14px;overflow:hidden;">
       <div style="padding:20px 22px;background:#e9fbf4;border-bottom:1px solid #cbece3;">
         <p style="margin:0 0 6px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#0f8f74;font-weight:700;">North Luxe Travels</p>
-        <h1 style="margin:0;font-size:22px;line-height:1.25;color:#0f172a;">${escapeHtml(title)}</h1>
+        <h1 style="margin:0;font-size:22px;line-height:1.25;color:#2B2B2B;">${escapeHtml(title)}</h1>
       </div>
       <div style="padding:22px;">
         <p style="margin:0 0 18px;font-size:15px;line-height:1.7;color:#3b5568;">${escapeHtml(intro)}</p>

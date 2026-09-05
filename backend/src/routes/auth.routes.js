@@ -7,6 +7,20 @@ import { User } from "../models/User.js";
 
 const router = express.Router();
 
+const toAuthUser = (user) => ({
+  id: user._id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  status: user.status,
+  avatar: user.avatar || "",
+  joined: user.createdAt,
+  createdAt: user.createdAt,
+  updatedAt: user.updatedAt,
+  avatarUpdatedAt: user.updatedAt,
+  lastLoginAt: user.lastLoginAt,
+});
+
 router.post(
   "/login",
   asyncHandler(async (req, res) => {
@@ -28,12 +42,7 @@ router.post(
 
     res.json({
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      user: toAuthUser(user),
     });
   }),
 );
@@ -42,7 +51,7 @@ router.get(
   "/me",
   requireAuth,
   asyncHandler(async (req, res) => {
-    res.json({ user: req.user });
+    res.json({ user: toAuthUser(req.user) });
   }),
 );
 

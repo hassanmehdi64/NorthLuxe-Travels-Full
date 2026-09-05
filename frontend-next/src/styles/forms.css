@@ -1,0 +1,219 @@
+@layer components {
+  .ql-form-shell {
+    @apply rounded-[1.75rem] shadow-2xl overflow-hidden;
+    border: 1px solid var(--c-border);
+    background: var(--c-surface);
+  }
+
+  .booking-form-shell {
+    overflow: visible;
+    border-radius: 1.25rem;
+    border-color: var(--c-booking-border);
+    box-shadow: 0 16px 38px rgba(15, 47, 87, 0.1);
+  }
+
+  .ql-form-header {
+    @apply px-6 py-5 border-b rounded-t-[2rem];
+    border-color: var(--c-border);
+    background: var(--c-navy);
+    color: #ffffff;
+  }
+
+  .ql-form-title {
+    @apply text-xl md:text-2xl font-semibold tracking-tight;
+  }
+
+  .ql-form-subtitle {
+    @apply text-[10px] uppercase tracking-[0.22em] font-semibold;
+    color: rgba(255, 255, 255, 0.78);
+  }
+
+  .ql-label {
+    @apply block text-[11px] uppercase tracking-[0.16em] font-semibold mb-2.5;
+    color: var(--c-muted);
+  }
+
+  .ql-input {
+    @apply w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-all;
+    border: 1px solid var(--c-booking-border-soft);
+    background: var(--c-surface);
+    color: var(--c-text);
+  }
+
+  .ql-input:focus {
+    border-color: var(--c-booking-border);
+    box-shadow: 0 0 0 3px rgba(var(--c-brand-rgb), 0.16);
+  }
+
+  .ql-select {
+    @apply w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-all appearance-none;
+    border: 1px solid var(--c-booking-border-soft);
+    background: var(--c-surface);
+    color: var(--c-text);
+  }
+
+  .ql-select:hover {
+    border-color: var(--c-booking-border);
+    background: #ffffff;
+    box-shadow: none;
+  }
+
+  .ql-select:focus {
+    border-color: var(--c-booking-border);
+    box-shadow: 0 0 0 3px rgba(var(--c-brand-rgb), 0.16);
+  }
+
+  .ql-select option {
+    background: #f8fffc;
+    color: var(--c-text);
+    padding: 10px 12px;
+    border-radius: 10px;
+  }
+
+  .ql-select option:hover,
+  .ql-select option:focus {
+    background: #f3f5f7;
+    color: var(--c-text);
+  }
+
+  .ql-select option:checked,
+  .ql-select option[selected] {
+    background: #eef2f6;
+    color: var(--c-text);
+    font-weight: 600;
+  }
+
+  .booking-select {
+    border-radius: 16px;
+    border: 1px solid var(--c-booking-border);
+    background: var(--c-surface);
+    box-shadow: none;
+  }
+
+  .booking-select:hover {
+    border-color: var(--c-booking-border);
+    background: #ffffff;
+    box-shadow: none;
+  }
+
+  .booking-select:focus {
+    border-color: var(--c-booking-border);
+    box-shadow: 0 0 0 3px rgba(var(--c-brand-rgb), 0.16);
+  }
+
+  .booking-select option {
+    background: #f8fffc;
+    color: var(--c-text);
+  }
+
+  .ql-textarea {
+    @apply w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-all resize-none leading-relaxed;
+    border: 1px solid var(--c-booking-border-soft);
+    background: var(--c-surface);
+    color: var(--c-text);
+  }
+
+  .ql-textarea:focus {
+    border-color: var(--c-booking-border);
+    box-shadow: 0 0 0 3px rgba(var(--c-brand-rgb), 0.16);
+  }
+
+  .ql-check {
+    @apply h-4 w-4 rounded;
+    border-color: var(--c-border);
+    accent-color: var(--c-brand);
+  }
+
+  .ql-soft-card {
+    @apply rounded-xl p-4;
+    border: 1px solid var(--c-border);
+    background: var(--c-surface);
+  }
+
+  .ql-btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold;
+    @apply transition-all duration-300 disabled:pointer-events-none disabled:opacity-60;
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
+    border: 1px solid var(--btn-primary-bg);
+    box-shadow: 0 10px 24px rgba(var(--c-brand-rgb), 0.16);
+  }
+
+  .ql-btn-primary:hover,
+  .ql-btn-primary:focus-visible {
+    background: var(--btn-primary-hover);
+    border-color: var(--btn-primary-hover);
+    color: var(--btn-primary-text);
+    box-shadow: 0 8px 18px rgba(15, 47, 87, 0.12);
+  }
+
+  .ql-btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold;
+    @apply transition-all duration-300 disabled:pointer-events-none disabled:opacity-60;
+    background: var(--btn-ghost-bg);
+    color: var(--btn-ghost-text);
+    border: 1px solid var(--btn-ghost-border);
+  }
+
+  .ql-btn-secondary:hover,
+  .ql-btn-secondary:focus-visible {
+    background: var(--btn-ghost-hover-bg);
+    color: var(--btn-ghost-hover-text);
+    border-color: var(--btn-ghost-hover-border);
+    box-shadow: 0 8px 18px rgba(15, 47, 87, 0.08);
+  }
+
+  .ql-btn-icon {
+    @apply inline-flex items-center justify-center rounded-xl;
+    @apply h-10 w-10 shrink-0 transition-all duration-300 disabled:pointer-events-none disabled:opacity-60;
+    background: var(--btn-icon-bg);
+    color: var(--btn-icon-text);
+    border: 1px solid var(--btn-icon-border);
+    box-shadow: 0 8px 20px rgba(15, 47, 87, 0.08);
+  }
+
+  .ql-btn-icon:hover,
+  .ql-btn-icon:focus-visible {
+    background: var(--btn-icon-hover-bg);
+    color: var(--btn-icon-hover-text);
+    border-color: var(--btn-icon-hover-border);
+    box-shadow: 0 12px 24px rgba(15, 47, 87, 0.12);
+  }
+
+  .ql-btn-icon[data-active="true"] {
+    background: rgba(var(--c-brand-rgb), 0.14);
+    color: var(--c-brand);
+    border-color: rgba(var(--c-brand-rgb), 0.34);
+  }
+
+  .ql-btn-compact {
+    @apply min-h-9 gap-1.5 rounded-lg px-4 py-2 text-[11px] font-semibold normal-case tracking-[0.02em];
+    box-shadow: 0 1px 3px rgba(6, 27, 58, 0.06);
+  }
+
+  .ql-btn-compact:hover,
+  .ql-btn-compact:focus-visible {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(6, 27, 58, 0.09);
+  }
+
+  .ql-btn-secondary.ql-btn-compact {
+    background: rgba(var(--c-brand-rgb), 0.045);
+    border-color: rgba(var(--c-brand-rgb), 0.2);
+    color: var(--c-text);
+  }
+
+  .ql-btn-secondary.ql-btn-compact:hover,
+  .ql-btn-secondary.ql-btn-compact:focus-visible {
+    background: rgba(var(--c-brand-rgb), 0.1);
+    border-color: rgba(var(--c-brand-rgb), 0.38);
+    color: var(--c-brand-dark);
+  }
+
+  .ql-step-chip {
+    @apply inline-flex items-center gap-2 rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em];
+    background: var(--c-hover);
+    border: 1px solid var(--c-border);
+    color: var(--c-text);
+  }
+}
