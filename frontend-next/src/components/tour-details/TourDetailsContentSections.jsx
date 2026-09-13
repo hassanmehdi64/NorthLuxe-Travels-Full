@@ -12,34 +12,34 @@ const formatListLabel = (value) =>
     .trim();
 
 const SectionHeading = ({ eyebrow, title, description }) => (
-  <div className="space-y-2">
-    <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[var(--c-brand)]">
+  <div className="space-y-1.5">
+    <p className="inline-flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.2em] text-[var(--c-brand)]">
+      <span className="h-px w-5 bg-[var(--c-brand)]" />
       {eyebrow}
     </p>
 
-    <h2 className="text-[1.45rem] font-semibold leading-tight tracking-[-0.03em] text-theme md:text-[1.75rem]">
+    <h2 className="text-lg font-bold leading-tight tracking-[-0.025em] text-theme">
       {title}
     </h2>
 
     {description ? (
-      <p className="max-w-5xl text-[14px] leading-6 text-muted md:text-[15px]">
+      <p className="max-w-3xl text-xs leading-5 text-muted sm:text-[13px]">
         {description}
       </p>
     ) : null}
   </div>
 );
 
-export const OverviewSection = ({ description, packageOverview = [] }) => (
-  <section className="w-full pt-4 pb-3">
+export const OverviewSection = ({ description, packageOverview = [] }) => !description && !packageOverview.length ? null : (
+  <section className="w-full border-b border-slate-200 py-6">
     <SectionHeading
       eyebrow="Overview"
       title="Tour Overview"
-      description="A quick summary of the route, pace, and package setup before you move into itinerary and booking details."
     />
 
-    <div className="mt-4">
-      <div className="rounded-2xl border border-theme bg-theme-surface p-5 md:p-6">
-        <div className="space-y-4 text-[14px] leading-7 text-muted md:text-[15px]">
+    <div className="mt-3">
+      <div className={`rounded-xl border border-theme bg-theme-surface p-4 shadow-[0_4px_16px_rgba(6,27,58,0.035)] md:p-5 ${packageOverview.length ? "lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(300px,0.55fr)] lg:gap-6" : ""}`}>
+        <div className="space-y-3 text-[15px] leading-7 text-muted">
           {String(description || "")
             .split(/\n+/)
             .filter(Boolean)
@@ -49,22 +49,22 @@ export const OverviewSection = ({ description, packageOverview = [] }) => (
         </div>
 
         {packageOverview.length ? (
-          <div className="mt-5 border-t border-[rgba(15,23,42,0.08)] pt-5">
-            <h3 className="text-[13px] font-black uppercase tracking-[0.16em] text-theme">
+          <div className="mt-4 border-t border-[rgba(15,23,42,0.08)] pt-4 lg:mt-0 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+            <h3 className="text-[10px] font-bold uppercase tracking-[0.15em] text-theme">
               Package Details
             </h3>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
               {packageOverview.map((item) => (
                 <div
                   key={item.label}
-                  className="rounded-xl bg-theme-bg px-4 py-3"
+                  className="rounded-lg bg-theme-bg px-3 py-2.5"
                 >
-                  <p className="text-[11px] font-black uppercase tracking-[0.14em] text-muted">
+                  <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-muted">
                     {item.label}
                   </p>
 
-                  <p className="mt-1.5 text-[14px] font-medium leading-6 text-theme">
+                  <p className="mt-1 text-xs font-medium leading-5 text-theme">
                     {item.value}
                   </p>
                 </div>
@@ -77,101 +77,99 @@ export const OverviewSection = ({ description, packageOverview = [] }) => (
   </section>
 );
 
-export const InclusionsSection = ({ includedServices = [], beforeYouBook = [] }) => (
-  <section className="w-full py-4">
+export const InclusionsSection = ({ includedServices = [], beforeYouBook = [] }) => !includedServices.length && !beforeYouBook.length ? null : (
+  <section className="w-full border-b border-slate-200 py-6">
     <SectionHeading
       eyebrow="Know Before You Go"
       title="What's Included"
-      description="Clear travel inclusions and practical notes before you confirm the booking."
     />
 
-    <div className="mt-4 grid gap-4 lg:grid-cols-2">
-      <div className="rounded-2xl border border-theme bg-theme-surface p-5">
-        <h3 className="text-[13px] font-black uppercase tracking-[0.16em] text-theme">
+    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+      {includedServices.length ? <div className="rounded-xl border border-theme bg-theme-surface p-4 shadow-[0_4px_14px_rgba(6,27,58,0.03)]">
+        <h3 className="text-[10px] font-bold uppercase tracking-[0.15em] text-theme">
           Included
         </h3>
 
-        <ul className="mt-4 space-y-3">
+        <ul className="mt-3 space-y-2.5">
           {includedServices.map((item) => (
             <li
               key={item}
-              className="flex items-start gap-3 text-[14px] leading-6 text-theme"
+              className="flex items-start gap-2.5 text-sm leading-6 text-theme"
             >
-              <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[rgba(var(--c-brand-rgb),0.12)] text-[var(--c-brand)]">
-                <Check size={14} />
+              <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[rgba(var(--c-brand-rgb),0.12)] text-[var(--c-brand)]">
+                <Check size={12} />
               </span>
 
               <span>{formatListLabel(item)}</span>
             </li>
           ))}
         </ul>
-      </div>
+      </div> : null}
 
-      <div className="rounded-2xl border border-theme bg-theme-surface p-5">
-        <h3 className="text-[13px] font-black uppercase tracking-[0.16em] text-theme">
+      {beforeYouBook.length ? <div className="rounded-xl border border-theme bg-theme-surface p-4 shadow-[0_4px_14px_rgba(6,27,58,0.03)]">
+        <h3 className="text-[10px] font-bold uppercase tracking-[0.15em] text-theme">
           Before You Book
         </h3>
 
-        <ul className="mt-4 space-y-3">
+        <ul className="mt-3 space-y-2.5">
           {beforeYouBook.map((item) => (
             <li
               key={item}
-              className="flex items-start gap-3 text-[14px] leading-6 text-theme"
+              className="flex items-start gap-2.5 text-sm leading-6 text-theme"
             >
-              <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-theme-bg text-muted">
-                <Info size={14} />
+              <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-theme-bg text-muted">
+                <Info size={12} />
               </span>
 
               <span>{item}</span>
             </li>
           ))}
         </ul>
-      </div>
+      </div> : null}
     </div>
   </section>
 );
 
 export const ItinerarySection = ({ items = [], openIndex, onToggle }) => (
-  <section className="w-full py-4">
+  <section className="w-full border-b border-slate-200 py-6">
     <SectionHeading
       eyebrow="Plan"
       title="Itinerary"
-      description="Day-by-day route flow with sightseeing highlights and travel pacing."
     />
 
     {items.length ? (
-      <div className="mt-4 space-y-3">
+      <div className="mt-3 space-y-2">
         {items.map((item, idx) => {
           const isOpen = openIndex === idx;
 
           return (
             <div
               key={`${item.day}-${idx}`}
-              className="overflow-hidden rounded-2xl border border-theme bg-theme-surface"
+              className={`overflow-hidden rounded-xl border bg-theme-surface transition-colors ${isOpen ? "border-[rgba(var(--c-brand-rgb),0.38)] shadow-[0_5px_16px_rgba(6,27,58,0.035)]" : "border-theme hover:border-[rgba(var(--c-brand-rgb),0.24)]"}`}
             >
               <button
                 type="button"
                 onClick={() => onToggle(idx)}
-                className="flex w-full cursor-pointer items-center justify-between gap-4 px-4 py-4 text-left md:px-5"
+                className="flex w-full cursor-pointer items-center justify-between gap-3 px-3.5 py-3 text-left md:px-4"
               >
-                <div className="flex min-w-0 items-start gap-4">
-                  <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[rgba(var(--c-brand-rgb),0.1)] text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-brand)]">
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[rgba(var(--c-brand-rgb),0.1)] text-[9px] font-bold uppercase tracking-[0.06em] text-[var(--c-brand)]">
                     Day {item.day || idx + 1}
                   </span>
 
                   <div className="min-w-0">
-                    <p className="text-[15px] font-semibold leading-6 text-theme md:text-[16px]">
+                    <p className="text-[15px] font-semibold leading-6 text-theme">
                       {item.title || `Day ${idx + 1}`}
                     </p>
 
-                    <p className="mt-1 text-sm leading-6 text-muted">
+                    <p className="mt-0.5 text-sm leading-5 text-muted">
                       {item.placesCovered?.join(" / ")}
                     </p>
                   </div>
                 </div>
 
                 <ChevronDown
-                  size={18}
+                  size={15}
                   className={`shrink-0 text-muted transition-transform duration-200 ${
                     isOpen ? "rotate-180" : ""
                   }`}
@@ -179,12 +177,12 @@ export const ItinerarySection = ({ items = [], openIndex, onToggle }) => (
               </button>
 
               {isOpen && (
-                <div className="border-t border-theme px-4 py-4 md:px-5">
+                <div className="border-t border-theme px-4 py-3.5">
                   <ul className="space-y-3">
                     {item.bulletPoints?.map((point) => (
                       <li
                         key={point}
-                        className="flex items-start gap-3 text-[14px] leading-6 text-muted"
+                        className="flex items-start gap-2.5 text-sm leading-6 text-muted"
                       >
                         <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--c-brand)]" />
                         <span>{point}</span>
@@ -205,20 +203,19 @@ export const ItinerarySection = ({ items = [], openIndex, onToggle }) => (
   </section>
 );
 
-export const RouteSection = ({ placeName, placesCovered = [] }) => (
-  <section className="w-full py-4">
+export const RouteSection = ({ placesCovered = [] }) => !placesCovered.length ? null : (
+  <section className="w-full border-b border-slate-200 py-6">
     <SectionHeading
       eyebrow="Route"
       title="Places Covered"
-      description={`This route is designed around ${placeName} with practical travel flow and sightseeing coverage.`}
     />
 
-    <div className="mt-4 rounded-2xl border border-theme bg-theme-surface p-5 md:p-6">
-      <div className="flex flex-wrap gap-2.5">
+    <div className="mt-3 rounded-xl border border-theme bg-theme-surface p-4 shadow-[0_4px_14px_rgba(6,27,58,0.03)]">
+      <div className="flex flex-wrap gap-2">
         {placesCovered.map((item) => (
           <span
             key={item}
-            className="rounded-full border border-[rgba(15,23,42,0.1)] bg-theme-bg px-3 py-1.5 text-[13px] font-medium text-theme"
+            className="rounded-full border border-[rgba(15,23,42,0.1)] bg-theme-bg px-2.5 py-1 text-[11px] font-medium text-theme"
           >
             {formatListLabel(item)}
           </span>
@@ -228,30 +225,29 @@ export const RouteSection = ({ placeName, placesCovered = [] }) => (
   </section>
 );
 
-export const FaqSection = ({ items = [], openIndex, onToggle }) => (
-  <section className="w-full py-4">
-    <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
+export const FaqSection = ({ items = [], openIndex, onToggle }) => !items.length ? null : (
+  <section className="w-full py-6">
+    <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
       <SectionHeading
         eyebrow="Support"
         title="Frequently Asked Questions"
-        description="Helpful details before booking, from customization to transport and payment expectations."
       />
 
-      <div className="space-y-3">
+      <div className="space-y-2">
         {items.map((faq, idx) => {
           const isOpen = openIndex === idx;
 
           return (
             <div
               key={faq.q}
-              className="overflow-hidden rounded-2xl border border-theme bg-theme-surface"
+              className={`overflow-hidden rounded-xl border bg-theme-surface transition-colors ${isOpen ? "border-[rgba(var(--c-brand-rgb),0.38)]" : "border-theme hover:border-[rgba(var(--c-brand-rgb),0.24)]"}`}
             >
               <button
                 type="button"
                 onClick={() => onToggle(idx)}
-                className="flex w-full cursor-pointer items-center justify-between gap-3 px-5 py-4 text-left"
+                className="flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-3 text-left"
               >
-                <span className="text-[15px] font-semibold text-theme md:text-[16px]">
+                <span className="text-[15px] font-semibold text-theme">
                   {faq.q}
                 </span>
 
@@ -264,8 +260,8 @@ export const FaqSection = ({ items = [], openIndex, onToggle }) => (
               </button>
 
               {isOpen && (
-                <div className="border-t border-theme px-5 py-4">
-                  <p className="text-[15px] leading-7 text-muted">{faq.a}</p>
+                <div className="border-t border-theme px-4 py-3">
+                  <p className="text-sm leading-6 text-muted">{faq.a}</p>
                 </div>
               )}
             </div>

@@ -22,7 +22,7 @@ const ServiceDetails = () => {
 
   const images = [service.image, service.coverImage, ...(service.gallery || [])];
   const deliverables = Array.isArray(service.deliverables) ? service.deliverables.filter(Boolean) : [];
-  const paragraphs = toParagraphs(service.content || service.description || service.shortDescription);
+  const paragraphs = toParagraphs(service.content || (service.shortDescription ? service.description : ""));
   const related = services.filter((item) => (item.id || item.slug) !== (service.id || service.slug)).slice(0, 3);
 
   return (
@@ -30,13 +30,13 @@ const ServiceDetails = () => {
       <div className="mx-auto max-w-[1240px] px-4 sm:px-6 lg:px-8">
         <DetailBreadcrumb href="/services" label="All services" />
 
-        <header className="mt-5 grid gap-5 border-b border-slate-200 pb-6 lg:grid-cols-[minmax(0,1fr)_330px] lg:items-end">
+        <header className="mt-4 grid gap-5 border-b border-slate-200 pb-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
           <div>
             <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-[var(--c-brand)]">Travel service</p>
-            <h1 className="mt-2 max-w-4xl text-[2rem] font-bold leading-[1.08] tracking-[-0.04em] text-[#061b3a] sm:text-[2.7rem] lg:text-[3.2rem]">{service.title}</h1>
+            <h1 className="mt-2 max-w-4xl text-[1.6rem] font-bold leading-[1.1] tracking-[-0.035em] text-[#061b3a] sm:text-[2rem] lg:text-[2.35rem]">{service.title}</h1>
             {service.shortDescription || service.description ? <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-500 sm:text-base">{service.shortDescription || service.description}</p> : null}
           </div>
-          <DetailFacts items={[{ icon: Layers3, label: "Category", value: service.category }]} />
+          <div className="lg:justify-self-end"><DetailFacts items={[{ icon: Layers3, label: "Category", value: service.category }]} /></div>
         </header>
 
         <div className="mt-5"><DetailMediaGrid images={images} title={service.title} /></div>

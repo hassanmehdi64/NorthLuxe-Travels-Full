@@ -12,26 +12,27 @@ import {
 import { formatCurrencyAmount } from "../../utils/currency";
 
 const HeroFact = ({ icon: Icon, label, value }) => (
-  <div className="rounded-2xl border border-[rgba(15,23,42,0.08)] bg-theme-surface p-4">
+  <div className="rounded-lg border border-[rgba(15,23,42,0.08)] bg-theme-surface px-3 py-2.5 shadow-[0_3px_10px_rgba(6,27,58,0.03)]">
     <div className="flex items-center gap-2 text-[var(--c-brand)]">
-      <Icon size={16} />
-      <span className="text-[10px] font-black uppercase tracking-[0.16em] text-muted">
+      <Icon size={13} />
+      <span className="text-[8px] font-bold uppercase tracking-[0.15em] text-muted">
         {label}
       </span>
     </div>
 
-    <p className="mt-2 text-[15px] font-semibold leading-6 text-theme">
+    <p className="mt-1 text-xs font-semibold leading-5 text-theme">
       {value}
     </p>
   </div>
 );
 
-const GalleryImage = ({ src, alt, className = "" }) => (
+const GalleryImage = ({ src, alt, className = "", onError }) => (
   <img
     src={src}
     alt={alt}
     loading="lazy"
     decoding="async"
+    onError={onError}
     className={`h-full w-full object-cover object-center ${className}`}
   />
 );
@@ -49,16 +50,12 @@ const getCustomRequestState = (tour) => ({
 export const TourDetailsBreadcrumbs = ({ tour }) => (
   <nav
     aria-label="Breadcrumb"
-    className="flex flex-wrap items-center gap-2 text-[13px] text-muted">
-    <Link to="/" className="transition hover:text-theme">
-      Home
+    className="flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-muted">
+    <Link to="/tours" className="inline-flex items-center gap-1 transition hover:text-[var(--c-brand)]">
+      <ArrowLeft size={13} /> All tours
     </Link>
-    <span>/</span>
-    <Link to="/tours" className="transition hover:text-theme">
-      Tours
-    </Link>
-    <span>/</span>
-    <span className="text-theme">{tour.title}</span>
+    <span className="text-slate-300">/</span>
+    <span className="truncate text-theme">{tour.title}</span>
   </nav>
 );
 
@@ -68,61 +65,25 @@ export const TourDetailsHeader = ({
   reviewCount,
   planLabel,
 }) => {
-  const durationText = tour.durationLabel || `${tour.durationDays || 0} Days`;
-  const locationText = tour.location || tour.destination || "Northern Pakistan";
+  const durationText = tour.durationLabel || (tour.durationDays ? `${tour.durationDays} Days` : "");
+  const locationText = tour.location || tour.destination || "";
 
   return (
-    <header className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2.5">
-        <span className="inline-flex items-center rounded-full bg-[rgba(var(--c-brand-rgb),0.1)] px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-[var(--c-brand)]">
-          {locationText}
-        </span>
-      </div>
-
-      <div className="space-y-2.5">
-        <h1 className="max-w-4xl text-[1.95rem] font-semibold leading-[1.04] tracking-[-0.04em] text-theme md:text-[2.7rem]">
-          {tour.title}
-        </h1>
-
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px] text-muted md:text-[14px]">
-          <span className="inline-flex items-center gap-1.5">
-            <div className="flex items-center gap-0.5 text-[var(--c-brand)]">
-              {Array.from({ length: 5 }).map((_, idx) => (
-                <Star
-                  key={idx}
-                  size={14}
-                  className={
-                    idx < Math.round(ratingValue)
-                      ? "fill-current"
-                      : "opacity-25"
-                  }
-                />
-              ))}
-            </div>
-
-            <span className="font-semibold text-theme">
-              {ratingValue.toFixed(1)}
-            </span>
-          </span>
-
-          <span>{reviewCount} reviews</span>
-
-          <span className="inline-flex items-center gap-1.5">
-            <MapPin size={14} className="text-[var(--c-brand)]" />
-            {locationText}
-          </span>
+    <header className="grid gap-5 overflow-hidden rounded-xl border border-slate-200 bg-white p-4 shadow-[0_6px_20px_rgba(6,27,58,0.04)] sm:p-5 lg:grid-cols-[minmax(0,1fr)_minmax(280px,420px)] lg:items-end">
+      <div className="min-w-0">
+        {locationText ? <span className="inline-flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.17em] text-[var(--c-brand)]"><MapPin size={11} />{locationText}</span> : null}
+        <h1 className="mt-2 max-w-4xl text-[1.6rem] font-bold leading-[1.1] tracking-[-0.035em] text-theme sm:text-[2rem] lg:text-[2.35rem]">{tour.title}</h1>
+        <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-muted">
+          {ratingValue > 0 ? <span className="inline-flex items-center gap-1.5"><span className="flex items-center gap-0.5 text-[var(--c-brand)]">{Array.from({ length: 5 }).map((_, idx) => <Star key={idx} size={11} className={idx < Math.round(ratingValue) ? "fill-current" : "opacity-25"} />)}</span><span className="font-semibold text-theme">{ratingValue.toFixed(1)}</span></span> : null}
+          {reviewCount > 0 ? <span>{reviewCount} reviews</span> : null}
         </div>
+        {tour.shortDescription ? <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">{tour.shortDescription}</p> : null}
       </div>
 
-      <p className="max-w-3xl text-[15px] leading-7 text-muted md:text-[16px]">
-        {tour.shortDescription ||
-          "Thoughtfully planned scenic touring with local support, practical pacing, and comfortable route coordination."}
-      </p>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <HeroFact icon={Clock3} label="Duration" value={durationText} />
-        <HeroFact icon={Users} label="Group Size" value={planLabel} />
-      </div>
+      {durationText || planLabel ? <div className="grid gap-2 sm:grid-cols-2">
+        {durationText ? <HeroFact icon={Clock3} label="Duration" value={durationText} /> : null}
+        {planLabel ? <HeroFact icon={Users} label="Group Size" value={planLabel} /> : null}
+      </div> : null}
     </header>
   );
 };
@@ -141,21 +102,21 @@ export const TourDetailsActions = ({
 
   const buttonSize =
     layout === "compact"
-      ? "h-11 px-2 text-[12px] sm:text-[13px]"
-      : "h-11 px-5 text-sm";
+      ? "h-10 px-2 text-[11px] sm:text-xs"
+      : "h-10 px-4 text-xs";
 
   return (
     <div className={`grid w-full gap-2 ${gridClass} ${className}`}>
       <Link
         to={`/book/${tour.id}`}
-        className={`ql-btn-primary inline-flex w-full cursor-pointer items-center justify-center rounded-xl font-semibold whitespace-nowrap ${buttonSize}`}>
+        className={`ql-btn-primary inline-flex w-full cursor-pointer items-center justify-center rounded-lg font-semibold whitespace-nowrap ${buttonSize}`}>
         Book Now
       </Link>
 
       <Link
         to="/custom-plan-request"
         state={getCustomRequestState(tour)}
-        className={`inline-flex w-full cursor-pointer items-center justify-center rounded-xl border border-[rgba(15,23,42,0.12)] bg-theme-surface font-semibold text-theme transition hover:border-[rgba(var(--c-brand-rgb),0.4)] hover:text-[var(--c-brand)] whitespace-nowrap ${buttonSize}`}>
+        className={`inline-flex w-full cursor-pointer items-center justify-center rounded-lg border border-[rgba(15,23,42,0.12)] bg-theme-surface font-semibold text-theme transition hover:border-[rgba(var(--c-brand-rgb),0.4)] hover:text-[var(--c-brand)] whitespace-nowrap ${buttonSize}`}>
         Custom Request
       </Link>
     </div>
@@ -164,10 +125,16 @@ export const TourDetailsActions = ({
 
 export const TourImageGallery = ({ images, title }) => {
   const [showAll, setShowAll] = useState(false);
+  const [failedImages, setFailedImages] = useState([]);
+
+  const validImages = useMemo(
+    () => [...new Set(images.filter(Boolean))].filter((image) => !failedImages.includes(image)),
+    [images, failedImages],
+  );
 
   const displayImages = useMemo(
-    () => images.filter(Boolean).slice(0, showAll ? 5 : 3),
-    [images, showAll],
+    () => validImages.slice(0, showAll ? 5 : 3),
+    [validImages, showAll],
   );
 
   if (!displayImages.length) return null;
@@ -175,43 +142,48 @@ export const TourImageGallery = ({ images, title }) => {
   const mainImage = displayImages[0];
   const sideImages = displayImages.slice(1, 3);
   const hasSingleSideImage = sideImages.length === 1;
+  const handleImageError = (image) => {
+    setFailedImages((current) => current.includes(image) ? current : [...current, image]);
+  };
 
   return (
     <div className="space-y-2.5">
-      <div className="hidden gap-3 md:grid md:grid-cols-[minmax(0,1.45fr)_minmax(260px,0.85fr)]">
-        <div className="relative overflow-hidden rounded-[1.5rem] bg-theme-bg shadow-[0_12px_28px_rgba(15,23,42,0.06)]">
+      <div className="hidden gap-1 md:grid md:grid-cols-[minmax(0,2fr)_minmax(210px,1fr)]">
+        <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-theme-bg">
           <GalleryImage
             src={mainImage}
             alt={`${title} main`}
-            className="h-[340px] lg:h-[380px]"
+            onError={() => handleImageError(mainImage)}
+            className="h-[280px] lg:h-[300px]"
           />
 
-          {images.length > 1 ? (
+          {validImages.length > 1 ? (
             <button
               type="button"
               onClick={() => setShowAll((current) => !current)}
-              className="absolute bottom-4 right-4 inline-flex cursor-pointer items-center gap-2 rounded-full bg-white/96 px-4 py-2 text-[13px] font-semibold text-theme shadow-[0_10px_20px_rgba(15,23,42,0.12)] transition hover:bg-theme-bg">
-              <Images size={15} className="text-[var(--c-brand)]" />
-              {showAll ? "Show less" : `View all photos (${images.length})`}
+              className="absolute bottom-3 right-3 inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-white/95 px-3 py-1.5 text-[11px] font-semibold text-theme shadow-[0_6px_16px_rgba(15,23,42,0.1)] transition hover:bg-theme-bg">
+              <Images size={13} className="text-[var(--c-brand)]" />
+              {showAll ? "Show less" : `Photos (${validImages.length})`}
             </button>
           ) : null}
         </div>
 
         {sideImages.length ? (
-          <div className="grid gap-3 grid-rows-2">
+          <div className="grid grid-rows-2 gap-1">
             {sideImages.map((image, index) => (
               <div
                 key={`${image}-${index}`}
-                className={`overflow-hidden rounded-[1.5rem] bg-theme-bg shadow-[0_12px_28px_rgba(15,23,42,0.06)] ${
+                className={`overflow-hidden rounded-xl border border-slate-200 bg-theme-bg ${
                   hasSingleSideImage ? "row-span-2" : ""
                 }`}>
                 <GalleryImage
                   src={image}
                   alt={`${title} gallery ${index + 2}`}
+                  onError={() => handleImageError(image)}
                   className={`w-full object-cover ${
                     hasSingleSideImage
-                      ? "h-[340px] lg:h-[380px]"
-                      : "h-[164px] lg:h-[184px]"
+                      ? "h-[280px] lg:h-[300px]"
+                      : "h-[138px] lg:h-[148px]"
                   }`}
                 />
               </div>
@@ -220,35 +192,37 @@ export const TourImageGallery = ({ images, title }) => {
         ) : null}
       </div>
 
-      <div className="space-y-3 md:hidden">
-        <div className="relative overflow-hidden rounded-[1.35rem] bg-theme-bg shadow-[0_12px_28px_rgba(15,23,42,0.06)]">
+      <div className="space-y-1 md:hidden">
+        <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-theme-bg">
           <GalleryImage
             src={mainImage}
             alt={`${title} main`}
-            className="h-[250px]"
+            onError={() => handleImageError(mainImage)}
+            className="h-[180px] sm:h-[220px]"
           />
 
-          {images.length > 1 ? (
+          {validImages.length > 1 ? (
             <button
               type="button"
               onClick={() => setShowAll((current) => !current)}
-              className="absolute bottom-3 right-3 inline-flex cursor-pointer items-center gap-2 rounded-full bg-white/96 px-3.5 py-2 text-[12px] font-semibold text-theme shadow-[0_10px_20px_rgba(15,23,42,0.12)] transition hover:bg-theme-bg">
-              <Images size={14} className="text-[var(--c-brand)]" />
-              {showAll ? "Show less" : `View all photos (${images.length})`}
+              className="absolute bottom-2.5 right-2.5 inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-white/95 px-2.5 py-1.5 text-[10px] font-semibold text-theme shadow-[0_6px_16px_rgba(15,23,42,0.1)] transition hover:bg-theme-bg">
+              <Images size={12} className="text-[var(--c-brand)]" />
+              {showAll ? "Show less" : `Photos (${validImages.length})`}
             </button>
           ) : null}
         </div>
 
         {sideImages.length ? (
-          <div className="grid gap-3">
+          <div className="grid grid-cols-2 gap-1">
             {sideImages.map((image, index) => (
               <div
                 key={`${image}-${index}`}
-                className="overflow-hidden rounded-[1.15rem] bg-theme-bg shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
+                className="overflow-hidden rounded-lg border border-slate-200 bg-theme-bg">
                 <GalleryImage
                   src={image}
                   alt={`${title} gallery ${index + 2}`}
-                  className="h-[150px]"
+                  onError={() => handleImageError(image)}
+                  className="h-[105px] sm:h-[125px]"
                 />
               </div>
             ))}
@@ -256,16 +230,17 @@ export const TourImageGallery = ({ images, title }) => {
         ) : null}
       </div>
 
-      {showAll && images.length > 3 ? (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {images.slice(3).map((image, index) => (
+      {showAll && validImages.length > 3 ? (
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
+          {validImages.slice(3).map((image, index) => (
             <div
               key={`${image}-extra-${index}`}
-              className="overflow-hidden rounded-[1.25rem] bg-theme-bg shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
+              className="overflow-hidden rounded-lg border border-slate-200 bg-theme-bg">
               <GalleryImage
                 src={image}
                 alt={`${title} extra ${index + 4}`}
-                className="h-[200px]"
+                onError={() => handleImageError(image)}
+                className="h-[120px] sm:h-[150px]"
               />
             </div>
           ))}
@@ -276,47 +251,28 @@ export const TourImageGallery = ({ images, title }) => {
 };
 
 export const TourBookingCard = ({ tour }) => (
-  <aside className="rounded-[1.75rem] border border-[rgba(15,23,42,0.08)] bg-theme-surface p-5 shadow-[0_18px_40px_rgba(15,23,42,0.06)]">
-    <div className="space-y-4">
+  <aside className="overflow-hidden rounded-xl border border-[rgba(15,23,42,0.08)] bg-theme-surface shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
+    <div className="h-0.5 bg-[var(--c-brand)]" />
+    <div className="grid items-center gap-4 p-4 lg:grid-cols-[minmax(180px,0.55fr)_minmax(320px,1fr)_auto] lg:gap-6 lg:px-5">
       <div>
-        <p className="text-[11px] font-black uppercase tracking-[0.18em] text-muted">
+        <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted">
           Starting from
         </p>
 
         <div className="mt-2 flex items-end gap-2">
-          <span className="text-[2rem] font-semibold leading-none text-theme">
+          <span className="text-[1.35rem] font-bold leading-none text-theme">
             {formatCurrencyAmount(tour.price, tour.currency)}
           </span>
         </div>
 
-        <p className="mt-1 text-[13px] text-muted">
+        <p className="mt-1 text-[11px] text-muted">
           Per trip, based on selected plan
         </p>
       </div>
 
       <TourDetailsActions tour={tour} layout="compact" />
 
-      <div className="space-y-3 border-t border-theme pt-4 text-[14px] text-muted">
-        <p className="inline-flex items-center gap-2">
-          <ShieldCheck size={15} className="text-[var(--c-brand)]" />
-          Free consultation
-        </p>
-
-        <p className="inline-flex items-center gap-2">
-          <ShieldCheck size={15} className="text-[var(--c-brand)]" />
-          Local expert support
-        </p>
-
-        <p className="inline-flex items-center gap-2">
-          <ShieldCheck size={15} className="text-[var(--c-brand)]" />
-          Transparent pricing
-        </p>
-
-        <p className="inline-flex items-center gap-2">
-          <ShieldCheck size={15} className="text-[var(--c-brand)]" />
-          Flexible planning
-        </p>
-      </div>
+      <p className="flex items-center gap-2 border-t border-theme pt-3 text-xs text-muted lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0"><ShieldCheck size={14} className="text-[var(--c-brand)]" />Secure booking request</p>
     </div>
   </aside>
 );

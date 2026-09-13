@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useParams } from "@/lib/router";
 
-import { usePublicTour, usePublicTours, useSettings } from "../hooks/useCms";
+import { usePublicContentList, usePublicTour, usePublicTours, useSettings } from "../hooks/useCms";
 import {
   MobileBookingBar,
   TourBookingCard,
@@ -17,10 +17,7 @@ import {
   OverviewSection,
   RouteSection,
 } from "../components/tour-details/TourDetailsContentSections";
-import {
-  RelatedToursSection,
-  ReviewsSection,
-} from "../components/tour-details/TourDetailsFooterSections";
+import { ReviewsSection } from "../components/tour-details/TourDetailsFooterSections";
 import {
   buildCommonTourFacts,
   buildDetailedDescription,
@@ -29,13 +26,11 @@ import {
   buildPackageOverview,
   buildPlacesCovered,
   buildTourReviews,
-  fallbackFaq,
   getTourHeroImages,
   getTourPlaceName,
   getTourPlanLabel,
 } from "../components/tour-details/tourDetailsData";
 
-const MAX_RELATED_TOURS = 4;
 const MAX_ITINERARY_DAYS = 10;
 
 const getRatingValue = (tour, reviews) => {
@@ -49,7 +44,7 @@ const getRatingValue = (tour, reviews) => {
   }
 
   const tourRating = Number(tour?.rating);
-  return Number.isFinite(tourRating) && tourRating > 0 ? tourRating : 4.8;
+  return Number.isFinite(tourRating) && tourRating > 0 ? tourRating : 0;
 };
 
 const buildBeforeYouBookNotes = (transportNote) => {
@@ -59,12 +54,7 @@ const buildBeforeYouBookNotes = (transportNote) => {
     .filter(Boolean)
     .slice(0, 2);
 
-  return Array.from(
-    new Set([
-      ...noteParts,
-      "Final route flow and operational details are reconfirmed before departure.",
-    ]),
-  ).slice(0, 4);
+  return Array.from(new Set(noteParts)).slice(0, 4);
 };
 
 const TourDetails = () => {
@@ -73,6 +63,7 @@ const TourDetails = () => {
   const { data: directTour } = usePublicTour(slug);
   const { data: tours = [] } = usePublicTours();
   const { data: settings = {} } = useSettings(true);
+  const { data: faqEntries = [] } = usePublicContentList("faq");
 
   const [openFaq, setOpenFaq] = useState(0);
   const [openItineraryDay, setOpenItineraryDay] = useState(0);
@@ -82,14 +73,12 @@ const TourDetails = () => {
     return tours.find((item) => item.slug === slug || item.id === slug);
   }, [directTour, tours, slug]);
 
-  const relatedTours = useMemo(() => {
-    if (!tour) return [];
-
-    return tours
-      .filter((item) => item.id !== tour.id && item.slug !== tour.slug)
-      .sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)))
-      .slice(0, MAX_RELATED_TOURS);
-  }, [tours, tour]);
+  const faqItems = useMemo(
+    () => faqEntries
+      .map((item) => ({ q: item.question || item.title || "", a: item.answer || item.description || "" }))
+      .filter((item) => item.q && item.a),
+    [faqEntries],
+  );
 
   const tourData = useMemo(() => {
     if (!tour) return null;
@@ -150,13 +139,13 @@ const TourDetails = () => {
   } = tourData;
 
   return (
-    <section className="bg-theme-bg pb-28 pt-8 md:pb-12 md:pt-10">
-      <div className="mx-auto w-full max-w-[1280px] px-4 sm:px-6 lg:px-8">
+    <section className="bg-[linear-gradient(180deg,#f7fafc_0%,var(--c-bg)_34%,var(--c-bg)_100%)] pb-24 pt-5 md:pb-12 md:pt-7">
+      <div className="w-full px-4 sm:px-6 lg:px-10 xl:px-14">
         <TourDetailsBreadcrumbs tour={tour} />
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
-          <section className="w-full">
-            <div className="space-y-5">
+        <div className="mt-4">
+          <section className="w-full min-w-0">
+            <div className="space-y-4">
               <TourDetailsHeader
                 tour={tour}
                 ratingValue={ratingValue}
@@ -169,18 +158,13 @@ const TourDetails = () => {
               </div>
 
               <TourImageGallery images={heroImages} title={tour.title} />
-            </div>
-          </section>
 
-          <aside className="hidden lg:block">
-            <div className="sticky top-24">
-              <TourBookingCard
-                tour={tour}
-              />
+              <div className="hidden lg:block">
+                <TourBookingCard tour={tour} />
+              </div>
             </div>
-          </aside>
 
-          <div className="w-full space-y-0 lg:col-span-2">
+            <div className="mt-5 w-full overflow-hidden rounded-xl border border-slate-200 bg-white px-4 shadow-[0_6px_20px_rgba(6,27,58,0.035)] sm:px-5 lg:px-6">
             <OverviewSection
               description={detailedDescription}
               packageOverview={packageOverview}
@@ -207,15 +191,15 @@ const TourDetails = () => {
             <ReviewsSection reviews={reviews} />
 
             <FaqSection
-              items={fallbackFaq}
+              items={faqItems}
               openIndex={openFaq}
               onToggle={(index) =>
                 setOpenFaq((current) => (current === index ? -1 : index))
               }
             />
 
-            <RelatedToursSection tours={relatedTours} />
-          </div>
+            </div>
+          </section>
         </div>
       </div>
 

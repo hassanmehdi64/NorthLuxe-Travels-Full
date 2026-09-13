@@ -52,11 +52,11 @@ const BlogDetails = () => {
             {formattedDate ? <span className="inline-flex items-center gap-1.5"><CalendarDays size={12} />{formattedDate}</span> : null}
             {readingTime ? <span className="inline-flex items-center gap-1.5"><Clock3 size={12} />{readingTime} min read</span> : null}
           </div>
-          <h1 className="mt-4 text-[2rem] font-bold leading-[1.1] tracking-[-0.04em] text-[#061b3a] sm:text-[2.8rem] lg:text-[3.35rem]">{blog.title}</h1>
+          <h1 className="mt-3 text-[1.65rem] font-bold leading-[1.12] tracking-[-0.035em] text-[#061b3a] sm:text-[2.15rem] lg:text-[2.55rem]">{blog.title}</h1>
           {blog.excerpt ? <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-500 sm:text-base">{blog.excerpt}</p> : null}
         </header>
 
-        {blog.image ? <div className="mt-7 overflow-hidden rounded-2xl bg-slate-100"><img src={blog.image} alt={blog.title} className="h-[250px] w-full object-cover sm:h-[380px] lg:h-[470px]" /></div> : null}
+        {blog.image ? <div className="mx-auto mt-6 max-w-[1000px] overflow-hidden rounded-xl bg-slate-100"><img src={blog.image} alt={blog.title} className="h-[190px] w-full object-cover sm:h-[270px] lg:h-[340px]" /></div> : null}
 
         {paragraphs.length ? <div className="mx-auto mt-8 max-w-[760px] space-y-5">{paragraphs.map((paragraph, paragraphIndex) => <p key={`${paragraphIndex}-${paragraph.slice(0, 28)}`} className="text-[15px] leading-8 text-slate-700 sm:text-base">{paragraph}</p>)}</div> : null}
 
