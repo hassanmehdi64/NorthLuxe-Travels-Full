@@ -44,16 +44,18 @@ const BookingDropdown = ({
     <div className="relative min-w-0" ref={menuRef}>
       <button
         type="button"
-        className={`w-full rounded-xl border px-3 py-2.5 text-left text-sm text-theme transition ${
+        className={`min-h-[44px] w-full overflow-hidden rounded-[0.625rem] border px-3.5 py-2.5 text-left text-[13px] text-theme outline-none transition ${
           disabled
             ? "cursor-not-allowed border-[#dde3ea] bg-[#f7f8fa] text-muted"
-            : "cursor-pointer border-[rgba(15,23,42,0.1)] bg-white hover:border-[rgba(15,23,42,0.16)] hover:bg-[#fbfcfd]"
+            : open
+              ? "cursor-pointer border-[rgba(var(--c-brand-rgb),0.65)] bg-white shadow-[0_0_0_3px_rgba(var(--c-brand-rgb),0.09)]"
+              : "cursor-pointer border-[rgba(15,47,87,0.14)] bg-[#fbfcfd] hover:border-[rgba(var(--c-brand-rgb),0.45)] hover:bg-white"
         }`}
         disabled={disabled}
         onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
       >
-        <div className="pr-7">
+        <div className="min-w-0 pr-7">
           <span className="block truncate font-semibold">
             {selectedOption?.label || placeholder}
           </span>
@@ -73,7 +75,7 @@ const BookingDropdown = ({
 
       {!disabled && open ? (
         <div
-          className={`absolute z-[120] max-h-[min(18rem,70vh)] w-full min-w-0 overflow-hidden rounded-xl border border-[rgba(15,23,42,0.12)] bg-white p-1.5 shadow-[0_16px_32px_rgba(15,23,42,0.12)] ${
+          className={`absolute z-[120] max-h-[min(18rem,70vh)] w-full min-w-0 overflow-hidden rounded-xl border border-[rgba(15,47,87,0.12)] bg-white p-1.5 shadow-[0_18px_40px_rgba(15,47,87,0.13)] ${
             openUpward ? "bottom-full mb-2" : "top-full mt-2"
           }`}
         >
@@ -88,10 +90,10 @@ const BookingDropdown = ({
                     onChange(item.value);
                     setOpen(false);
                   }}
-                  className={`w-full cursor-pointer rounded-lg px-3 py-2.5 text-left text-sm transition ${
+                  className={`w-full cursor-pointer rounded-lg px-3 py-2.5 text-left text-[13px] transition ${
                     isActive
-                      ? "bg-[#F7F1E3] text-[#2B2B2B]"
-                      : "bg-white text-theme hover:bg-[#f7f8fa]"
+                      ? "bg-[rgba(var(--c-brand-rgb),0.1)] text-[var(--c-brand-dark)]"
+                      : "bg-white text-theme hover:bg-[rgba(var(--c-brand-rgb),0.045)]"
                   }`}
                 >
                   <div className="flex min-w-0 items-start justify-between gap-3">

@@ -10,8 +10,8 @@ const BookingStepTabs = ({
   isTravelSectionValid,
   onStepChange,
 }) => (
-  <div className="rounded-xl border border-booking bg-booking-soft p-1.5">
-    <div className="grid grid-cols-3 gap-1.5">
+  <nav aria-label="Booking progress" className="rounded-xl border border-booking bg-[#fbfcfc] px-2 py-2 sm:px-3">
+    <div className="grid grid-cols-3">
       {STEP_ITEMS.map((item) => {
         const canOpen =
           item.id === 1 ||
@@ -23,22 +23,26 @@ const BookingStepTabs = ({
             type="button"
             disabled={!canOpen}
             onClick={() => canOpen && onStepChange(item.id)}
-            className={`rounded-lg border px-2 py-2 text-center transition sm:px-3 sm:text-left ${
+            className={`group relative flex min-w-0 items-center justify-center gap-2 rounded-lg px-1.5 py-2 text-center transition sm:px-3 ${
               activeSection === item.id
-                ? "border-booking bg-white text-theme shadow-sm"
+                ? "bg-white text-theme shadow-[0_1px_5px_rgba(15,47,87,0.08)]"
                 : canOpen
-                  ? "cursor-pointer border-booking-soft bg-white/70 text-heading hover:border-booking hover:bg-white"
-                  : "cursor-not-allowed border-slate-200 bg-slate-50 text-muted opacity-70"
+                  ? "cursor-pointer text-muted hover:bg-white/70 hover:text-theme"
+                  : "cursor-not-allowed text-muted opacity-40"
             }`}
           >
-            <p className="text-[9px] font-bold uppercase tracking-[0.08em] sm:text-[10px] sm:tracking-[0.12em]">Step {item.id}</p>
-            <p className="mt-1 text-[11px] font-semibold leading-4 sm:hidden">{item.short}</p>
-            <p className="mt-1 hidden text-[13px] font-semibold leading-5 sm:block">{item.label}</p>
+            <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold ${activeSection === item.id ? "bg-[var(--c-brand)] text-white" : "border border-slate-300 bg-white text-muted"}`}>
+              {item.id}
+            </span>
+            <span className="truncate text-[10px] font-semibold sm:text-[12px]">
+              <span className="sm:hidden">{item.short}</span>
+              <span className="hidden sm:inline">{item.label}</span>
+            </span>
           </button>
         );
       })}
     </div>
-  </div>
+  </nav>
 );
 
 export default BookingStepTabs;

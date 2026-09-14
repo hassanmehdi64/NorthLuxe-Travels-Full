@@ -20,39 +20,26 @@ const BookingTourSummary = ({
       : "10% Advance";
 
   return (
-    <div className="rounded-xl border border-booking bg-booking-soft px-3 py-3 sm:px-4">
-      <p className="text-center text-[9px] font-black uppercase tracking-[0.15em] text-[#4c6472]">
-        Booking Summary
-      </p>
-      <div className="mx-auto mt-3 grid max-w-4xl items-stretch gap-2.5 text-left sm:gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_170px] md:items-center md:text-center">
-        <div className="min-w-0 rounded-lg bg-white/55 px-3 py-2 md:border-r md:border-booking md:bg-transparent md:px-4 md:py-0">
-          <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#6a7f8e]">
-            Selected Tour
-          </p>
-          <p className="mt-1 line-clamp-2 text-sm font-semibold leading-tight text-[#1f3342] sm:text-base md:line-clamp-1 md:text-[1.05rem]">
+    <div className="flex flex-col gap-3 rounded-xl border border-[rgba(var(--c-brand-rgb),0.16)] bg-[#f2f8f5] px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <div className="min-w-0">
+          <p className="line-clamp-1 text-[13px] font-semibold text-theme sm:text-sm">
             {selectedTour.title}
           </p>
-        </div>
-        <div className="min-w-0 rounded-lg bg-white/55 px-3 py-2 md:bg-transparent md:px-0 md:py-0">
-          <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#6a7f8e]">
-            Route & Duration
-          </p>
-          <p className="mt-1 line-clamp-2 text-[12px] font-medium leading-5 text-[#3b5568] sm:text-[13px] md:line-clamp-1">
+          <p className="mt-1 line-clamp-1 text-[11px] text-muted">
             {selectedTour.location} |{" "}
             {selectedTour.durationLabel || `${selectedTour.durationDays} Days`}
           </p>
         </div>
-        <div className="rounded-xl border border-[var(--c-brand)]/35 bg-white px-3 py-2 text-center shadow-sm">
-          <p className="text-[9px] font-black uppercase tracking-[0.13em] text-[var(--c-brand-dark)]">
+        <div className="shrink-0 border-t border-[rgba(var(--c-brand-rgb),0.12)] pt-2 text-left sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0 sm:text-right">
+          <p className="text-[9px] font-semibold uppercase tracking-[0.1em] text-muted">
             {selectedPlanLabel}
           </p>
-          <p className={`mt-0.5 break-words text-sm font-black text-[#123245] sm:text-base ${!isArrivalPayment && paymentPlan === "advance_10" ? "animate-pulse" : ""}`}>
+          <p className="mt-0.5 text-sm font-bold text-theme">
             {quoteLoading && !quoteData
               ? "Calculating..."
               : formatCurrencyAmount(payableAmount, paymentCurrency || selectedTour.currency)}
           </p>
         </div>
-      </div>
     </div>
   );
 };

@@ -9,9 +9,13 @@ const BookingTravelerSection = ({
   isTravelerSectionValid,
   onNext,
 }) => (
-  <div className="space-y-3.5 rounded-xl border border-booking bg-white p-3.5 shadow-[0_8px_20px_rgba(15,23,42,0.04)] sm:p-4">
-    <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
-      <label>
+  <div className="space-y-5 py-1 sm:space-y-6">
+    <div className="border-l-2 border-[var(--c-brand)] pl-3">
+      <p className="text-[15px] font-semibold text-theme">Who is traveling?</p>
+      <p className="mt-1 text-xs text-muted">Add the primary traveler’s contact and ID details.</p>
+    </div>
+    <div className="grid gap-4 md:grid-cols-2">
+      <label className="min-w-0">
         <span className="ql-label">Full Name</span>
         <input
           className="ql-input"
@@ -22,7 +26,7 @@ const BookingTravelerSection = ({
           }
         />
       </label>
-      <label>
+      <label className="min-w-0">
         <span className="ql-label">Email</span>
         <input
           type="email"
@@ -32,7 +36,7 @@ const BookingTravelerSection = ({
           onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
         />
       </label>
-      <label>
+      <label className="min-w-0">
         <span className="ql-label">Phone</span>
         <input
           type="tel"
@@ -42,7 +46,7 @@ const BookingTravelerSection = ({
           onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
         />
       </label>
-      <label>
+      <label className="min-w-0">
         <span className="ql-label">
           {hasLockedTour
             ? "Selected Tour"
@@ -65,8 +69,8 @@ const BookingTravelerSection = ({
       </label>
     </div>
 
-    <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
-      <label>
+    <div className="grid gap-4 border-t border-booking pt-5 md:grid-cols-2">
+      <label className="min-w-0">
         <span className="ql-label">Traveler Type</span>
         <BookingDropdown
           value={form.travelerType}
@@ -81,7 +85,7 @@ const BookingTravelerSection = ({
       </label>
 
       {form.travelerType === "local" ? (
-        <label>
+        <label className="min-w-0">
           <span className="ql-label">Local ID Type</span>
           <BookingDropdown
             value={form.localIdType}
@@ -95,7 +99,7 @@ const BookingTravelerSection = ({
           />
         </label>
       ) : (
-        <label>
+        <label className="min-w-0">
           <span className="ql-label">Country</span>
           <input
             className="ql-input"
@@ -109,7 +113,7 @@ const BookingTravelerSection = ({
       )}
 
       {form.travelerType === "local" ? (
-        <label className="md:col-span-2">
+        <label className="min-w-0 md:col-span-2">
           <span className="ql-label">
             {form.localIdType === "passport" ? "Passport Number" : "CNIC Number"}
           </span>
@@ -123,7 +127,7 @@ const BookingTravelerSection = ({
           />
         </label>
       ) : (
-        <label>
+        <label className="min-w-0">
           <span className="ql-label">Passport Number</span>
           <input
             className="ql-input"
@@ -137,14 +141,14 @@ const BookingTravelerSection = ({
       )}
     </div>
 
-    <div className="mt-2 flex justify-end">
+    <div className="flex justify-end border-t border-booking pt-5">
       <button
         type="button"
         className="ql-btn-primary w-full sm:w-auto"
         disabled={!isTravelerSectionValid}
         onClick={onNext}
       >
-        Next: Travel
+        Continue
       </button>
     </div>
   </div>

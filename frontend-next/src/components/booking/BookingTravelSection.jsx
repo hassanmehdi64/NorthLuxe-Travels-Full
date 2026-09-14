@@ -156,9 +156,13 @@ const BookingTravelSection = ({
   onBack,
   onNext,
 }) => (
-  <div className="space-y-3.5 rounded-xl border border-booking bg-white p-3.5 shadow-[0_8px_20px_rgba(15,23,42,0.04)] sm:p-4">
-    <div className="rounded-xl border border-booking-soft bg-booking-soft p-2.5 sm:p-3">
-      <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
+  <div className="space-y-5 py-1 sm:space-y-6">
+    <div className="border-l-2 border-[var(--c-brand)] pl-3">
+      <p className="text-[15px] font-semibold text-theme">When and how?</p>
+      <p className="mt-1 text-xs text-muted">Choose your dates, group size and travel preferences.</p>
+    </div>
+    <div>
+      <div className="grid gap-4 md:grid-cols-2">
         <label>
           <span className="ql-label">Start Date</span>
           <BookingDatePicker
@@ -179,26 +183,26 @@ const BookingTravelSection = ({
               setForm((p) => ({ ...p, endDate: nextValue }))
             }
           />
-          <label className="mt-2 inline-flex items-center gap-2 text-[13px] text-textMuted">
-            <input
-              type="checkbox"
-              className="ql-check"
-              checked={form.flexibleDates}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, flexibleDates: e.target.checked }))
-              }
-            />
-            My dates are flexible
-          </label>
           {form.travelDate && form.endDate && form.endDate < form.travelDate ? (
             <span className="mt-1 block text-xs text-red-500">End date cannot be before travel date.</span>
           ) : null}
         </label>
+        <label className="booking-check-field md:col-span-2">
+          <input
+            type="checkbox"
+            className="ql-check"
+            checked={form.flexibleDates}
+            onChange={(e) =>
+              setForm((p) => ({ ...p, flexibleDates: e.target.checked }))
+            }
+          />
+          <span>My travel dates are flexible</span>
+        </label>
       </div>
     </div>
 
-    <div className="rounded-xl border border-booking-soft bg-booking-soft p-2.5 sm:p-3">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="border-t border-booking pt-5">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <label className="space-y-2">
           <span className="ql-label mb-0 text-[10px] normal-case tracking-[0.08em]">Departure Time</span>
           <BookingDropdown
@@ -251,8 +255,8 @@ const BookingTravelSection = ({
       </div>
     </div>
 
-    <div className="space-y-3.5 rounded-xl border border-booking-soft bg-booking-soft p-2.5 sm:p-3">
-      <label className="inline-flex items-center gap-2 text-sm text-textMain">
+    <div className="space-y-4 border-t border-booking pt-5">
+      <label className="booking-check-field">
         <input
           type="checkbox"
           className="ql-check"
@@ -267,10 +271,10 @@ const BookingTravelSection = ({
             }))
           }
         />
-        Include Hotel Stay
+        <span>Include hotel stay</span>
       </label>
 
-      <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2">
         <label>
           <span className="ql-label">Hotel Category</span>
           <BookingDropdown
@@ -327,7 +331,7 @@ const BookingTravelSection = ({
       />
     </label>
 
-    <div className="mt-2 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+    <div className="flex flex-col-reverse gap-3 border-t border-booking pt-5 sm:flex-row sm:justify-between">
       <button
         type="button"
         className="ql-btn-secondary w-full sm:w-auto"
@@ -341,7 +345,7 @@ const BookingTravelSection = ({
         disabled={!isTravelSectionValid}
         onClick={onNext}
       >
-        Next: Payment
+        Continue
       </button>
     </div>
   </div>

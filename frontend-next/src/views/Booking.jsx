@@ -11,7 +11,6 @@ import {
 import BookingHeader from "../components/booking/BookingHeader";
 import BookingPreferencesSection from "../components/booking/BookingPreferencesSection";
 import BookingReviewStep from "../components/booking/BookingReviewStep";
-import BookingSidebar from "../components/booking/BookingSidebar";
 import BookingStepTabs from "../components/booking/BookingStepTabs";
 import BookingSuccessStep from "../components/booking/BookingSuccessStep";
 import BookingTourSummary from "../components/booking/BookingTourSummary";
@@ -140,18 +139,6 @@ const Booking = () => {
   const selectedTour = useMemo(
     () => tours.find((tour) => tour.id === form.tourId),
     [tours, form.tourId],
-  );
-
-  const popularPlans = useMemo(
-    () =>
-      [...tours]
-        .sort((a, b) => {
-          const scoreA = Number(Boolean(a.featured)) * 2 + Number(a.availableSeats || 0);
-          const scoreB = Number(Boolean(b.featured)) * 2 + Number(b.availableSeats || 0);
-          return scoreB - scoreA;
-        })
-        .slice(0, 3),
-    [tours],
   );
 
   const hotelOptions = useMemo(
@@ -611,26 +598,14 @@ const Booking = () => {
   };
 
   return (
-    <section className="min-h-[calc(100vh-4rem)] bg-theme-bg py-4 sm:py-6 md:py-8">
-      <div className="mx-auto w-full max-w-6xl px-3 sm:px-5 lg:px-8">
-        <div className="ql-form-shell booking-form-shell [&_.ql-label]:text-[10px] [&_.ql-label]:tracking-[0.12em] [&_.ql-input]:text-[13px] [&_.ql-input]:py-2 [&_.ql-input]:px-3 [&_.ql-textarea]:text-[13px] [&_.ql-textarea]:px-3 [&_.ql-textarea]:py-2 [&_.ql-btn-primary]:text-[13px] [&_.ql-btn-secondary]:text-[13px]">
+    <section className="min-h-[calc(100vh-4rem)] overflow-x-clip bg-[radial-gradient(circle_at_top_left,rgba(var(--c-brand-rgb),0.08),transparent_28%),linear-gradient(180deg,#f7faf9_0%,#f4f7f9_100%)] py-4 sm:py-7 lg:py-9">
+      <div className="mx-auto w-full max-w-[1040px] px-3 sm:px-5 lg:px-6">
+        <div className="ql-form-shell booking-form-shell [&_.ql-label]:text-[11px] [&_.ql-label]:normal-case [&_.ql-label]:tracking-normal [&_.ql-input]:text-[13px] [&_.ql-input]:px-3.5 [&_.ql-input]:py-2.5 [&_.ql-textarea]:px-3.5 [&_.ql-textarea]:py-2.5 [&_.ql-textarea]:text-[13px] [&_.ql-btn-primary]:text-[13px] [&_.ql-btn-secondary]:text-[13px]">
           <BookingHeader isCustomBooking={isCustomBooking} action={action} />
 
           {step === 1 ? (
-            <div className="p-3 sm:p-4 md:p-5">
-              <div className="grid min-w-0 gap-3.5 lg:gap-4 xl:grid-cols-[minmax(0,1fr)_280px] xl:gap-5 xl:items-start">
-                <div className="min-w-0 space-y-3.5">
-                  {isStandardBooking ? (
-                    <BookingTourSummary
-                      selectedTour={selectedTour}
-                      quoteData={quoteData}
-                      quoteLoading={quoteBooking.isPending}
-                      paymentPlan={form.paymentPlan}
-                      paymentCurrency={paymentCurrency}
-                      isArrivalPayment={isPayOnArrival}
-                    />
-                  ) : null}
-
+            <div className="p-4 sm:p-6 lg:p-7">
+              <div className="min-w-0 space-y-5 sm:space-y-6">
                   <BookingStepTabs
                     activeSection={activeSection}
                     isTravelerSectionValid={isTravelerSectionValid}
@@ -643,6 +618,17 @@ const Booking = () => {
                       )
                     }
                   />
+
+                  {isStandardBooking ? (
+                    <BookingTourSummary
+                      selectedTour={selectedTour}
+                      quoteData={quoteData}
+                      quoteLoading={quoteBooking.isPending}
+                      paymentPlan={form.paymentPlan}
+                      paymentCurrency={paymentCurrency}
+                      isArrivalPayment={isPayOnArrival}
+                    />
+                  ) : null}
 
                   {activeSection === 1 ? (
                     <BookingTravelerSection
@@ -683,17 +669,9 @@ const Booking = () => {
                       isTravelSectionValid={isTravelSectionValid}
                       isPreferencesSectionValid={isPreferencesSectionValid}
                       onBack={() => setActiveSection(2)}
-                      onCancel={() => navigate("/tours")}
                       onContinue={requestQuote}
                     />
                   ) : null}
-                </div>
-
-                <BookingSidebar
-                  popularPlans={popularPlans}
-                  selectedTourId={form.tourId}
-                  setForm={setForm}
-                />
               </div>
             </div>
           ) : null}

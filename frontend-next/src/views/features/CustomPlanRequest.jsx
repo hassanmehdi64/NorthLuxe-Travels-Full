@@ -4,7 +4,6 @@ import { CalendarDays, ChevronDown } from "lucide-react";
 import { createPortal } from "react-dom";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
-import FeaturePageHeader from "../../components/features/FeaturePageHeader";
 import { useCreatePublicBooking } from "../../hooks/useCms";
 import { useToast } from "../../context/ToastContext";
 import { formatCurrencyAmount } from "../../utils/currency";
@@ -102,10 +101,10 @@ const BookingStyleDropdown = ({
   }, [open, options.length]);
 
   return (
-    <div className="relative" ref={menuRef}>
+    <div className="relative min-w-0" ref={menuRef}>
       <button
         type="button"
-        className={`w-full rounded-2xl border px-4 py-3 text-left text-sm text-theme transition ${
+        className={`w-full min-w-0 overflow-hidden rounded-lg border px-3 py-2.5 text-left text-[13px] text-theme transition ${
           open
             ? "border-[#67d7b2] bg-[#f2fff9] shadow-[0_5px_14px_rgba(123,231,196,0.14)]"
             : "border-[var(--c-border)] bg-white hover:border-[#8fdcc1] hover:bg-[#fbfffd]"
@@ -126,7 +125,7 @@ const BookingStyleDropdown = ({
 
       {open ? (
         <div
-          className={`absolute z-[120] w-full overflow-hidden rounded-2xl border border-[#89dfc3] bg-white p-1.5 shadow-[0_16px_32px_rgba(15,23,42,0.16)] ${
+          className={`absolute z-[120] w-full overflow-hidden rounded-lg border border-[#89dfc3] bg-white p-1 shadow-[0_12px_28px_rgba(15,23,42,0.12)] ${
             openUpward ? "bottom-full mb-2" : "top-full mt-2"
           }`}
         >
@@ -137,7 +136,7 @@ const BookingStyleDropdown = ({
                   return (
                     <label
                       key={item.value}
-                      className={`flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2.5 text-sm transition ${
+                      className={`flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-[13px] transition ${
                         active ? "bg-[#dcf8ed] text-theme" : "bg-[#f8fffc] text-theme hover:bg-[#dcf8ed]"
                       }`}
                     >
@@ -161,7 +160,7 @@ const BookingStyleDropdown = ({
                         onChange?.(item.value);
                         setOpen(false);
                       }}
-                      className={`w-full rounded-xl px-3 py-2.5 text-left text-sm transition ${
+                      className={`w-full rounded-md px-3 py-2 text-left text-[13px] transition ${
                         active
                           ? "bg-[#20b77a] font-semibold text-white"
                           : "bg-[#f8fffc] text-theme hover:bg-[#dcf8ed]"
@@ -247,7 +246,7 @@ const BookingStyleDateField = ({ value, onChange, placeholder = "Select date" })
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="w-full rounded-xl border border-[var(--c-border)] bg-[var(--c-surface)] px-3.5 py-2.5 text-left text-sm text-[var(--c-text)] outline-none transition-all hover:border-[var(--c-brand)]/50"
+        className="w-full min-h-[44px] rounded-[0.625rem] border border-[rgba(15,47,87,0.14)] bg-[#fbfcfd] px-3.5 py-2.5 text-left text-[13px] text-[var(--c-text)] outline-none transition-all hover:border-[rgba(var(--c-brand-rgb),0.45)] hover:bg-white focus:border-[rgba(var(--c-brand-rgb),0.65)] focus:shadow-[0_0_0_3px_rgba(var(--c-brand-rgb),0.09)]"
       >
         <span className="flex items-center gap-2">
           <CalendarDays size={16} className="text-[var(--c-muted)]" />
@@ -486,18 +485,16 @@ const CustomPlanRequest = () => {
   })();
 
   return (
-    <section className="py-20 bg-theme-bg min-h-[70vh]">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <FeaturePageHeader
-          eyebrow="Tailored Planning"
-          title="Custom Tour"
-          highlight="Plan Request"
-          description="Share your budget and preferences to receive a tour plan tailored to your comfort and spending level."
-        />
+    <section className="min-h-[70vh] overflow-x-clip bg-[#f6f8fa] py-6 sm:py-8">
+      <div className="mx-auto max-w-[860px] px-3 sm:px-5">
+        <div className="mb-5">
+          <h1 className="text-xl font-semibold tracking-tight text-theme sm:text-2xl">Plan a custom trip</h1>
+          <p className="mt-1 max-w-xl text-[13px] leading-5 text-muted">Share the essentials and our team will prepare a trip around your preferences.</p>
+        </div>
 
         {submissionNotice ? (
-          <div ref={noticeRef} className="ql-form-shell px-6 py-8 text-center">
-            <div className="mx-auto max-w-2xl rounded-[24px] border border-[rgba(123,231,196,0.34)] bg-[linear-gradient(180deg,rgba(234,253,245,0.96),rgba(255,255,255,0.98))] px-6 py-7 shadow-[0_14px_34px_rgba(123,231,196,0.16)]">
+          <div ref={noticeRef} className="booking-form-shell border bg-white px-5 py-8 text-center sm:px-6">
+            <div className="mx-auto max-w-2xl rounded-xl border border-[rgba(var(--c-brand-rgb),0.22)] bg-[#f2f8f5] px-5 py-6">
               <p className="text-lg font-semibold text-theme">{submissionNotice.title}</p>
               <p className="mt-3 text-sm leading-7 text-muted">{submissionNotice.message}</p>
               <div className="mt-5 flex justify-center">
@@ -512,7 +509,11 @@ const CustomPlanRequest = () => {
             </div>
           </div>
         ) : (
-        <form onSubmit={handleSubmit} className="ql-form-shell p-7 grid md:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="ql-form-shell booking-form-shell grid gap-4 p-4 sm:p-6 md:grid-cols-2 [&_.ql-label]:text-[11px] [&_.ql-label]:normal-case [&_.ql-label]:tracking-normal">
+          <div className="border-b border-booking pb-3 md:col-span-2">
+            <p className="text-base font-semibold text-theme">Your trip details</p>
+            <p className="mt-1 text-xs text-muted">Fields marked by the form are kept to the information needed for planning.</p>
+          </div>
           <label>
             <span className="ql-label">Full Name</span>
             <input

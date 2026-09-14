@@ -3,8 +3,8 @@ import { Check, MoveUpRight } from "lucide-react";
 import { formatCurrencyAmount } from "../../utils/currency";
 
 const BookingSidebar = ({ popularPlans, selectedTourId, setForm }) => (
-  <aside className="min-w-0 space-y-4 xl:sticky xl:top-24 xl:self-start">
-    <div className="overflow-hidden rounded-2xl border border-booking bg-white shadow-[0_14px_30px_rgba(15,23,42,0.08)]">
+  <aside className="min-w-0 space-y-4 lg:sticky lg:top-24 lg:self-start">
+    <div className="overflow-hidden rounded-xl border border-booking bg-white shadow-[0_6px_20px_rgba(15,23,42,0.05)]">
       <div className="border-b border-booking bg-booking-soft px-3.5 py-3 sm:px-4 sm:py-3.5">
         <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[var(--c-brand-dark)]">
           Suggested tours
@@ -14,19 +14,19 @@ const BookingSidebar = ({ popularPlans, selectedTourId, setForm }) => (
         </p>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto p-3 sm:p-3.5 xl:block xl:divide-y xl:divide-[var(--c-border)] xl:overflow-visible xl:p-0">
+      <div className="flex gap-3 overflow-x-auto p-3 sm:p-3.5 lg:block lg:divide-y lg:divide-[var(--c-border)] lg:overflow-visible lg:p-0">
         {popularPlans.map((plan) => (
           <button
             key={plan.id}
             type="button"
             onClick={() => setForm((p) => ({ ...p, tourId: plan.id }))}
-            className={`group relative w-[245px] shrink-0 rounded-xl border px-3 py-3 text-left transition-all duration-200 xl:w-full xl:rounded-none xl:border-0 xl:px-4 xl:py-3.5 ${
+            className={`group relative w-[245px] shrink-0 rounded-xl border px-3 py-3 text-left transition-all duration-200 lg:w-full lg:rounded-none lg:border-0 lg:px-4 lg:py-3.5 ${
               selectedTourId === plan.id ? "bg-[#e7fbf3]" : "bg-white hover:bg-[#f8fffc]"
             }`}
           >
             <span
               aria-hidden="true"
-              className={`absolute left-0 top-0 h-full w-1 rounded-l-xl transition xl:rounded-l-none ${
+              className={`absolute left-0 top-0 h-full w-1 rounded-l-xl transition lg:rounded-l-none ${
                 selectedTourId === plan.id ? "bg-[var(--c-brand)]" : "bg-transparent"
               }`}
             />

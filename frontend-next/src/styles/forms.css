@@ -6,10 +6,116 @@
   }
 
   .booking-form-shell {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
     overflow: visible;
-    border-radius: 1.25rem;
-    border-color: var(--c-booking-border);
-    box-shadow: 0 16px 38px rgba(15, 47, 87, 0.1);
+    border-radius: 1.125rem;
+    border-color: rgba(15, 47, 87, 0.1);
+    background: #ffffff;
+    background-clip: padding-box;
+    box-shadow: 0 18px 50px rgba(15, 47, 87, 0.08);
+  }
+
+  .booking-form-shell > header:first-child {
+    border-top-left-radius: 1.0625rem;
+    border-top-right-radius: 1.0625rem;
+  }
+
+  .booking-form-shell label,
+  .booking-form-shell .grid,
+  .booking-form-shell .flex,
+  .booking-form-shell input,
+  .booking-form-shell textarea,
+  .booking-form-shell button {
+    min-width: 0;
+  }
+
+  .booking-form-shell input:not([type="checkbox"]):not([type="radio"]),
+  .booking-form-shell textarea,
+  .booking-form-shell .ql-input,
+  .booking-form-shell .ql-textarea {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .booking-form-shell .ql-check {
+    width: 1rem;
+    min-width: 1rem;
+    max-width: 1rem;
+    height: 1rem;
+    flex: 0 0 1rem;
+    margin: 0;
+    cursor: pointer;
+  }
+
+  .booking-check-field {
+    display: inline-flex;
+    width: fit-content;
+    max-width: 100%;
+    align-items: center;
+    gap: 0.625rem;
+    cursor: pointer;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
+    color: var(--c-text);
+    font-size: 0.75rem;
+    line-height: 1.25rem;
+    transition: border-color 160ms ease, background-color 160ms ease;
+  }
+
+  .booking-check-field:hover {
+    color: var(--c-brand-dark);
+  }
+
+  .booking-form-shell .ql-input,
+  .booking-form-shell .ql-textarea {
+    border-radius: 0.625rem;
+    border-color: rgba(15, 47, 87, 0.14);
+    background: #fbfcfd;
+  }
+
+  .booking-form-shell .ql-input {
+    min-height: 2.75rem;
+  }
+
+  .booking-form-shell .ql-input:hover,
+  .booking-form-shell .ql-textarea:hover {
+    border-color: rgba(var(--c-brand-rgb), 0.45);
+    background: #ffffff;
+  }
+
+  .booking-form-shell .ql-input:focus,
+  .booking-form-shell .ql-textarea:focus {
+    border-color: rgba(var(--c-brand-rgb), 0.65);
+    box-shadow: 0 0 0 3px rgba(var(--c-brand-rgb), 0.09);
+  }
+
+  .booking-form-shell .ql-btn-primary,
+  .booking-form-shell .ql-btn-secondary {
+    min-height: 2.625rem;
+    border-radius: 0.625rem;
+    box-shadow: none;
+  }
+
+  @media (max-width: 639px) {
+    .booking-form-shell {
+      border-radius: 0.875rem;
+      box-shadow: 0 8px 28px rgba(15, 47, 87, 0.07);
+    }
+
+    .booking-form-shell > header:first-child {
+      border-top-left-radius: 0.8125rem;
+      border-top-right-radius: 0.8125rem;
+    }
+
+    .booking-form-shell .ql-input,
+    .booking-form-shell .ql-textarea {
+      font-size: 16px;
+    }
   }
 
   .ql-form-header {
