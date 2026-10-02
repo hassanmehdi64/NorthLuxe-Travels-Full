@@ -30,13 +30,13 @@ const ActivityDetails = () => {
       <div className="mx-auto max-w-[1240px] px-4 sm:px-6 lg:px-8">
         <DetailBreadcrumb href="/activities" label="All activities" />
 
-        <header className="mt-4 grid gap-5 border-b border-slate-200 pb-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-          <div>
+        <header className="mt-4 border-b border-slate-200 pb-6">
+          <div className="min-w-0">
             <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-[var(--c-brand)]">Activity</p>
-            <h1 className="mt-2 max-w-4xl text-[1.6rem] font-bold leading-[1.1] tracking-[-0.035em] text-[#061b3a] sm:text-[2rem] lg:text-[2.35rem]">{activity.title}</h1>
-            {activity.shortDescription || activity.description ? <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-500 sm:text-base">{activity.shortDescription || activity.description}</p> : null}
+            <h1 className="mt-2 max-w-4xl text-[1.75rem] font-bold leading-[1.08] tracking-[-0.035em] text-[#061b3a] sm:text-[2.15rem] lg:text-[2.5rem]">{activity.title}</h1>
+            {activity.shortDescription || activity.description ? <p className="mt-3 max-w-4xl text-sm leading-6 text-slate-500 sm:text-[15px] sm:leading-7">{activity.shortDescription || activity.description}</p> : null}
           </div>
-          <div className="lg:justify-self-end"><DetailFacts items={[
+          <div className="mt-5 min-w-0"><DetailFacts items={[
             { icon: MapPin, label: "Location", value: activity.location },
             { icon: Clock3, label: "Duration", value: activity.duration },
             { icon: Mountain, label: "Level", value: activity.level },

@@ -8,6 +8,8 @@ import {
   Headphones,
   CalendarDays,
   Users,
+  SlidersHorizontal,
+  BookOpenCheck,
 } from "lucide-react";
 import { Link, useNavigate } from "@/lib/router";
 import {
@@ -378,7 +380,7 @@ const TourMain = () => {
         <HeroBackgroundSlider />
         <div className="absolute inset-0 z-[14] bg-[linear-gradient(90deg,rgba(6,27,58,0.9)_0%,rgba(6,27,58,0.76)_34%,rgba(6,27,58,0.34)_68%,rgba(6,27,58,0.14)_100%)]" />
 
-        <div className="relative z-20 flex min-h-[520px] items-center px-5 pb-20 pt-10 sm:min-h-[580px] sm:px-10 sm:pb-24 sm:pt-12 md:min-h-[620px] md:px-14 xl:h-full xl:min-h-0 xl:px-[5.5vw] xl:pb-20 xl:pt-12">
+        <div className="relative z-20 flex min-h-[520px] items-center px-5 py-10 sm:min-h-[580px] sm:px-10 sm:py-12 md:min-h-[620px] md:px-14 xl:h-full xl:min-h-0 xl:px-[5.5vw] xl:py-12">
           <div className="max-w-[540px]">
             <div className="flex flex-wrap items-center gap-3 text-[10px] font-bold uppercase tracking-[0.28em] text-white/80 [&>span:nth-child(3)]:hidden [&>span:nth-child(5)]:hidden sm:text-[11px]">
               <span className="h-0.5 w-12 bg-[var(--c-brand)]" />
@@ -419,7 +421,22 @@ const TourMain = () => {
             <button type="submit" className="ql-btn-primary min-h-12 w-full text-sm font-bold"><Search size={18} />Search Journeys</button>
           </form>
 
-          <div className="mt-2.5 flex items-center justify-center gap-4 text-[11px] font-semibold text-slate-600"><Link to="/custom-plan-request" className="transition hover:text-[var(--c-brand)]">Custom request</Link><span className="h-3 w-px bg-slate-200" /><Link to="/book" className="transition hover:text-[var(--c-brand)]">Book directly</Link></div>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <Link
+              to="/custom-plan-request"
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-[11px] font-semibold text-[#294052] shadow-[0_2px_8px_rgba(6,27,58,0.04)] transition hover:border-[rgba(var(--c-brand-rgb),0.38)] hover:bg-[#f5fbf8] hover:text-[var(--c-brand-dark)]"
+            >
+              <SlidersHorizontal size={13} />
+              Custom request
+            </Link>
+            <Link
+              to="/book"
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-[#061b3a] px-3 text-[11px] font-semibold text-white shadow-[0_4px_12px_rgba(6,27,58,0.14)] transition hover:bg-[#0b2c54]"
+            >
+              <BookOpenCheck size={13} />
+              Book directly
+            </Link>
+          </div>
 
           <div className="mt-3 grid grid-cols-3 divide-x divide-slate-200 border-t border-slate-100 pt-3">
             {HERO_POINTS.map(({ icon: Icon, label }) => <div key={label} className="flex flex-col items-center gap-1 px-2 text-center text-[9px] font-semibold leading-3 text-slate-700 sm:flex-row sm:text-left sm:text-[10px]"><Icon size={18} className="shrink-0 text-[#061b3a]" /><span>{label}</span></div>)}

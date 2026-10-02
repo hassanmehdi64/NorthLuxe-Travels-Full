@@ -68,13 +68,13 @@ export const DetailFacts = ({ items = [] }) => {
   const columns = visible.length === 1 ? "sm:grid-cols-1" : visible.length === 2 ? "sm:grid-cols-2" : "sm:grid-cols-3";
 
   return (
-    <div className={`grid w-full gap-px overflow-hidden rounded-lg border border-slate-200 bg-slate-200 shadow-[0_3px_10px_rgba(6,27,58,0.03)] ${columns} ${visible.length === 1 ? "sm:w-auto sm:min-w-[200px]" : ""}`}>
+    <div className={`grid w-full min-w-0 gap-2 ${columns}`}>
       {visible.map(({ icon: Icon, label, value }) => (
-        <div key={`${label}-${value}`} className="flex min-w-0 items-center gap-2 bg-white px-3 py-2.5">
-          {Icon ? <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-[rgba(var(--c-brand-rgb),0.08)] text-[var(--c-brand)]"><Icon size={13} /></span> : null}
+        <div key={`${label}-${value}`} className="flex min-w-0 items-start gap-2.5 rounded-lg border border-slate-200 bg-white px-3.5 py-3">
+          {Icon ? <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-md bg-[rgba(var(--c-brand-rgb),0.08)] text-[var(--c-brand)]"><Icon size={13} /></span> : null}
           <div className="min-w-0">
             <p className="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-400">{label}</p>
-            <p className="mt-0.5 whitespace-nowrap text-xs font-semibold text-[#061b3a]">{value}</p>
+            <p className="mt-0.5 break-words text-xs font-semibold leading-5 text-[#061b3a]">{value}</p>
           </div>
         </div>
       ))}
