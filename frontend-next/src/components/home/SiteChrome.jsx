@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Link, NavLink } from "@/lib/router";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Heart, Search, ShoppingBag, Mail, Phone, MapPin } from "lucide-react";
+import { Heart, Search, ShoppingBag, Mail, Phone, MapPin, Menu, X } from "lucide-react";
 import { useSettings } from "../../hooks/useCms";
 import { getCart, getWishlist } from "../../features/commerce/storage";
 import FooterSocial from "../footer/FooterSocial";
@@ -58,10 +58,10 @@ export function SiteNavigation() {
     <div className="home-nav-tools"><Link to="/search" aria-label="Search tours"><Search size={18} /></Link><Link to="/wishlist" aria-label={`Wishlist, ${counts.wishlist} saved tours`}><Heart size={18} />{counts.wishlist > 0 && <small>{counts.wishlist}</small>}</Link><Link to="/cart" aria-label={`Cart, ${counts.cart} tours`}><ShoppingBag size={18} />{counts.cart > 0 && <small>{counts.cart}</small>}</Link></div>
     <Action to={planRoute} className="home-nav-plan">Plan My Trip</Action>
     <Button className="home-menu" variant="outline" aria-label={open ? "Close navigation" : "Open navigation"} aria-expanded={open} aria-controls="home-mobile-menu" onClick={() => setOpen(!open)}>
-      {open ? <span aria-hidden="true">×</span> : <Icon name="Menu" />}
+      {open ? <X size={17} aria-hidden="true" /> : <Menu size={17} aria-hidden="true" />}
     </Button>
     {open && <nav id="home-mobile-menu" className="home-mobile-nav" aria-label="Mobile navigation">
-      {navigation.map(([label, to]) => <Link key={label} to={to} onClick={() => setOpen(false)}>{label}</Link>)}
+      {navigation.map(([label, to]) => <NavLink key={label} to={to} className={({ isActive }) => isActive ? "is-active" : undefined} onClick={() => setOpen(false)}>{label}</NavLink>)}
       <Action to={planRoute}>Plan My Trip</Action>
     </nav>}
   </header>;
