@@ -71,7 +71,7 @@ const FilterDropdown = ({
           <span className="block text-[8px] font-bold uppercase tracking-[0.17em] text-slate-500">
             {label}
           </span>
-          <span className="mt-1 block truncate text-[13px] font-semibold text-[#061b3a]">
+          <span className="mt-1 block truncate text-[13px] font-semibold text-[var(--c-navy)]">
             {selected?.label || placeholder}
           </span>
         </span>
@@ -147,26 +147,18 @@ const ToursFilter = ({
   return (
     <section className="relative z-20 bg-theme-bg py-5 sm:py-6">
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10">
-        <div className="relative mb-4 flex min-h-7 items-center justify-center">
-          <div className="inline-flex items-center gap-3">
-            <span className="h-px w-8 bg-[var(--c-brand)]" />
-            <h2 className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#061b3a]">
-              Smart Filters
-            </h2>
-            <span className="h-px w-8 bg-[var(--c-brand)]" />
-          </div>
-
+        {hasActiveFilters && <div className="mb-2 flex justify-end">
           <button
             type="button"
             onClick={clearFilters}
             disabled={!hasActiveFilters}
-            className="absolute right-0 inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[10px] font-semibold text-[var(--c-brand-dark)] transition-colors hover:bg-[rgba(var(--c-brand-rgb),0.07)] disabled:pointer-events-none disabled:opacity-35">
+            className="inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-[10px] font-semibold text-[var(--c-brand-dark)] transition-colors hover:bg-[rgba(var(--c-brand-rgb),0.07)] disabled:pointer-events-none disabled:opacity-35">
             <RotateCcw size={12} />
-            <span className="hidden sm:inline">Clear filters</span>
+            <span>Clear filters</span>
           </button>
-        </div>
+        </div>}
 
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-2.5 shadow-[0_10px_28px_rgba(6,27,58,0.07)]">
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-2.5 shadow-[0_10px_28px_rgba(var(--c-brand-rgb),0.07)]">
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
               <FilterDropdown
                 icon={MapPin}

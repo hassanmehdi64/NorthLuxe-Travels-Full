@@ -5,14 +5,14 @@ import OurAchievements from "../components/achievements/OurAchievements";
 
 const About = () => {
   return (
-    <main className="bg-theme-bg text-theme">
+    <main className="about-page bg-theme-bg text-theme">
       <PageHero
         page="about"
         label="About hero"
         tag="About"
         title="About"
         accent="North Luxe"
-        text="We combine local knowledge, practical planning, and reliable on-ground support so every trip feels smooth, safe, and memorable."
+        text="Local knowledge, thoughtful planning and support throughout your journey."
       />
       <OurStory />
       <OurAchievements />

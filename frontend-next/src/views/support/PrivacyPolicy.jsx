@@ -11,8 +11,8 @@ const PrivacyPolicy = () => {
     .map((line) => (line.endsWith(".") ? line : `${line}.`));
 
   return (
-    <section className="bg-theme-bg py-20 min-h-[60vh]">
-      <div className="max-w-4xl mx-auto px-6">
+    <section className="compact-info-page bg-theme-bg py-6 sm:py-8 min-h-[60vh]">
+      <div className="site-page-container mx-auto">
         <FeaturePageHeader
           eyebrow={policy?.eyebrow || "Legal"}
           title="Privacy"
@@ -20,7 +20,7 @@ const PrivacyPolicy = () => {
           description={policy?.shortDescription || "How we collect, use, and protect your information."}
         />
 
-        <div className="rounded-2xl border border-theme bg-theme-surface p-6 md:p-8 space-y-4 text-theme">
+        <div className="rounded-lg border border-theme bg-theme-surface p-4 sm:p-5 space-y-4 text-theme">
           {contentLines.length ? (
             contentLines.map((line) => <p key={line}>{line}</p>)
           ) : (

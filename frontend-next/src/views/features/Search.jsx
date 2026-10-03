@@ -36,7 +36,7 @@ const SearchPage = () => {
   }, [tours, query]);
 
   return (
-    <section className="py-20 bg-theme-bg min-h-[70vh]">
+    <section className="py-10 bg-theme-bg min-h-[70vh]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <FeaturePageHeader
           eyebrow="Quick Search"

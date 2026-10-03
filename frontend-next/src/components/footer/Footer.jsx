@@ -65,9 +65,9 @@ const Footer = () => {
 
   return (
     <footer
-      className="relative overflow-hidden border-t border-white/10 bg-[#061b3a] pb-20 pt-8 text-[var(--footer-text)] sm:pb-6 sm:pt-9"
+      className="relative overflow-hidden border-t border-white/10 bg-[var(--c-navy)] pb-20 pt-8 text-[var(--footer-text)] sm:pb-6 sm:pt-9"
       style={{
-        "--footer-bg": "#061b3a",
+        "--footer-bg": "var(--c-navy)",
         "--footer-text": "#ffffff",
         "--footer-muted": "rgba(255,255,255,0.66)",
         "--footer-accent": footerColors.accentText,

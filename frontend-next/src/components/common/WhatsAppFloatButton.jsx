@@ -17,11 +17,12 @@ const WhatsAppFloatButton = () => {
   const location = useLocation();
   if (location.pathname.startsWith("/admin")) return null;
 
+  const hasMobileBookingBar = /^\/tours\/[^/]+\/?$/.test(location.pathname);
   const messengerLink = settings?.socialLinks?.facebook || "";
   const whatsappLink = buildWhatsAppLink(settings);
 
   return (
-    <div className="fixed bottom-6 right-6 z-[120] flex flex-col items-end gap-2.5">
+    <div className={`site-chat-buttons fixed right-4 z-[120] flex flex-col items-end gap-2.5 sm:right-6 ${hasMobileBookingBar ? "bottom-24 lg:bottom-6" : "bottom-4 sm:bottom-6"}`}>
       {messengerLink ? (
         <a
           href={messengerLink}

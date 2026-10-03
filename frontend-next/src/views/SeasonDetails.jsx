@@ -10,8 +10,8 @@ const SeasonDetails = () => {
 
   if (!season) {
     return (
-      <section className="bg-theme-bg py-10 md:py-12">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-14">
+      <section className="season-detail-page bg-theme-bg py-6 sm:py-8">
+        <div className="site-page-container mx-auto">
           <div className="rounded-2xl border border-dashed border-theme bg-theme-surface py-16 text-center text-muted">
             Seasonal journey not found.
           </div>
@@ -21,8 +21,8 @@ const SeasonDetails = () => {
   }
 
   return (
-    <section className="bg-theme-bg py-10 md:py-12">
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-14 space-y-6">
+    <section className="season-detail-page bg-theme-bg py-6 sm:py-8">
+      <div className="site-page-container mx-auto space-y-6">
         <div className="overflow-hidden rounded-2xl border border-theme bg-theme-surface">
           <div className="relative h-[250px] sm:h-[300px] lg:h-[340px]">
             <img src={season.image} alt={season.title} className="h-full w-full object-cover" />

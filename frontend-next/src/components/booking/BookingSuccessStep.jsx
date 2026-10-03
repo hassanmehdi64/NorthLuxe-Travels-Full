@@ -23,7 +23,7 @@ const BookingSuccessStep = ({
   }, []);
 
   return (
-    <div className="space-y-5 p-4 sm:p-6 lg:p-7 animate-in fade-in duration-300">
+    <div className="space-y-5 p-4 sm:p-5 lg:p-6 animate-in fade-in duration-300">
       <div className="rounded-xl border border-[rgba(var(--c-brand-rgb),0.2)] bg-[#f2f8f5] p-5 text-center sm:p-7">
         <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-white text-emerald-700">
           <ShieldCheck size={21} />
@@ -82,7 +82,7 @@ const BookingSuccessStep = ({
         </p>
       </div>
 
-      <div className="flex flex-col-reverse gap-3 border-t border-booking pt-5 sm:flex-row sm:justify-between">
+      <div className="flex flex-col-reverse gap-3 border-t border-booking pt-4 sm:flex-row sm:justify-between">
         <button
           type="button"
           className="ql-btn-secondary w-full sm:w-auto"

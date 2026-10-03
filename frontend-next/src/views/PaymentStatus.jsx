@@ -1,4 +1,5 @@
-import { AlertCircle, LoaderCircle, ShieldCheck } from "lucide-react";
+import Loader from "../components/spinner/Loader";
+import { AlertCircle, ShieldCheck } from "lucide-react";
 import { Link, useSearchParams } from "@/lib/router";
 import { usePaymentSession } from "../hooks/useCms";
 import { displayCurrency } from "../utils/currency";
@@ -45,7 +46,7 @@ const PaymentStatus = ({ mode = "success" }) => {
         <div className="rounded-3xl border border-theme bg-theme-surface p-6 sm:p-8 shadow-[0_14px_30px_rgba(15,23,42,0.08)]">
           {isLoading ? (
             <div className="py-8 text-center">
-              <LoaderCircle size={26} className="mx-auto animate-spin text-[var(--c-brand)]" />
+              <Loader label="Confirming payment" />
               <p className="mt-4 text-sm text-muted">Confirming your payment with Stripe...</p>
             </div>
           ) : isError || !sessionId ? (

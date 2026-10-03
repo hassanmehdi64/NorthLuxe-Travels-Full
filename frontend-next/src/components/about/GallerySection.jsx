@@ -18,18 +18,7 @@ const GallerySection = () => {
         <div className="mb-6 lg:mb-8">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
             <div className="space-y-2 max-w-2xl">
-              <div className="inline-flex items-center gap-3">
-                <span className="h-px w-8 bg-[var(--c-brand)]" />
-                <span className="text-[var(--c-brand)] font-black uppercase tracking-[0.35em] text-[10px]">
-                  Visual Journal
-                </span>
-              </div>
-              <h2 className="text-3xl md:text-4xl font-bold text-theme tracking-tight">
-                Gallery <span className="text-[var(--c-brand)]">Highlights</span>
-              </h2>
-              <p className="text-muted text-sm md:text-base max-w-xl leading-relaxed">
-                A curated look at routes, landscapes, and guest moments from our journeys across the North.
-              </p>
+              <h2 className="text-3xl md:text-4xl font-bold text-theme tracking-tight">Gallery</h2>
             </div>
 
             <Link
@@ -49,7 +38,7 @@ const GallerySection = () => {
                 key={`${img.src}-${idx}`}
                 type="button"
                 onClick={() => setSelectedImg(img)}
-                className={`group relative overflow-hidden rounded-[10px] border border-slate-200/70 bg-[#061b3a] text-left shadow-[0_2px_8px_rgba(6,27,58,0.05)] transition-[border-color,box-shadow] duration-300 hover:border-[rgba(var(--c-brand-rgb),0.4)] hover:shadow-[0_6px_16px_rgba(6,27,58,0.09)] ${
+                className={`group relative overflow-hidden rounded-[10px] border border-slate-200/70 bg-[var(--c-navy)] text-left shadow-[0_2px_8px_rgba(var(--c-brand-rgb),0.05)] transition-[border-color,box-shadow] duration-300 hover:border-[rgba(var(--c-brand-rgb),0.4)] hover:shadow-[0_6px_16px_rgba(var(--c-brand-rgb),0.09)] ${
                   idx === 0
                     ? "col-span-1 row-span-2 lg:col-span-4"
                     : idx <= 3
@@ -70,8 +59,8 @@ const GallerySection = () => {
                   className="h-full w-full object-cover transition-transform duration-[850ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.055]"
                 />
 
-                <div className="absolute inset-0 bg-[#061b3a]/0 transition-colors duration-400 group-hover:bg-[#061b3a]/25" />
-                <span className="absolute inset-0 m-auto grid h-8 w-8 scale-90 place-items-center rounded-full border border-white/35 bg-[#061b3a]/35 text-white opacity-0 backdrop-blur-md transition-all duration-300 group-hover:scale-100 group-hover:opacity-100">
+                <div className="absolute inset-0 bg-[var(--c-navy)]/0 transition-colors duration-400 group-hover:bg-[var(--c-navy)]/25" />
+                <span className="absolute inset-0 m-auto grid h-8 w-8 scale-90 place-items-center rounded-full border border-white/35 bg-[var(--c-navy)]/35 text-white opacity-0 backdrop-blur-md transition-all duration-300 group-hover:scale-100 group-hover:opacity-100">
                   <Maximize2 size={12} />
                 </span>
                 <span className="absolute inset-x-0 bottom-0 h-0.5 origin-left scale-x-0 bg-[var(--c-brand)] transition-transform duration-400 group-hover:scale-x-100" />

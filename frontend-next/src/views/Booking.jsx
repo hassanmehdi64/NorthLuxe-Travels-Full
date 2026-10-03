@@ -598,14 +598,14 @@ const Booking = () => {
   };
 
   return (
-    <section className="min-h-[calc(100vh-4rem)] overflow-x-clip bg-[radial-gradient(circle_at_top_left,rgba(var(--c-brand-rgb),0.08),transparent_28%),linear-gradient(180deg,#f7faf9_0%,#f4f7f9_100%)] py-4 sm:py-7 lg:py-9">
-      <div className="mx-auto w-full max-w-[1040px] px-3 sm:px-5 lg:px-6">
+    <section className="light-booking-page min-h-[calc(100vh-4rem)] bg-theme-bg py-5 sm:py-7">
+      <div className="mx-auto w-full max-w-[900px] px-3 sm:px-5 lg:px-6">
         <div className="ql-form-shell booking-form-shell [&_.ql-label]:text-[11px] [&_.ql-label]:normal-case [&_.ql-label]:tracking-normal [&_.ql-input]:text-[13px] [&_.ql-input]:px-3.5 [&_.ql-input]:py-2.5 [&_.ql-textarea]:px-3.5 [&_.ql-textarea]:py-2.5 [&_.ql-textarea]:text-[13px] [&_.ql-btn-primary]:text-[13px] [&_.ql-btn-secondary]:text-[13px]">
           <BookingHeader isCustomBooking={isCustomBooking} action={action} />
 
           {step === 1 ? (
-            <div className="p-4 sm:p-6 lg:p-7">
-              <div className="min-w-0 space-y-5 sm:space-y-6">
+            <div className="p-4 sm:p-5 lg:p-6">
+              <div className="min-w-0 space-y-4 sm:space-y-5">
                   <BookingStepTabs
                     activeSection={activeSection}
                     isTravelerSectionValid={isTravelerSectionValid}

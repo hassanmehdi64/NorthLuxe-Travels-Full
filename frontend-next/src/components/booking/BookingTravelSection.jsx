@@ -1,151 +1,5 @@
-import { createPortal } from "react-dom";
-import { CalendarDays } from "lucide-react";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Calendar as UiCalendar } from "@/components/ui/calendar";
 import BookingDropdown from "./BookingDropdown";
-
-const formatDate = (date) => {
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const dd = String(date.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-};
-
-const useIsMobile = (breakpoint = 640) => {
-  const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== "undefined" && window.innerWidth < breakpoint,
-  );
-
-  useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth < breakpoint);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, [breakpoint]);
-
-  return isMobile;
-};
-
-const BookingDatePicker = ({
-  when,
-  setWhen,
-  placeholder = "Select date",
-  disabled = false,
-}) => {
-  const [open, setOpen] = useState(false);
-  const wrapRef = useRef(null);
-  const panelRef = useRef(null);
-  const isMobile = useIsMobile(640);
-  const selectedDate = useMemo(() => (when ? new Date(when) : undefined), [when]);
-  const [pos, setPos] = useState({ top: 0, left: 0, width: 320 });
-
-  const updatePos = () => {
-    const el = wrapRef.current;
-    if (!el) return;
-
-    const rect = el.getBoundingClientRect();
-    const width = Math.min(320, window.innerWidth - 16);
-    const left = Math.min(window.innerWidth - width - 8, Math.max(8, rect.left));
-
-    setPos({
-      top: rect.bottom + 10 + window.scrollY,
-      left: left + window.scrollX,
-      width,
-    });
-  };
-
-  useLayoutEffect(() => {
-    if (!open || isMobile) return;
-    updatePos();
-  }, [open, isMobile]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const onKey = (event) => event.key === "Escape" && setOpen(false);
-    const onResize = () => !isMobile && updatePos();
-    const onPointerDown = (event) => {
-      if (
-        wrapRef.current?.contains(event.target) ||
-        panelRef.current?.contains(event.target)
-      ) {
-        return;
-      }
-      setOpen(false);
-    };
-
-    window.addEventListener("keydown", onKey);
-    window.addEventListener("resize", onResize);
-    window.addEventListener("scroll", onResize, true);
-    document.addEventListener("mousedown", onPointerDown);
-
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("scroll", onResize, true);
-      document.removeEventListener("mousedown", onPointerDown);
-    };
-  }, [open, isMobile]);
-
-  useEffect(() => {
-    if (disabled) setOpen(false);
-  }, [disabled]);
-
-  const calendarContent = (
-    <UiCalendar
-      mode="single"
-      selected={selectedDate}
-      onSelect={(date) => {
-        if (!date) return;
-        setWhen(formatDate(date));
-        setOpen(false);
-      }}
-      className="mx-auto w-full max-w-[17.5rem] rounded-lg border bg-white shadow-[0_18px_40px_rgba(15,23,42,0.12)] sm:max-w-none"
-      fixedWeeks
-      captionLayout="dropdown"
-    />
-  );
-
-  return (
-    <div ref={wrapRef} className="relative">
-      <button
-        type="button"
-        onClick={() => !disabled && setOpen(true)}
-        disabled={disabled}
-        className={`ql-input flex items-center gap-2 text-left text-sm select-none ${disabled ? "cursor-not-allowed opacity-60" : ""}`}
-      >
-        <CalendarDays size={16} className="shrink-0 text-[var(--c-muted)]" />
-        {when ? when : <span style={{ color: "var(--c-muted)" }}>{placeholder}</span>}
-      </button>
-
-      {open &&
-        createPortal(
-          <>
-            {isMobile ? (
-              <div
-                ref={panelRef}
-                className="fixed inset-x-3 top-[4.6rem] z-[99999] sm:inset-x-auto sm:right-4"
-              >
-                <div className="mx-auto w-full max-w-[17.5rem] sm:max-w-[292px]">{calendarContent}</div>
-              </div>
-            ) : (
-              <div
-                ref={panelRef}
-                className="absolute z-[99999]"
-                style={{
-                  top: pos.top,
-                  left: pos.left,
-                  width: pos.width,
-                }}
-              >
-                {calendarContent}
-              </div>
-            )}
-          </>,
-          document.body,
-        )}
-    </div>
-  );
-};
+import BookingDateField from "./BookingDateField";
 
 const BookingTravelSection = ({
   form,
@@ -156,8 +10,8 @@ const BookingTravelSection = ({
   onBack,
   onNext,
 }) => (
-  <div className="space-y-5 py-1 sm:space-y-6">
-    <div className="border-l-2 border-[var(--c-brand)] pl-3">
+  <div className="space-y-4 py-1 sm:space-y-5">
+    <div className="space-y-1">
       <p className="text-[15px] font-semibold text-theme">When and how?</p>
       <p className="mt-1 text-xs text-muted">Choose your dates, group size and travel preferences.</p>
     </div>
@@ -165,21 +19,21 @@ const BookingTravelSection = ({
       <div className="grid gap-4 md:grid-cols-2">
         <label>
           <span className="ql-label">Start Date</span>
-          <BookingDatePicker
+          <BookingDateField
             placeholder="Select start date"
-            when={form.travelDate}
-            setWhen={(nextValue) =>
+            value={form.travelDate}
+            onChange={(nextValue) =>
               setForm((p) => ({ ...p, travelDate: nextValue }))
             }
           />
         </label>
         <label>
           <span className="ql-label">End Date</span>
-          <BookingDatePicker
+          <BookingDateField
             disabled={form.flexibleDates}
             placeholder="Select end date"
-            when={form.endDate}
-            setWhen={(nextValue) =>
+            value={form.endDate}
+            onChange={(nextValue) =>
               setForm((p) => ({ ...p, endDate: nextValue }))
             }
           />
@@ -201,7 +55,7 @@ const BookingTravelSection = ({
       </div>
     </div>
 
-    <div className="border-t border-booking pt-5">
+    <div className="border-t border-booking pt-4">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <label className="space-y-2">
           <span className="ql-label mb-0 text-[10px] normal-case tracking-[0.08em]">Departure Time</span>
@@ -255,7 +109,7 @@ const BookingTravelSection = ({
       </div>
     </div>
 
-    <div className="space-y-4 border-t border-booking pt-5">
+    <div className="space-y-4 border-t border-booking pt-4">
       <label className="booking-check-field">
         <input
           type="checkbox"
@@ -331,7 +185,7 @@ const BookingTravelSection = ({
       />
     </label>
 
-    <div className="flex flex-col-reverse gap-3 border-t border-booking pt-5 sm:flex-row sm:justify-between">
+    <div className="flex flex-col-reverse gap-3 border-t border-booking pt-4 sm:flex-row sm:justify-between">
       <button
         type="button"
         className="ql-btn-secondary w-full sm:w-auto"

@@ -18,7 +18,7 @@ const elementOptions = {
       "::placeholder": {
         color: "#94a3b8",
       },
-      iconColor: "#20b77a",
+      iconColor: "#00875a",
     },
     invalid: {
       color: "#dc2626",
@@ -27,8 +27,8 @@ const elementOptions = {
   },
 };
 
-const FieldShell = ({ label, children }) => (
-  <label className="space-y-2">
+const FieldShell = ({ label, children, className = "" }) => (
+  <label className={`min-w-0 space-y-2 ${className}`}>
     <span className="ql-label">{label}</span>
     <div className="rounded-xl border border-[rgba(15,23,42,0.08)] bg-white px-3 py-3 shadow-[0_8px_18px_rgba(15,23,42,0.04)]">
       {children}
@@ -150,8 +150,8 @@ const BookingCardPaymentFields = ({
           Payment has already been confirmed with reference <strong>{confirmedPayment.transactionReference}</strong>. Submit the booking to finish the process.
         </div>
       ) : (
-        <div className="grid gap-3 md:grid-cols-[minmax(0,1.5fr)_160px_130px]">
-          <FieldShell label="Card Number">
+        <div className="grid grid-cols-2 gap-3 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.8fr)]">
+          <FieldShell label="Card Number" className="col-span-2 xl:col-span-1">
             <CardNumberElement options={elementOptions} onChange={(event) => setCardError(event.error?.message || "")} />
           </FieldShell>
           <FieldShell label="Expiry Date">

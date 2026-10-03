@@ -11,7 +11,7 @@ const GalleryPage = () => {
   const galleryItems = useMemo(() => buildGalleryItems(items, tours), [items, tours]);
 
   return (
-    <section className="py-12 lg:py-14 bg-theme-bg min-h-[60vh]">
+    <section className="py-6 sm:py-8 bg-theme-bg min-h-[60vh]">
       <div className="max-w-[1600px] mx-auto px-8 sm:px-10 lg:px-14 xl:px-16">
         <div className="mb-10 lg:mb-12">
           <div className="space-y-2 max-w-2xl">
@@ -37,7 +37,7 @@ const GalleryPage = () => {
                 key={`${img.src}-${idx}`}
                 type="button"
                 onClick={() => setSelectedImg(img)}
-                className="group relative aspect-[4/3] overflow-hidden rounded-xl border border-slate-200/70 bg-[#061b3a] text-left shadow-[0_3px_12px_rgba(6,27,58,0.06)] transition-[border-color,box-shadow] duration-300 hover:border-[rgba(var(--c-brand-rgb),0.45)] hover:shadow-[0_8px_20px_rgba(6,27,58,0.11)]"
+                className="group relative aspect-[4/3] overflow-hidden rounded-xl border border-slate-200/70 bg-[var(--c-navy)] text-left shadow-[0_3px_12px_rgba(var(--c-brand-rgb),0.06)] transition-[border-color,box-shadow] duration-300 hover:border-[rgba(var(--c-brand-rgb),0.45)] hover:shadow-[0_8px_20px_rgba(var(--c-brand-rgb),0.11)]"
               >
                 <img
                   src={img.src}
@@ -52,8 +52,8 @@ const GalleryPage = () => {
                   className="h-full w-full object-cover transition-transform duration-[850ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.055]"
                 />
 
-                <div className="absolute inset-0 bg-[#061b3a]/0 transition-colors duration-400 group-hover:bg-[#061b3a]/25" />
-                <span className="absolute inset-0 m-auto grid h-10 w-10 scale-90 place-items-center rounded-full border border-white/40 bg-[#061b3a]/35 text-white opacity-0 backdrop-blur-md transition-all duration-300 group-hover:scale-100 group-hover:opacity-100">
+                <div className="absolute inset-0 bg-[var(--c-navy)]/0 transition-colors duration-400 group-hover:bg-[var(--c-navy)]/25" />
+                <span className="absolute inset-0 m-auto grid h-10 w-10 scale-90 place-items-center rounded-full border border-white/40 bg-[var(--c-navy)]/35 text-white opacity-0 backdrop-blur-md transition-all duration-300 group-hover:scale-100 group-hover:opacity-100">
                   <Maximize2 size={15} />
                 </span>
                 <span className="absolute inset-x-0 bottom-0 h-[3px] origin-left scale-x-0 bg-[var(--c-brand)] transition-transform duration-400 group-hover:scale-x-100" />

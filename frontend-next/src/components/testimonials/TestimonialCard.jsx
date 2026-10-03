@@ -19,7 +19,7 @@ const TestimonialCard = ({ name, role, avatar, message, rating = 5, date, locati
     .toUpperCase();
 
   return (
-    <article className="group flex h-full min-h-[224px] w-full max-w-full overflow-hidden rounded-xl border border-slate-200/80 bg-white p-4 shadow-[0_3px_12px_rgba(6,27,58,0.055)] transition-[border-color,box-shadow] duration-300 hover:border-[rgba(var(--c-brand-rgb),0.42)] hover:shadow-[0_8px_20px_rgba(6,27,58,0.09)] sm:min-h-[232px] sm:p-5">
+    <article className="group flex h-full min-h-[224px] w-full max-w-full overflow-hidden rounded-xl border border-slate-200/80 bg-white p-4 shadow-[0_3px_12px_rgba(var(--c-brand-rgb),0.055)] transition-[border-color,box-shadow] duration-300 hover:border-[rgba(var(--c-brand-rgb),0.42)] hover:shadow-[0_8px_20px_rgba(var(--c-brand-rgb),0.09)] sm:min-h-[232px] sm:p-5">
       <div className="flex w-full flex-col">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -35,7 +35,7 @@ const TestimonialCard = ({ name, role, avatar, message, rating = 5, date, locati
             </div>
 
             <div className="min-w-0 flex-1">
-              <h4 className="mb-1 truncate text-sm font-bold leading-tight tracking-tight text-[#061b3a]">
+              <h4 className="mb-1 truncate text-sm font-bold leading-tight tracking-tight text-[var(--c-navy)]">
                 {name}
               </h4>
               <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">

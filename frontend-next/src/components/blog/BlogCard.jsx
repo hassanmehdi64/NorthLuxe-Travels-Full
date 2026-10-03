@@ -4,7 +4,7 @@ const BlogCard = ({ blog, compact = false }) => {
   return (
     <Link
       to={`/blog/${blog.slug}`}
-      className="group flex h-full flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-[0_3px_12px_rgba(6,27,58,0.045)] transition-[border-color,box-shadow] duration-200 hover:border-[rgba(var(--c-brand-rgb),0.35)] hover:shadow-[0_8px_20px_rgba(6,27,58,0.08)]"
+      className="luxe-blog-card group flex h-full flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-[0_3px_12px_rgba(var(--c-brand-rgb),0.045)] transition-[border-color,box-shadow] duration-200 hover:border-[rgba(var(--c-brand-rgb),0.35)] hover:shadow-[0_8px_20px_rgba(var(--c-brand-rgb),0.08)]"
     >
       <img
         src={blog.image || "/gb.jpg"}

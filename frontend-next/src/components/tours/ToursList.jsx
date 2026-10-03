@@ -2,32 +2,28 @@ import TourCard from "./TourCard";
 import { SearchX, ShieldCheck } from "lucide-react";
 
 const ToursList = ({ tours = [], searchSummary = {}, isLoading = false }) => {
-  const hasSearchSummary = Boolean(searchSummary?.query || searchSummary?.dateLabel);
+  const hasSearchSummary = Boolean(searchSummary?.query || searchSummary?.dateLabel || searchSummary?.guests);
 
   return (
     <section className="bg-theme-bg pb-14 pt-0 lg:pb-16">
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10">
-        <div className="mb-4 flex flex-col gap-2 rounded-xl border border-slate-200/80 bg-white px-4 py-3 shadow-[0_5px_16px_rgba(6,27,58,0.04)] sm:mb-5 sm:px-5">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-500">Results</span>
-              <span className="h-1.5 w-1.5 rounded-full bg-[var(--c-brand)]" />
-              <h2 className="text-sm font-semibold tracking-tight text-[#061b3a] sm:text-base">
-                {tours.length} curated journeys found
-              </h2>
+        <div className="mb-4 flex flex-col gap-2 rounded-lg border border-slate-200/80 bg-white px-4 py-3 sm:mb-5">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+            <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1" role="status" aria-live="polite">
+              <span className="text-xs font-medium text-slate-500">Results</span>
+              <p className="text-[13px] font-medium leading-5 text-[var(--c-navy)]">
+                {isLoading ? "Loading journeys..." : `${tours.length} curated ${tours.length === 1 ? "journey" : "journeys"} found`}
+              </p>
             </div>
-            <div className="flex items-center gap-2 sm:border-l sm:border-slate-200 sm:pl-5">
-              <span className="grid h-7 w-7 place-items-center rounded-full bg-[rgba(var(--c-brand-rgb),0.1)] text-[var(--c-brand)]">
-                <ShieldCheck size={14} />
-              </span>
-              <span className="text-[9px] font-bold uppercase tracking-[0.17em] text-[var(--c-brand-dark)]">
-                Verified listings
-              </span>
-            </div>
+            <span className="inline-flex shrink-0 items-center gap-1.5 text-[11px] font-medium leading-5 text-[var(--c-brand-dark)]">
+              <ShieldCheck size={14} aria-hidden="true" />
+              Verified listings
+            </span>
           </div>
 
           {hasSearchSummary ? (
             <div className="flex flex-wrap gap-2">
+              {searchSummary.guests ? <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-semibold text-slate-600">{searchSummary.guests} {searchSummary.guests === 1 ? "adult" : "adults"}</span> : null}
               {searchSummary?.query ? (
                 <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-semibold text-slate-600">
                   Place: {searchSummary.query}
@@ -55,9 +51,9 @@ const ToursList = ({ tours = [], searchSummary = {}, isLoading = false }) => {
             {Array.from({ length: 8 }, (_, index) => (
               <div
                 key={index}
-                className="overflow-hidden rounded-[1.25rem] border border-slate-200/80 bg-white">
-                <div className="h-44 animate-pulse bg-slate-200 sm:h-48" />
-                <div className="space-y-3 p-4 sm:p-5">
+                className="luxe-tour-skeleton flex flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white">
+                <div className="h-[150px] shrink-0 animate-pulse bg-slate-200" />
+                <div className="min-w-0 flex-1 space-y-2 p-3.5">
                   <div className="h-2.5 w-20 animate-pulse rounded bg-slate-100" />
                   <div className="h-4 w-4/5 animate-pulse rounded bg-slate-200" />
                   <div className="h-3 w-3/5 animate-pulse rounded bg-slate-100" />

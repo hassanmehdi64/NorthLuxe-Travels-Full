@@ -49,7 +49,7 @@ const BookingReviewStep = ({
       : quoteData?.advanceAmount || 0;
 
   return (
-    <div className="min-w-0 space-y-5 p-4 sm:p-6 lg:p-7">
+    <div className="min-w-0 space-y-5 p-4 sm:p-5 lg:p-6">
       <div>
         <p className="text-base font-semibold tracking-tight text-theme">Review and confirm</p>
         <p className="mt-1 text-xs text-muted">Check the essentials, then confirm.</p>
@@ -125,7 +125,7 @@ const BookingReviewStep = ({
           </div>
         )
       ) : (
-        <div className="flex flex-col-reverse gap-3 border-t border-booking pt-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col-reverse gap-3 border-t border-booking pt-4 sm:flex-row sm:items-center sm:justify-between">
           <button type="button" className="ql-btn-secondary w-full sm:w-auto" onClick={onBack}>Back</button>
           <button type="button" className="ql-btn-primary w-full sm:w-auto" disabled={submitting || !canConfirmBooking} onClick={onSubmit}>
             {submitting ? "Submitting..." : "Confirm booking"}

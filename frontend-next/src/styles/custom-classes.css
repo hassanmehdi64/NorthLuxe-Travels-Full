@@ -4,11 +4,11 @@
 
 :root {
   /* Brand & Actions */
-  --c-brand: #20b77a;
-  --c-brand-dark: #159f6a;
-  --c-navy: #061B3A;
-  --c-navy-2: #0F2F57;
-  --c-green: #2D5A3F;
+  --c-brand: #00875a;
+  --c-brand-dark: #006d49;
+  --c-navy: #002a50;
+  --c-navy-2: #174367;
+  --c-green: #00875a;
   
   /* Backgrounds */
   --c-bg: #F8FAFC;

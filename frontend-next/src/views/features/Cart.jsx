@@ -35,7 +35,7 @@ const CartPage = () => {
   };
 
   return (
-    <section className="py-20 bg-theme-bg min-h-[70vh]">
+    <section className="py-10 bg-theme-bg min-h-[70vh]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <FeaturePageHeader
           eyebrow="Checkout Queue"
@@ -48,13 +48,13 @@ const CartPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-4">
               {items.map((item) => (
-                <article key={item.id} className="rounded-2xl border border-theme bg-theme-surface p-4 flex gap-4">
-                  <img src={item.image} alt={item.title} className="h-24 w-32 rounded-xl object-cover" />
+                <article key={item.id} className="rounded-2xl border border-theme bg-theme-surface cart-tour-row grid grid-cols-[64px_minmax(0,1fr)_44px] items-start gap-3 p-3 sm:grid-cols-[112px_minmax(0,1fr)_44px] sm:p-4">
+                  <img src={item.image} alt={item.title} className="h-16 w-16 rounded-lg object-cover sm:h-20 sm:w-28" />
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--c-brand)]">
                       {item.location}
                     </p>
-                    <h3 className="text-base font-bold text-theme line-clamp-1">{item.title}</h3>
+                    <h3 className="cart-tour-title text-base font-medium text-theme line-clamp-2">{item.title}</h3>
                     <p className="text-sm text-muted mt-1">
                       {item.durationDays} days | {formatCurrencyAmount(item.price, item.currency)}
                     </p>
@@ -62,9 +62,10 @@ const CartPage = () => {
                   <button
                     type="button"
                     onClick={() => handleRemove(item.id, item.title)}
-                    className="ql-btn-secondary self-start px-3 py-2 text-xs font-black uppercase tracking-[0.16em]"
+                    className="ql-btn-icon h-11 w-11 self-start rounded-lg"
+                    aria-label={`Remove ${item.title} from cart`}
                   >
-                    Remove
+                    <Trash2 size={16} aria-hidden="true" />
                   </button>
                 </article>
               ))}

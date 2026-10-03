@@ -1,3 +1,4 @@
+import Loader from "../components/spinner/Loader";
 import { useMemo, useState } from "react";
 import { useParams } from "@/lib/router";
 
@@ -5,7 +6,6 @@ import { usePublicContentList, usePublicTour, usePublicTours, useSettings } from
 import {
   MobileBookingBar,
   TourBookingCard,
-  TourDetailsActions,
   TourDetailsBreadcrumbs,
   TourDetailsHeader,
   TourImageGallery,
@@ -31,7 +31,7 @@ import {
   getTourPlanLabel,
 } from "../components/tour-details/tourDetailsData";
 
-const MAX_ITINERARY_DAYS = 10;
+
 
 const getRatingValue = (tour, reviews) => {
   if (reviews.length) {
@@ -60,8 +60,8 @@ const buildBeforeYouBookNotes = (transportNote) => {
 const TourDetails = () => {
   const { slug } = useParams();
 
-  const { data: directTour } = usePublicTour(slug);
-  const { data: tours = [] } = usePublicTours();
+  const { data: directTour, isLoading: tourLoading } = usePublicTour(slug);
+  const { data: tours = [], isLoading: toursLoading } = usePublicTours();
   const { data: settings = {} } = useSettings(true);
   const { data: faqEntries = [] } = usePublicContentList("faq");
 
@@ -83,10 +83,7 @@ const TourDetails = () => {
   const tourData = useMemo(() => {
     if (!tour) return null;
 
-    const displayItinerary = buildDisplayItinerary(tour).slice(
-      0,
-      MAX_ITINERARY_DAYS,
-    );
+    const displayItinerary = buildDisplayItinerary(tour);
     const reviews = buildTourReviews(tour);
     const ratingValue = getRatingValue(tour, reviews);
     const reviewCount = reviews.length || Number(tour.reviews || 0);
@@ -110,6 +107,8 @@ const TourDetails = () => {
       beforeYouBook: buildBeforeYouBookNotes(commonFacts.transportNote),
     };
   }, [tour, settings]);
+
+  if (!tour && (tourLoading || toursLoading)) return <Loader fullPage label="Loading tour details" />;
 
   if (!tour || !tourData) {
     return (
@@ -139,32 +138,14 @@ const TourDetails = () => {
   } = tourData;
 
   return (
-    <section className="bg-[linear-gradient(180deg,#f7fafc_0%,var(--c-bg)_34%,var(--c-bg)_100%)] pb-24 pt-5 md:pb-12 md:pt-7">
-      <div className="w-full px-4 sm:px-6 lg:px-10 xl:px-14">
+    <section className="tour-detail-page bg-theme-bg pb-24 pt-5 lg:pb-12">
+      <div className="tour-detail-container mx-auto w-full max-w-[1328px] px-6">
         <TourDetailsBreadcrumbs tour={tour} />
-
-        <div className="mt-4">
-          <section className="w-full min-w-0">
-            <div className="space-y-4">
-              <TourDetailsHeader
-                tour={tour}
-                ratingValue={ratingValue}
-                reviewCount={reviewCount}
-                planLabel={planLabel}
-              />
-
-              <div className="lg:hidden">
-                <TourDetailsActions tour={tour} />
-              </div>
-
-              <TourImageGallery images={heroImages} title={tour.title} />
-
-              <div className="hidden lg:block">
-                <TourBookingCard tour={tour} />
-              </div>
-            </div>
-
-            <div className="mt-5 w-full overflow-hidden rounded-xl border border-slate-200 bg-white px-4 shadow-[0_6px_20px_rgba(6,27,58,0.035)] sm:px-5 lg:px-6">
+        <div className="mt-5 space-y-5">
+          <TourDetailsHeader tour={tour} ratingValue={ratingValue} reviewCount={reviewCount} planLabel={planLabel} />
+          <TourImageGallery images={heroImages} title={tour.title} />
+          <div className="tour-detail-layout grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="tour-detail-content min-w-0 rounded-xl border border-theme bg-white px-5 sm:px-6">
             <OverviewSection
               description={detailedDescription}
               packageOverview={packageOverview}
@@ -199,7 +180,10 @@ const TourDetails = () => {
             />
 
             </div>
-          </section>
+            <div className="tour-detail-sidebar min-w-0 lg:sticky lg:top-6">
+              <TourBookingCard tour={tour} />
+            </div>
+          </div>
         </div>
       </div>
 

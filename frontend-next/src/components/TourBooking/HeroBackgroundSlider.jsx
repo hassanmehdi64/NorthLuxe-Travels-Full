@@ -91,9 +91,9 @@ const HeroBackgroundSlider = () => {
         }}
       />
 
-      <div className="absolute inset-0 z-[11] bg-[linear-gradient(90deg,rgba(6,27,58,0.12)_0%,rgba(6,27,58,0.025)_58%,rgba(6,27,58,0.18)_100%)]" />
+      <div className="absolute inset-0 z-[11] bg-[linear-gradient(90deg,rgba(var(--c-brand-rgb),0.12)_0%,rgba(var(--c-brand-rgb),0.025)_58%,rgba(var(--c-brand-rgb),0.18)_100%)]" />
 
-      <div className="absolute inset-x-0 bottom-0 z-[12] h-32 bg-[linear-gradient(180deg,transparent_0%,rgba(6,27,58,0.18)_48%,rgba(6,27,58,0.48)_100%)]" />
+      <div className="absolute inset-x-0 bottom-0 z-[12] h-32 bg-[linear-gradient(180deg,transparent_0%,rgba(var(--c-brand-rgb),0.18)_48%,rgba(var(--c-brand-rgb),0.48)_100%)]" />
     </div>
   );
 };

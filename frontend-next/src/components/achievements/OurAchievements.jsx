@@ -55,7 +55,7 @@ const OurAchievements = () => {
             return (
               <article
                 key={item.label}
-                className="rounded-xl border border-slate-200/80 bg-white p-3.5 shadow-[0_3px_12px_rgba(6,27,58,0.045)] sm:p-4">
+                className="rounded-xl border border-slate-200/80 bg-white p-3.5 shadow-[0_3px_12px_rgba(var(--c-brand-rgb),0.045)] sm:p-4">
                 <div className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[rgba(var(--c-brand-rgb),0.08)] text-[var(--c-brand)]">
                   <Icon size={14} />
                 </div>

@@ -1,3 +1,4 @@
+import Loader from "../components/spinner/Loader";
 import { useState } from "react";
 import { Navigate, useLocation, useNavigate } from "@/lib/router";
 import { useAuth } from "../context/useAuth";
@@ -12,7 +13,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
 
   if (authLoading) {
-    return <div className="min-h-screen grid place-items-center bg-theme-bg text-muted">Checking session...</div>;
+    return <Loader fullPage label="Checking session" />;
   }
 
   if (isAuthenticated) return <Navigate to="/admin" replace />;

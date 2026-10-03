@@ -26,8 +26,8 @@ const Faqs = () => {
     : faqs;
 
   return (
-    <section className="bg-theme-bg py-20 min-h-[60vh]">
-      <div className="max-w-4xl mx-auto px-6">
+    <section className="compact-info-page bg-theme-bg py-6 sm:py-8 min-h-[60vh]">
+      <div className="site-page-container mx-auto">
         <FeaturePageHeader
           eyebrow="Support"
           title="Frequently Asked"
@@ -37,7 +37,7 @@ const Faqs = () => {
 
         <div className="space-y-4">
           {faqItems.map((item) => (
-            <article key={item.q} className="rounded-2xl border border-theme bg-theme-surface p-5">
+            <article key={item.q} className="rounded-lg border border-theme bg-theme-surface p-5">
               <h2 className="font-bold text-theme">{item.q}</h2>
               <p className="text-sm text-muted mt-2">{item.a}</p>
             </article>

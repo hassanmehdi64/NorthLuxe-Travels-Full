@@ -4,6 +4,7 @@ import {
   CircleDot,
   Info,
 } from "lucide-react";
+import { useId } from "react";
 
 const formatListLabel = (value) =>
   String(value || "")
@@ -11,22 +12,10 @@ const formatListLabel = (value) =>
     .replace(/\s+/g, " ")
     .trim();
 
-const SectionHeading = ({ eyebrow, title, description }) => (
-  <div className="space-y-1.5">
-    <p className="inline-flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.2em] text-[var(--c-brand)]">
-      <span className="h-px w-5 bg-[var(--c-brand)]" />
-      {eyebrow}
-    </p>
-
-    <h2 className="text-lg font-bold leading-tight tracking-[-0.025em] text-theme">
-      {title}
-    </h2>
-
-    {description ? (
-      <p className="max-w-3xl text-xs leading-5 text-muted sm:text-[13px]">
-        {description}
-      </p>
-    ) : null}
+const SectionHeading = ({ title, description }) => (
+  <div className="space-y-2">
+    <h2 className="tour-detail-section-title text-theme">{title}</h2>
+    {description && <p className="max-w-3xl text-xs leading-5 text-muted">{description}</p>}
   </div>
 );
 
@@ -38,8 +27,8 @@ export const OverviewSection = ({ description, packageOverview = [] }) => !descr
     />
 
     <div className="mt-3">
-      <div className={`rounded-xl border border-theme bg-theme-surface p-4 shadow-[0_4px_16px_rgba(6,27,58,0.035)] md:p-5 ${packageOverview.length ? "lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(300px,0.55fr)] lg:gap-6" : ""}`}>
-        <div className="space-y-3 text-[15px] leading-7 text-muted">
+      <div className={`rounded-xl border border-theme bg-theme-surface p-4 shadow-[0_4px_16px_rgba(var(--c-brand-rgb),0.035)] md:p-5 ${packageOverview.length ? "lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(300px,0.55fr)] lg:gap-6" : ""}`}>
+        <div className="space-y-3 text-[13px] leading-6 text-muted">
           {String(description || "")
             .split(/\n+/)
             .filter(Boolean)
@@ -50,7 +39,7 @@ export const OverviewSection = ({ description, packageOverview = [] }) => !descr
 
         {packageOverview.length ? (
           <div className="mt-4 border-t border-[rgba(15,23,42,0.08)] pt-4 lg:mt-0 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
-            <h3 className="text-[10px] font-bold uppercase tracking-[0.15em] text-theme">
+            <h3 className="text-xs font-semibold text-theme">
               Package Details
             </h3>
 
@@ -85,8 +74,8 @@ export const InclusionsSection = ({ includedServices = [], beforeYouBook = [] })
     />
 
     <div className="mt-3 grid gap-3 sm:grid-cols-2">
-      {includedServices.length ? <div className="rounded-xl border border-theme bg-theme-surface p-4 shadow-[0_4px_14px_rgba(6,27,58,0.03)]">
-        <h3 className="text-[10px] font-bold uppercase tracking-[0.15em] text-theme">
+      {includedServices.length ? <div className="rounded-xl border border-theme bg-theme-surface p-4 shadow-[0_4px_14px_rgba(var(--c-brand-rgb),0.03)]">
+        <h3 className="text-xs font-semibold text-theme">
           Included
         </h3>
 
@@ -106,8 +95,8 @@ export const InclusionsSection = ({ includedServices = [], beforeYouBook = [] })
         </ul>
       </div> : null}
 
-      {beforeYouBook.length ? <div className="rounded-xl border border-theme bg-theme-surface p-4 shadow-[0_4px_14px_rgba(6,27,58,0.03)]">
-        <h3 className="text-[10px] font-bold uppercase tracking-[0.15em] text-theme">
+      {beforeYouBook.length ? <div className="rounded-xl border border-theme bg-theme-surface p-4 shadow-[0_4px_14px_rgba(var(--c-brand-rgb),0.03)]">
+        <h3 className="text-xs font-semibold text-theme">
           Before You Book
         </h3>
 
@@ -130,78 +119,52 @@ export const InclusionsSection = ({ includedServices = [], beforeYouBook = [] })
   </section>
 );
 
-export const ItinerarySection = ({ items = [], openIndex, onToggle }) => (
-  <section className="w-full border-b border-slate-200 py-6">
-    <SectionHeading
-      eyebrow="Plan"
-      title="Itinerary"
-    />
-
-    {items.length ? (
-      <div className="mt-3 space-y-2">
-        {items.map((item, idx) => {
-          const isOpen = openIndex === idx;
-
-          return (
-            <div
-              key={`${item.day}-${idx}`}
-              className={`overflow-hidden rounded-xl border bg-theme-surface transition-colors ${isOpen ? "border-[rgba(var(--c-brand-rgb),0.38)] shadow-[0_5px_16px_rgba(6,27,58,0.035)]" : "border-theme hover:border-[rgba(var(--c-brand-rgb),0.24)]"}`}
-            >
-              <button
-                type="button"
-                onClick={() => onToggle(idx)}
-                className="flex w-full cursor-pointer items-center justify-between gap-3 px-3.5 py-3 text-left md:px-4"
-              >
-                <div className="flex min-w-0 items-start gap-3">
-                  <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[rgba(var(--c-brand-rgb),0.1)] text-[9px] font-bold uppercase tracking-[0.06em] text-[var(--c-brand)]">
-                    Day {item.day || idx + 1}
-                  </span>
-
-                  <div className="min-w-0">
-                    <p className="text-[15px] font-semibold leading-6 text-theme">
-                      {item.title || `Day ${idx + 1}`}
-                    </p>
-
-                    <p className="mt-0.5 text-sm leading-5 text-muted">
-                      {item.placesCovered?.join(" / ")}
-                    </p>
+export const ItinerarySection = ({ items = [], openIndex, onToggle }) => {
+  const itineraryId = useId();
+  return (
+    <section className="w-full border-b border-slate-200 py-6">
+      <div className="flex items-center justify-between gap-3">
+        <SectionHeading title="Itinerary" />
+        {items.length > 0 && <span className="text-[11px] text-muted">{items.length} {items.length === 1 ? "day" : "days"}</span>}
+      </div>
+      {items.length ? (
+        <ol className="tour-itinerary mt-5">
+          {items.map((item, index) => {
+            const isOpen = openIndex === index;
+            const dayLabel = item.day || index + 1;
+            const panelId = `${itineraryId}-day-${index}`;
+            const headingId = `${panelId}-heading`;
+            return (
+              <li key={`${dayLabel}-${index}`} className={`tour-itinerary-step ${isOpen ? "is-open" : ""}`}>
+                <span className="tour-itinerary-marker" aria-hidden="true">{dayLabel}</span>
+                <div className="tour-itinerary-day">
+                  <button id={headingId} type="button" onClick={() => onToggle(index)} aria-expanded={isOpen} aria-controls={panelId} className="tour-itinerary-toggle">
+                    <span className="min-w-0">
+                      <span className="block text-[10px] font-medium text-[var(--c-brand)]">Day {dayLabel}</span>
+                      <span className="mt-1 block text-[13px] font-semibold leading-5 text-theme">{item.title || `Day ${dayLabel}`}</span>
+                      {item.placesCovered?.length > 0 && <span className="mt-1 block text-[11px] leading-5 text-muted">{item.placesCovered.join(" / ")}</span>}
+                    </span>
+                    <ChevronDown size={15} className={`shrink-0 text-muted transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  <div id={panelId} role="region" aria-labelledby={headingId} hidden={!isOpen} className="tour-itinerary-panel">
+                    <ul className="space-y-2">
+                      {item.bulletPoints?.map((point, pointIndex) => (
+                        <li key={`${pointIndex}-${point}`} className="flex items-start gap-2 text-[12px] leading-6 text-muted">
+                          <Check size={13} className="mt-1.5 shrink-0 text-[var(--c-brand)]" />
+                          <span>{point}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
-
-                <ChevronDown
-                  size={15}
-                  className={`shrink-0 text-muted transition-transform duration-200 ${
-                    isOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-
-              {isOpen && (
-                <div className="border-t border-theme px-4 py-3.5">
-                  <ul className="space-y-3">
-                    {item.bulletPoints?.map((point) => (
-                      <li
-                        key={point}
-                        className="flex items-start gap-2.5 text-sm leading-6 text-muted"
-                      >
-                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--c-brand)]" />
-                        <span>{point}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    ) : (
-      <p className="mt-4 text-[14px] text-muted">
-        Detailed itinerary is shared after booking confirmation.
-      </p>
-    )}
-  </section>
-);
+              </li>
+            );
+          })}
+        </ol>
+      ) : <p className="mt-4 text-xs leading-6 text-muted">Detailed itinerary is shared after booking confirmation.</p>}
+    </section>
+  );
+};
 
 export const RouteSection = ({ placesCovered = [] }) => !placesCovered.length ? null : (
   <section className="w-full border-b border-slate-200 py-6">
@@ -210,7 +173,7 @@ export const RouteSection = ({ placesCovered = [] }) => !placesCovered.length ? 
       title="Places Covered"
     />
 
-    <div className="mt-3 rounded-xl border border-theme bg-theme-surface p-4 shadow-[0_4px_14px_rgba(6,27,58,0.03)]">
+    <div className="mt-3 rounded-xl border border-theme bg-theme-surface p-4 shadow-[0_4px_14px_rgba(var(--c-brand-rgb),0.03)]">
       <div className="flex flex-wrap gap-2">
         {placesCovered.map((item) => (
           <span
@@ -245,9 +208,10 @@ export const FaqSection = ({ items = [], openIndex, onToggle }) => !items.length
               <button
                 type="button"
                 onClick={() => onToggle(idx)}
+                aria-expanded={isOpen}
                 className="flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-3 text-left"
               >
-                <span className="text-[15px] font-semibold text-theme">
+                <span className="text-[13px] font-medium text-theme">
                   {faq.q}
                 </span>
 

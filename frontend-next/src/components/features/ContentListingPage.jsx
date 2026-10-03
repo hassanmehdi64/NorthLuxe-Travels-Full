@@ -36,7 +36,7 @@ const ContentListingPage = ({
                 <span className="h-px w-6 bg-[var(--c-brand)]" />
                 {eyebrow}
               </div>
-              <h2 className="text-xl font-bold tracking-tight text-[#061b3a] sm:text-2xl">
+              <h2 className="text-xl font-bold tracking-tight text-[var(--c-navy)] sm:text-2xl">
                 {heading}
               </h2>
             </div>
@@ -49,7 +49,7 @@ const ContentListingPage = ({
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-3.5 md:grid-cols-3 xl:grid-cols-4" aria-label={`Loading ${itemsLabel}`} aria-busy="true">
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3.5 md:grid-cols-3 xl:grid-cols-4" aria-label={`Loading ${itemsLabel}`} aria-busy="true">
               {Array.from({ length: 8 }, (_, index) => (
                 <div key={index} className="overflow-hidden rounded-xl border border-slate-200 bg-white">
                   <div className="h-28 animate-pulse bg-slate-200 sm:h-40" />
@@ -62,7 +62,7 @@ const ContentListingPage = ({
               ))}
             </div>
           ) : items.length ? (
-            <div className="grid grid-cols-2 items-stretch gap-2.5 sm:gap-3.5 md:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 items-stretch sm:grid-cols-2 gap-2.5 sm:gap-3.5 md:grid-cols-3 xl:grid-cols-4">
               {items.map((item) => {
                 const itemRoute = item.slug || item.id;
                 const image = item.image || item.coverImage || "/gb.jpg";
@@ -75,7 +75,7 @@ const ContentListingPage = ({
                   <Link
                     key={item.id || item.slug}
                     to={`/${route}/${itemRoute}`}
-                    className="group flex h-full min-w-0 flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-[0_3px_12px_rgba(6,27,58,0.05)] transition-[border-color,box-shadow] duration-200 hover:border-[rgba(var(--c-brand-rgb),0.35)] hover:shadow-[0_8px_20px_rgba(6,27,58,0.09)]">
+                    className="luxe-content-card group flex h-full min-w-0 flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-[0_3px_12px_rgba(var(--c-brand-rgb),0.05)] transition-[border-color,box-shadow] duration-200 hover:border-[rgba(var(--c-brand-rgb),0.35)] hover:shadow-[0_8px_20px_rgba(var(--c-brand-rgb),0.09)]">
                     <div className="relative h-28 overflow-hidden bg-slate-100 sm:h-40 lg:h-44">
                       {/* CMS images can use dynamically configured external hosts. */}
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -91,14 +91,14 @@ const ContentListingPage = ({
                         }}
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.035]"
                       />
-                      <span className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-[#061b3a]/45 to-transparent" />
+                      <span className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-[var(--c-navy)]/45 to-transparent" />
                     </div>
 
                     <div className="flex flex-1 flex-col p-3 sm:p-4">
                       <p className="truncate text-[8px] font-bold uppercase tracking-[0.13em] text-[var(--c-brand)] sm:text-[9px]">
                         {category}
                       </p>
-                      <h3 className="mt-1 line-clamp-2 text-[13px] font-bold leading-[1.35] text-[#061b3a] sm:text-base">
+                      <h3 className="mt-1 line-clamp-2 text-[13px] font-bold leading-[1.35] text-[var(--c-navy)] sm:text-base">
                         {item.title}
                       </h3>
                       <p className="mt-2 hidden line-clamp-2 text-xs leading-5 text-slate-500 sm:block">
@@ -114,7 +114,7 @@ const ContentListingPage = ({
             </div>
           ) : (
             <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-14 text-center">
-              <h3 className="text-base font-bold text-[#061b3a]">Nothing published yet</h3>
+              <h3 className="text-base font-bold text-[var(--c-navy)]">Nothing published yet</h3>
               <p className="mt-1 text-xs text-slate-500">{emptyMessage}</p>
             </div>
           )}

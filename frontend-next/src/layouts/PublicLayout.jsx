@@ -1,17 +1,13 @@
 import { useEffect } from "react";
 import { useLocation } from "@/lib/router";
-import Navbar from "../components/navbar/Navbar";
-import Footer from "../components/footer/Footer";
+import { SiteNavigation, SiteFooter } from "../components/home/SiteChrome";
 import WhatsAppFloatButton from "../components/common/WhatsAppFloatButton";
 import { useSettings } from "../hooks/useCms";
+import "../styles/public-theme.css";
 
 const PublicLayout = ({ children }) => {
   const { data: settings } = useSettings(true);
   const location = useLocation();
-
-  const flushHeroRoutes = ["/tours", "/destinations", "/activities", "/services", "/about", "/blog", "/contact"];
-  const shouldFlushTopSpacing = flushHeroRoutes.includes(location.pathname);
-  const shouldFlushSideSpacing = ["/", ...flushHeroRoutes].includes(location.pathname);
 
   useEffect(() => {
     if (!settings) return;
@@ -32,18 +28,14 @@ const PublicLayout = ({ children }) => {
   }, [settings]);
 
   return (
-    <>
-      <Navbar />
-      <div className={`${shouldFlushTopSpacing ? "pt-0" : "pt-[60px] sm:pt-[64px]"} ${shouldFlushSideSpacing ? "px-0" : "px-0 sm:px-[5px]"}`}>
-        <main>
-          {children}
-        </main>
+    <div className="luxe-home public-site">
+      <SiteNavigation />
+      <div className={location.pathname === "/" ? "public-home-shell" : "public-page-content"}>
+        {children}
       </div>
-      <div className="px-0">
-        <Footer />
-      </div>
+      <SiteFooter />
       <WhatsAppFloatButton />
-    </>
+    </div>
   );
 };
 

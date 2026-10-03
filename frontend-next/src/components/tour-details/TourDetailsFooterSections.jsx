@@ -1,19 +1,9 @@
 import { Star } from "lucide-react";
 
-const SectionHeading = ({ eyebrow, title, description }) => (
-  <div className="space-y-1.5">
-    <p className="inline-flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.2em] text-[var(--c-brand)]">
-      <span className="h-px w-5 bg-[var(--c-brand)]" />
-      {eyebrow}
-    </p>
-    <h2 className="text-lg font-bold leading-tight tracking-[-0.025em] text-theme">
-      {title}
-    </h2>
-    {description ? (
-      <p className="max-w-3xl text-xs leading-5 text-muted sm:text-[13px]">
-        {description}
-      </p>
-    ) : null}
+const SectionHeading = ({ title, description }) => (
+  <div className="space-y-2">
+    <h2 className="tour-detail-section-title text-theme">{title}</h2>
+    {description && <p className="max-w-3xl text-xs leading-5 text-muted">{description}</p>}
   </div>
 );
 
@@ -50,7 +40,7 @@ export const ReviewsSection = ({ reviews }) => {
 
               <div className="inline-flex items-center gap-1 rounded-full bg-[rgba(var(--c-brand-rgb),0.1)] px-2.5 py-1 text-[12px] font-bold text-[var(--c-brand)]">
                 <Star size={12} className="fill-current" />
-                {item.rating}.0
+                {Number(item.rating).toFixed(1)}
               </div>
             </div>
 

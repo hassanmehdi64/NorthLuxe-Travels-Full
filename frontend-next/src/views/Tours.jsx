@@ -1,3 +1,4 @@
+import { fitsTravellerCount } from "../components/home/travelSearch.mjs";
 import PageHero from "../components/common/PageHero";
 import ToursFilter from "../components/tours/ToursFilter";
 import ToursList from "../components/tours/ToursList";
@@ -17,6 +18,8 @@ const Tours = () => {
   const seasonFilter = (searchParams.get("season") || "").toLowerCase();
   const query = searchParams.get("q") || "";
   const travelDate = searchParams.get("date") || "";
+  const guestParam = Number(searchParams.get("guests"));
+  const guests = Number.isInteger(guestParam) && guestParam > 0 ? Math.min(guestParam, 12) : 0;
   const experienceFilter = normalizeSearchValue(searchParams.get("experience") || "");
   const requestedExperience = experienceFilter.includes("luxury")
     ? "luxury"
@@ -36,6 +39,10 @@ const Tours = () => {
     experience: requestedExperience,
     sortBy: "popular",
   });
+
+  useEffect(() => {
+    setFilters((current) => ({ ...current, destination: searchDestination, experience: requestedExperience }));
+  }, [searchDestination, requestedExperience]);
 
   const destinations = useMemo(
     () => ["all", ...new Set(tours.map((tour) => tour.location).filter(Boolean))],
@@ -82,7 +89,7 @@ const Tours = () => {
       const experienceOk =
         filters.experience === "all" ||
         selectedExperienceTerms.some((term) => tourSearchText.includes(term));
-      return destinationOk && durationOk && seasonOk && experienceOk;
+      return destinationOk && durationOk && seasonOk && experienceOk && fitsTravellerCount(tour, guests);
     });
 
     let scoredMatches = baseMatches.map((tour) => ({
@@ -111,15 +118,16 @@ const Tours = () => {
         return popularityB - popularityA;
       })
       .map((item) => item.tour);
-  }, [tours, filters, seasonFilter, query, travelDate]);
+  }, [tours, filters, seasonFilter, query, travelDate, guests]);
 
   const searchSummary = useMemo(
     () => ({
       query: query.trim(),
+      guests,
       dateLabel: dateMeta.label,
       seasonLabel: dateMeta.season,
     }),
-    [query, dateMeta],
+    [query, dateMeta, guests],
   );
 
   return (

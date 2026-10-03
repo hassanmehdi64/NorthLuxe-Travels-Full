@@ -1,11 +1,10 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "@/lib/router";
-import { CalendarDays, ChevronDown } from "lucide-react";
-import { createPortal } from "react-dom";
-import { DayPicker } from "react-day-picker";
-import "react-day-picker/dist/style.css";
+import { ChevronDown } from "lucide-react";
 import { useCreatePublicBooking } from "../../hooks/useCms";
 import { useToast } from "../../context/ToastContext";
+import BookingDropdown from "../../components/booking/BookingDropdown";
+import BookingDateField from "../../components/booking/BookingDateField";
 import { formatCurrencyAmount } from "../../utils/currency";
 
 const DESTINATION_OPTIONS = [
@@ -40,27 +39,6 @@ const BUDGET_TYPE_OPTIONS = [
   { value: "total_trip", label: "Total Trip Budget" },
   { value: "per_person", label: "Per Person Budget" },
 ];
-
-const formatDate = (date) => {
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const dd = String(date.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-};
-
-const useIsMobile = (breakpoint = 640) => {
-  const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== "undefined" && window.innerWidth < breakpoint,
-  );
-
-  useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth < breakpoint);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, [breakpoint]);
-
-  return isMobile;
-};
 
 const BookingStyleDropdown = ({
   value,
@@ -174,136 +152,6 @@ const BookingStyleDropdown = ({
           {children ? <div className="mt-2">{children}</div> : null}
         </div>
       ) : null}
-    </div>
-  );
-};
-
-const BookingStyleDateField = ({ value, onChange, placeholder = "Select date" }) => {
-  const [open, setOpen] = useState(false);
-  const wrapRef = useRef(null);
-  const isMobile = useIsMobile(640);
-  const selectedDate = useMemo(() => (value ? new Date(value) : undefined), [value]);
-  const [pos, setPos] = useState({ top: 0, left: 0, width: 360 });
-
-  const updatePos = () => {
-    const el = wrapRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const width = Math.min(360, window.innerWidth - 16);
-    const left = Math.min(window.innerWidth - width - 8, Math.max(8, rect.left));
-    setPos({
-      top: rect.bottom + 10 + window.scrollY,
-      left: left + window.scrollX,
-      width,
-    });
-  };
-
-  useLayoutEffect(() => {
-    if (!open || isMobile) return;
-    updatePos();
-  }, [open, isMobile]);
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (event) => event.key === "Escape" && setOpen(false);
-    const onResize = () => !isMobile && updatePos();
-    window.addEventListener("keydown", onKey);
-    window.addEventListener("resize", onResize);
-    window.addEventListener("scroll", onResize, true);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("scroll", onResize, true);
-    };
-  }, [open, isMobile]);
-
-  const calendarUi = (
-    <div>
-      <style>{`
-        .rdp {
-          --rdp-accent-color: var(--c-brand);
-          --rdp-background-color: var(--c-hover);
-        }
-        .rdp-caption_label { color: var(--c-text); font-weight: 600; }
-        .rdp-day_selected, .rdp-day_selected:hover { background: var(--c-brand); color: var(--c-text); }
-        .rdp-day:hover:not(.rdp-day_selected) { background: var(--c-hover); }
-      `}</style>
-      <DayPicker
-        mode="single"
-        selected={selectedDate}
-        onSelect={(date) => {
-          if (!date) return;
-          onChange(formatDate(date));
-          setOpen(false);
-        }}
-        showOutsideDays
-      />
-    </div>
-  );
-
-  return (
-    <div ref={wrapRef} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="w-full min-h-[44px] rounded-[0.625rem] border border-[rgba(15,47,87,0.14)] bg-[#fbfcfd] px-3.5 py-2.5 text-left text-[13px] text-[var(--c-text)] outline-none transition-all hover:border-[rgba(var(--c-brand-rgb),0.45)] hover:bg-white focus:border-[rgba(var(--c-brand-rgb),0.65)] focus:shadow-[0_0_0_3px_rgba(var(--c-brand-rgb),0.09)]"
-      >
-        <span className="flex items-center gap-2">
-          <CalendarDays size={16} className="text-[var(--c-muted)]" />
-          {value || <span className="text-[var(--c-muted)]">{placeholder}</span>}
-        </span>
-      </button>
-
-      {open &&
-        createPortal(
-          <>
-            <div
-              onClick={() => setOpen(false)}
-              className="fixed inset-0 z-[99998]"
-              style={{ background: "rgba(15, 23, 42, 0.35)" }}
-            />
-            {isMobile ? (
-              <div
-                className="fixed left-0 right-0 bottom-0 z-[99999] rounded-t-2xl p-3"
-                style={{
-                  background: "var(--c-surface)",
-                  borderTop: "1px solid var(--c-border)",
-                  boxShadow: "0 -18px 40px rgba(0,0,0,0.18)",
-                }}
-              >
-                <div className="flex items-center justify-between px-2 pb-2">
-                  <div className="text-sm font-semibold" style={{ color: "var(--c-text)" }}>
-                    Select date
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setOpen(false)}
-                    className="text-sm font-semibold"
-                    style={{ color: "var(--c-muted)" }}
-                  >
-                    Close
-                  </button>
-                </div>
-                {calendarUi}
-              </div>
-            ) : (
-              <div
-                className="absolute z-[99999] rounded-2xl p-3"
-                style={{
-                  top: pos.top,
-                  left: pos.left,
-                  width: pos.width,
-                  background: "var(--c-surface)",
-                  border: "1px solid var(--c-border)",
-                  boxShadow: "0 18px 45px rgba(0,0,0,0.18)",
-                }}
-              >
-                {calendarUi}
-              </div>
-            )}
-          </>,
-          document.body,
-        )}
     </div>
   );
 };
@@ -485,7 +333,7 @@ const CustomPlanRequest = () => {
   })();
 
   return (
-    <section className="min-h-[70vh] overflow-x-clip bg-[#f6f8fa] py-6 sm:py-8">
+    <section className="light-request-page min-h-[70vh] bg-theme-bg py-5 sm:py-7">
       <div className="mx-auto max-w-[860px] px-3 sm:px-5">
         <div className="mb-5">
           <h1 className="text-xl font-semibold tracking-tight text-theme sm:text-2xl">Plan a custom trip</h1>
@@ -509,16 +357,17 @@ const CustomPlanRequest = () => {
             </div>
           </div>
         ) : (
-        <form onSubmit={handleSubmit} className="ql-form-shell booking-form-shell grid gap-4 p-4 sm:p-6 md:grid-cols-2 [&_.ql-label]:text-[11px] [&_.ql-label]:normal-case [&_.ql-label]:tracking-normal">
+        <form onSubmit={handleSubmit} className="ql-form-shell booking-form-shell grid gap-3 p-4 sm:gap-4 sm:p-5 md:grid-cols-2 [&_.ql-label]:text-[11px] [&_.ql-label]:normal-case [&_.ql-label]:tracking-normal">
           <div className="border-b border-booking pb-3 md:col-span-2">
-            <p className="text-base font-semibold text-theme">Your trip details</p>
-            <p className="mt-1 text-xs text-muted">Fields marked by the form are kept to the information needed for planning.</p>
+            <p className="text-base font-semibold text-theme">Contact details</p>
           </div>
+          <div className="md:col-span-2 grid gap-3 md:grid-cols-3">
           <label>
             <span className="ql-label">Full Name</span>
             <input
               className="ql-input"
-              placeholder="Your Full Name"
+              placeholder="Your full name"
+              autoComplete="name"
               value={form.name}
               onChange={(e) => {
                 setSubmissionNotice(null);
@@ -530,7 +379,8 @@ const CustomPlanRequest = () => {
             <span className="ql-label">Email</span>
             <input
               type="email"
-              placeholder="Email"
+              placeholder="you@example.com"
+              autoComplete="email"
               className="ql-input"
               value={form.email}
               onChange={(e) => {
@@ -539,12 +389,13 @@ const CustomPlanRequest = () => {
               }}
             />
           </label>
-          <div className="md:col-span-2 grid gap-4 md:grid-cols-3">
             <label>
               <span className="ql-label">Phone</span>
               <input
                 className="ql-input"
-                placeholder="Enter a contact Number"
+                placeholder="+92 3XX XXX XXXX"
+                type="tel"
+                autoComplete="tel"
                 value={form.phone}
                 onChange={(e) => {
                   setSubmissionNotice(null);
@@ -552,9 +403,12 @@ const CustomPlanRequest = () => {
                 }}
               />
             </label>
+          </div>
+          <div className="form-section-heading md:col-span-2"><p>Trip details</p></div>
+          <div className="md:col-span-2 grid gap-3 sm:grid-cols-2">
             <label>
               <span className="ql-label">Start Date</span>
-              <BookingStyleDateField
+              <BookingDateField
                 value={form.startDate}
                 onChange={(date) => setForm((prev) => ({ ...prev, startDate: date }))}
                 placeholder="Select start date"
@@ -562,7 +416,7 @@ const CustomPlanRequest = () => {
             </label>
             <label>
               <span className="ql-label">End Date</span>
-              <BookingStyleDateField
+              <BookingDateField
                 value={form.endDate}
                 onChange={(date) => setForm((prev) => ({ ...prev, endDate: date }))}
                 placeholder="Select end date"
@@ -671,9 +525,10 @@ const CustomPlanRequest = () => {
               />
             </label>
           </div>
+          <div className="form-section-heading md:col-span-2"><p>Preferences</p></div>
           <label>
             <span className="ql-label">Budget Type</span>
-            <BookingStyleDropdown
+            <BookingDropdown
               value={form.budgetMode}
               onChange={(value) => setForm((prev) => ({ ...prev, budgetMode: value }))}
               options={BUDGET_TYPE_OPTIONS}
@@ -690,7 +545,7 @@ const CustomPlanRequest = () => {
           </label>
           <label>
             <span className="ql-label">Hotel Preference</span>
-            <BookingStyleDropdown
+            <BookingDropdown
               value={form.hotelPreference}
               onChange={(value) => setForm((prev) => ({ ...prev, hotelPreference: value }))}
               options={HOTEL_OPTIONS}
@@ -698,7 +553,7 @@ const CustomPlanRequest = () => {
           </label>
           <label>
             <span className="ql-label">Vehicle Preference</span>
-            <BookingStyleDropdown
+            <BookingDropdown
               value={form.vehiclePreference}
               onChange={(value) =>
                 setForm((prev) => ({
@@ -724,7 +579,7 @@ const CustomPlanRequest = () => {
           <label className="md:col-span-2">
             <span className="ql-label">Special Requirements</span>
             <textarea
-              rows={4}
+              rows={3}
               className="ql-textarea"
               placeholder="Tell us your travel style, activities, comfort needs, or route requests."
               value={form.requirements}
@@ -733,7 +588,7 @@ const CustomPlanRequest = () => {
           </label>
           <div className="md:col-span-2">
             <button type="submit" className="ql-btn-primary w-full" disabled={submitting}>
-              {submitting ? "Submitting..." : "Submit Custom Plan Request"}
+              {submitting ? "Submitting..." : "Send trip request"}
             </button>
           </div>
         </form>

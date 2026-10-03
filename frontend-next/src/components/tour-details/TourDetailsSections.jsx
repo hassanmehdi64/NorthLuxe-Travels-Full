@@ -3,7 +3,6 @@ import { Link } from "@/lib/router";
 import {
   ArrowLeft,
   Clock3,
-  Images,
   MapPin,
   ShieldCheck,
   Star,
@@ -12,10 +11,10 @@ import {
 import { formatCurrencyAmount } from "../../utils/currency";
 
 const HeroFact = ({ icon: Icon, label, value }) => (
-  <div className="rounded-lg border border-[rgba(15,23,42,0.08)] bg-theme-surface px-3 py-2.5 shadow-[0_3px_10px_rgba(6,27,58,0.03)]">
+  <div className="rounded-lg border border-[rgba(15,23,42,0.08)] bg-theme-surface px-3 py-2.5 ">
     <div className="flex items-center gap-2 text-[var(--c-brand)]">
       <Icon size={13} />
-      <span className="text-[8px] font-bold uppercase tracking-[0.15em] text-muted">
+      <span className="text-[10px] font-medium text-muted">
         {label}
       </span>
     </div>
@@ -26,14 +25,14 @@ const HeroFact = ({ icon: Icon, label, value }) => (
   </div>
 );
 
-const GalleryImage = ({ src, alt, className = "", onError }) => (
+const GalleryImage = ({ src, alt, className = "", onError, loading = "lazy" }) => (
   <img
     src={src}
     alt={alt}
-    loading="lazy"
+    loading={loading}
     decoding="async"
     onError={onError}
-    className={`h-full w-full object-cover object-center ${className}`}
+    className={`w-full object-cover object-center ${className}`}
   />
 );
 
@@ -69,7 +68,7 @@ export const TourDetailsHeader = ({
   const locationText = tour.location || tour.destination || "";
 
   return (
-    <header className="grid gap-5 overflow-hidden rounded-xl border border-slate-200 bg-white p-4 shadow-[0_6px_20px_rgba(6,27,58,0.04)] sm:p-5 lg:grid-cols-[minmax(0,1fr)_minmax(280px,420px)] lg:items-end">
+    <header className="tour-detail-header grid gap-5 overflow-hidden rounded-xl border border-slate-200 bg-white p-4 shadow-[0_6px_20px_rgba(var(--c-brand-rgb),0.04)] sm:p-5 lg:grid-cols-[minmax(0,1fr)_minmax(280px,420px)] lg:items-end">
       <div className="min-w-0">
         {locationText ? <span className="inline-flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.17em] text-[var(--c-brand)]"><MapPin size={11} />{locationText}</span> : null}
         <h1 className="mt-2 max-w-4xl text-[1.6rem] font-bold leading-[1.1] tracking-[-0.035em] text-theme sm:text-[2rem] lg:text-[2.35rem]">{tour.title}</h1>
@@ -102,8 +101,8 @@ export const TourDetailsActions = ({
 
   const buttonSize =
     layout === "compact"
-      ? "h-10 px-2 text-[11px] sm:text-xs"
-      : "h-10 px-4 text-xs";
+      ? "h-11 px-2 text-[11px] sm:text-xs"
+      : "h-11 px-4 text-xs";
 
   return (
     <div className={`grid w-full gap-2 ${gridClass} ${className}`}>
@@ -123,137 +122,34 @@ export const TourDetailsActions = ({
   );
 };
 
-export const TourImageGallery = ({ images, title }) => {
+export const TourImageGallery = ({ images = [], title }) => {
   const [showAll, setShowAll] = useState(false);
   const [failedImages, setFailedImages] = useState([]);
-
   const validImages = useMemo(
     () => [...new Set(images.filter(Boolean))].filter((image) => !failedImages.includes(image)),
     [images, failedImages],
   );
-
-  const displayImages = useMemo(
-    () => validImages.slice(0, showAll ? 5 : 3),
-    [validImages, showAll],
-  );
-
-  if (!displayImages.length) return null;
-
-  const mainImage = displayImages[0];
-  const sideImages = displayImages.slice(1, 3);
-  const hasSingleSideImage = sideImages.length === 1;
-  const handleImageError = (image) => {
-    setFailedImages((current) => current.includes(image) ? current : [...current, image]);
-  };
-
+  if (!validImages.length) return null;
+  const visibleImages = showAll ? validImages : validImages.slice(0, 3);
+  const handleImageError = (image) => setFailedImages((current) => current.includes(image) ? current : [...current, image]);
   return (
-    <div className="space-y-2.5">
-      <div className="hidden gap-1 md:grid md:grid-cols-[minmax(0,2fr)_minmax(210px,1fr)]">
-        <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-theme-bg">
-          <GalleryImage
-            src={mainImage}
-            alt={`${title} main`}
-            onError={() => handleImageError(mainImage)}
-            className="h-[280px] lg:h-[300px]"
-          />
-
-          {validImages.length > 1 ? (
-            <button
-              type="button"
-              onClick={() => setShowAll((current) => !current)}
-              className="absolute bottom-3 right-3 inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-white/95 px-3 py-1.5 text-[11px] font-semibold text-theme shadow-[0_6px_16px_rgba(15,23,42,0.1)] transition hover:bg-theme-bg">
-              <Images size={13} className="text-[var(--c-brand)]" />
-              {showAll ? "Show less" : `Photos (${validImages.length})`}
-            </button>
-          ) : null}
-        </div>
-
-        {sideImages.length ? (
-          <div className="grid grid-rows-2 gap-1">
-            {sideImages.map((image, index) => (
-              <div
-                key={`${image}-${index}`}
-                className={`overflow-hidden rounded-xl border border-slate-200 bg-theme-bg ${
-                  hasSingleSideImage ? "row-span-2" : ""
-                }`}>
-                <GalleryImage
-                  src={image}
-                  alt={`${title} gallery ${index + 2}`}
-                  onError={() => handleImageError(image)}
-                  className={`w-full object-cover ${
-                    hasSingleSideImage
-                      ? "h-[280px] lg:h-[300px]"
-                      : "h-[138px] lg:h-[148px]"
-                  }`}
-                />
-              </div>
-            ))}
-          </div>
-        ) : null}
+    <section className="tour-photo-gallery" aria-label={`${title} photos`}>
+      <div className="tour-photo-grid" style={{ "--photo-columns": Math.min(visibleImages.length, 3) }}>
+        {visibleImages.map((image, index) => (
+          <a key={image} href={image} target="_blank" rel="noreferrer" className="tour-photo-tile" aria-label={`Open ${title} photo ${index + 1} at full size`}>
+            <GalleryImage src={image} alt={`${title}, photo ${index + 1}`} loading={index === 0 ? "eager" : "lazy"} onError={() => handleImageError(image)} />
+          </a>
+        ))}
       </div>
-
-      <div className="space-y-1 md:hidden">
-        <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-theme-bg">
-          <GalleryImage
-            src={mainImage}
-            alt={`${title} main`}
-            onError={() => handleImageError(mainImage)}
-            className="h-[180px] sm:h-[220px]"
-          />
-
-          {validImages.length > 1 ? (
-            <button
-              type="button"
-              onClick={() => setShowAll((current) => !current)}
-              className="absolute bottom-2.5 right-2.5 inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-white/95 px-2.5 py-1.5 text-[10px] font-semibold text-theme shadow-[0_6px_16px_rgba(15,23,42,0.1)] transition hover:bg-theme-bg">
-              <Images size={12} className="text-[var(--c-brand)]" />
-              {showAll ? "Show less" : `Photos (${validImages.length})`}
-            </button>
-          ) : null}
-        </div>
-
-        {sideImages.length ? (
-          <div className="grid grid-cols-2 gap-1">
-            {sideImages.map((image, index) => (
-              <div
-                key={`${image}-${index}`}
-                className="overflow-hidden rounded-lg border border-slate-200 bg-theme-bg">
-                <GalleryImage
-                  src={image}
-                  alt={`${title} gallery ${index + 2}`}
-                  onError={() => handleImageError(image)}
-                  className="h-[105px] sm:h-[125px]"
-                />
-              </div>
-            ))}
-          </div>
-        ) : null}
-      </div>
-
-      {showAll && validImages.length > 3 ? (
-        <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
-          {validImages.slice(3).map((image, index) => (
-            <div
-              key={`${image}-extra-${index}`}
-              className="overflow-hidden rounded-lg border border-slate-200 bg-theme-bg">
-              <GalleryImage
-                src={image}
-                alt={`${title} extra ${index + 4}`}
-                onError={() => handleImageError(image)}
-                className="h-[120px] sm:h-[150px]"
-              />
-            </div>
-          ))}
-        </div>
-      ) : null}
-    </div>
+      {validImages.length > 3 && <button type="button" onClick={() => setShowAll((current) => !current)} aria-expanded={showAll} className="mt-3 text-xs font-medium text-[var(--c-brand)] hover:underline">{showAll ? "Show fewer photos" : `Show all ${validImages.length} photos`}</button>}
+    </section>
   );
 };
 
 export const TourBookingCard = ({ tour }) => (
-  <aside className="overflow-hidden rounded-xl border border-[rgba(15,23,42,0.08)] bg-theme-surface shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
+  <aside className="tour-booking-card overflow-hidden rounded-xl border border-[rgba(15,23,42,0.08)] bg-theme-surface shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
     <div className="h-0.5 bg-[var(--c-brand)]" />
-    <div className="grid items-center gap-4 p-4 lg:grid-cols-[minmax(180px,0.55fr)_minmax(320px,1fr)_auto] lg:gap-6 lg:px-5">
+    <div className="flex flex-col gap-5 p-5">
       <div>
         <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted">
           Starting from
@@ -270,9 +166,9 @@ export const TourBookingCard = ({ tour }) => (
         </p>
       </div>
 
-      <TourDetailsActions tour={tour} layout="compact" />
+      <TourDetailsActions tour={tour} layout="stacked" />
 
-      <p className="flex items-center gap-2 border-t border-theme pt-3 text-xs text-muted lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0"><ShieldCheck size={14} className="text-[var(--c-brand)]" />Secure booking request</p>
+      <p className="flex items-center gap-2 border-t border-theme pt-4 text-[11px] text-muted"><ShieldCheck size={14} className="text-[var(--c-brand)]" />Secure booking request</p>
     </div>
   </aside>
 );

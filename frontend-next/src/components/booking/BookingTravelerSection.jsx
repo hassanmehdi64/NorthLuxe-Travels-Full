@@ -9,8 +9,8 @@ const BookingTravelerSection = ({
   isTravelerSectionValid,
   onNext,
 }) => (
-  <div className="space-y-5 py-1 sm:space-y-6">
-    <div className="border-l-2 border-[var(--c-brand)] pl-3">
+  <div className="space-y-4 py-1 sm:space-y-5">
+    <div className="space-y-1">
       <p className="text-[15px] font-semibold text-theme">Who is traveling?</p>
       <p className="mt-1 text-xs text-muted">Add the primary traveler’s contact and ID details.</p>
     </div>
@@ -69,7 +69,7 @@ const BookingTravelerSection = ({
       </label>
     </div>
 
-    <div className="grid gap-4 border-t border-booking pt-5 md:grid-cols-2">
+    <div className="grid gap-4 border-t border-booking pt-4 md:grid-cols-2">
       <label className="min-w-0">
         <span className="ql-label">Traveler Type</span>
         <BookingDropdown
@@ -141,7 +141,7 @@ const BookingTravelerSection = ({
       )}
     </div>
 
-    <div className="flex justify-end border-t border-booking pt-5">
+    <div className="flex justify-end border-t border-booking pt-4">
       <button
         type="button"
         className="ql-btn-primary w-full sm:w-auto"

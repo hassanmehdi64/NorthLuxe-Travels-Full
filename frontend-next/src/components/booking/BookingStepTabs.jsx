@@ -10,7 +10,7 @@ const BookingStepTabs = ({
   isTravelSectionValid,
   onStepChange,
 }) => (
-  <nav aria-label="Booking progress" className="rounded-xl border border-booking bg-[#fbfcfc] px-2 py-2 sm:px-3">
+  <nav aria-label="Booking progress" className="border-b border-booking pb-2">
     <div className="grid grid-cols-3">
       {STEP_ITEMS.map((item) => {
         const canOpen =
@@ -22,10 +22,11 @@ const BookingStepTabs = ({
             key={item.id}
             type="button"
             disabled={!canOpen}
+            aria-current={activeSection === item.id ? "step" : undefined}
             onClick={() => canOpen && onStepChange(item.id)}
-            className={`group relative flex min-w-0 items-center justify-center gap-2 rounded-lg px-1.5 py-2 text-center transition sm:px-3 ${
+            className={`group relative flex min-w-0 items-center min-h-10 justify-center gap-2 rounded-md px-1.5 py-2 text-center transition sm:px-3 ${
               activeSection === item.id
-                ? "bg-white text-theme shadow-[0_1px_5px_rgba(15,47,87,0.08)]"
+                ? "bg-[var(--c-hover)] text-[var(--c-brand)]"
                 : canOpen
                   ? "cursor-pointer text-muted hover:bg-white/70 hover:text-theme"
                   : "cursor-not-allowed text-muted opacity-40"

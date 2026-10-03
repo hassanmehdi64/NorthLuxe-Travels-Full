@@ -2,12 +2,12 @@
   /* =====================================================
      CORE PALETTE (The "Source of Truth")
      ===================================================== */
-  --c-brand:   #20b77a;  /* Brand Green */
-  --c-brand-rgb: 32, 183, 122;
-  --c-brand-dark: #159f6a; /* Brand Hover */
-  --c-navy:    #061B3A;  /* Primary Dark Blue */
-  --c-navy-2:  #0F2F57;  /* Secondary Dark Blue */
-  --c-green:   #2D5A3F;  /* Green Accent */
+  --c-brand:   #00875a;  /* Brand Green */
+  --c-brand-rgb: 0, 135, 90;
+  --c-brand-dark: #006d49; /* Brand Hover */
+  --c-navy:    #002a50;  /* Primary Dark Blue */
+  --c-navy-2:  #174367;  /* Secondary Dark Blue */
+  --c-green:   #00875a;  /* Green Accent */
   --c-bg:      #F8FAFC;  /* Cool off-white */
   --c-surface: #FFFFFF;  /* Pure white */
   --c-text:    #2B2B2B;  /* Text Dark */
@@ -81,7 +81,7 @@
   /* =====================================================
      TYPOGRAPHY
      ===================================================== */
-  --font-primary: "Manrope", sans-serif;
-  --font-heading: "Plus Jakarta Sans", sans-serif;
+  --font-primary: "Montserrat", sans-serif;
+  --font-heading: "Montserrat", sans-serif;
   --font-urdu:    "Jameel Noori Nastaleeq", "Noto Nastaliq Urdu", serif;
 }

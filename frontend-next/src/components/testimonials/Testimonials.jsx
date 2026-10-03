@@ -23,24 +23,11 @@ const Testimonials = () => {
         <div className="mb-6 lg:mb-8">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
             <div className="space-y-2 max-w-2xl">
-              <div className="inline-flex items-center gap-3">
-                <span className="h-px w-8 bg-[var(--c-brand)]" />
-                <span className="text-[10px] font-black uppercase tracking-[0.35em] text-[var(--c-brand)]">
-                  Guest Reviews
-                </span>
-              </div>
-
-              <h2 className="text-3xl md:text-4xl font-bold text-theme tracking-tight">
-                Moments That <span className="text-[var(--c-brand)]">Inspire</span>
-              </h2>
-
-              <p className="text-muted text-sm md:text-base max-w-xl leading-relaxed">
-                Verified feedback from travelers who explored our premium routes across the North.
-              </p>
+              <h2 className="text-3xl md:text-4xl font-bold text-theme tracking-tight">Guest reviews</h2>
             </div>
 
             <div className="flex self-center md:self-auto">
-              <span className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-[rgba(var(--c-brand-rgb),0.18)] bg-[rgba(var(--c-brand-rgb),0.045)] px-3.5 text-[10px] font-semibold text-[#061b3a]">
+              <span className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-[rgba(var(--c-brand-rgb),0.18)] bg-[rgba(var(--c-brand-rgb),0.045)] px-3.5 text-[10px] font-semibold text-[var(--c-navy)]">
                 <Star size={11} className="text-[var(--c-brand)] fill-[var(--c-brand)]" />
                 {avgRating} average · {stories.length} verified reviews
               </span>
@@ -91,7 +78,7 @@ const Testimonials = () => {
         :global(.testimonial-swiper-container .swiper-pagination-bullet) {
           width: 5px;
           height: 5px;
-          background: #061b3a;
+          background: var(--c-navy);
           opacity: 0.2;
           transition: all 300ms ease;
         }

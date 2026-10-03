@@ -16,8 +16,8 @@ export const defaultHomeHeroImages = [
 ];
 
 export const defaultLogoUrl = "/north-luxe-logo.png";
-export const defaultBrandColor = "#20b77a";
-export const defaultBrandHoverColor = "#159f6a";
+export const defaultBrandColor = "#00875a";
+export const defaultBrandHoverColor = "#006d49";
 
 export const defaultHeroColors = {
   overlay: "rgba(0, 0, 0, 0.45)",
@@ -29,19 +29,19 @@ export const defaultHeroColors = {
 };
 
 export const defaultNavbarColors = {
-  main: "#061B3A",
-  scrolled: "#061B3A",
-  mobile: "#061B3A",
+  main: "#002a50",
+  scrolled: "#002a50",
+  mobile: "#002a50",
   text: "#ffffff",
   mutedText: "rgba(255, 255, 255, 0.9)",
-  activeText: "#20b77a",
+  activeText: "#00875a",
 };
 
 export const defaultFooterColors = {
-  background: "#061B3A",
+  background: "#002a50",
   text: "#ffffff",
   mutedText: "rgba(255, 255, 255, 0.78)",
-  accentText: "#20b77a",
+  accentText: "#00875a",
 };
 
 export const getPageHeroImage = (settings, page, fallback) =>

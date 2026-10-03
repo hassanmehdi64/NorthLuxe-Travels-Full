@@ -171,7 +171,7 @@ const HeroDatePicker = ({ when, setWhen, placeholder = "When" }) => {
     <div
       ref={wrapRef}
       className="relative flex min-h-[54px] items-center gap-3 rounded-[10px] border border-slate-200 bg-white px-4 py-2 shadow-sm transition-colors hover:border-emerald-300">
-      <CalendarDays size={20} className="shrink-0 text-[#061b3a]" />
+      <CalendarDays size={20} className="shrink-0 text-[var(--c-navy)]" />
 
       <button
         type="button"
@@ -276,7 +276,7 @@ const TravelersSelect = ({ value, onChange }) => {
         open ? "border-[var(--c-brand)] ring-2 ring-[rgba(var(--c-brand-rgb),0.12)]" : "border-slate-200 hover:border-emerald-300"
       }`}
     >
-      <Users size={20} className="shrink-0 text-[#061b3a]" />
+      <Users size={20} className="shrink-0 text-[var(--c-navy)]" />
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
@@ -301,10 +301,10 @@ const TravelersSelect = ({ value, onChange }) => {
             ref={panelRef}
             role="listbox"
             aria-label="Select number of travelers"
-            className="fixed z-[99999] overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-[0_18px_45px_rgba(6,27,58,0.18)]"
+            className="fixed z-[99999] overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-[0_18px_45px_rgba(var(--c-brand-rgb),0.18)]"
             style={position}
           >
-            <div className="mb-1 px-3 py-2 text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#061b3a]">
+            <div className="mb-1 px-3 py-2 text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--c-navy)]">
               Number of travelers
             </div>
             <div className="brand-dropdown-scroll max-h-[198px] space-y-0.5 overflow-y-auto overscroll-contain pr-1">
@@ -323,7 +323,7 @@ const TravelersSelect = ({ value, onChange }) => {
                     className={`flex min-h-12 w-full items-center rounded-lg px-3 py-2 text-left text-[13px] font-semibold transition ${
                       selected
                         ? "bg-[var(--c-brand)] text-white"
-                        : "text-slate-600 hover:bg-[rgba(var(--c-brand-rgb),0.08)] hover:text-[#061b3a]"
+                        : "text-slate-600 hover:bg-[rgba(var(--c-brand-rgb),0.08)] hover:text-[var(--c-navy)]"
                     }`}
                   >
                     <span>{count} {count === 1 ? "Traveler" : "Travelers"}</span>
@@ -378,7 +378,7 @@ const TourMain = () => {
     <section className="relative isolate overflow-hidden bg-[#fbfaf7] xl:grid xl:min-h-[560px] xl:grid-cols-[minmax(0,1.7fr)_minmax(410px,0.82fr)] xl:[height:calc(100svh-64px)]">
       <div className="relative min-h-[520px] overflow-hidden sm:min-h-[580px] md:min-h-[620px] xl:h-full xl:min-h-0">
         <HeroBackgroundSlider />
-        <div className="absolute inset-0 z-[14] bg-[linear-gradient(90deg,rgba(6,27,58,0.9)_0%,rgba(6,27,58,0.76)_34%,rgba(6,27,58,0.34)_68%,rgba(6,27,58,0.14)_100%)]" />
+        <div className="absolute inset-0 z-[14] bg-[linear-gradient(90deg,rgba(var(--c-brand-rgb),0.9)_0%,rgba(var(--c-brand-rgb),0.76)_34%,rgba(var(--c-brand-rgb),0.34)_68%,rgba(var(--c-brand-rgb),0.14)_100%)]" />
 
         <div className="relative z-20 flex min-h-[520px] items-center px-5 py-10 sm:min-h-[580px] sm:px-10 sm:py-12 md:min-h-[620px] md:px-14 xl:h-full xl:min-h-0 xl:px-[5.5vw] xl:py-12">
           <div className="max-w-[540px]">
@@ -386,7 +386,7 @@ const TourMain = () => {
               <span className="h-0.5 w-12 bg-[var(--c-brand)]" />
               <span>Explore</span><span>•</span><span>Experience</span><span>•</span><span>Belong</span>
             </div>
-            <h1 className="mt-4 text-[clamp(3rem,11vw,4.5rem)] font-medium leading-[0.92] tracking-[-0.04em] text-white [font-family:Georgia,'Times_New_Roman',serif] xl:text-[clamp(3.5rem,4.35vw,4.85rem)]">
+            <h1 className="mt-4 text-[clamp(3rem,11vw,4.5rem)] font-medium leading-[0.92] tracking-[-0.04em] text-white xl:text-[clamp(3.5rem,4.35vw,4.85rem)]">
               Discover <span className="block text-[var(--c-brand)]">Pakistan</span><span className="block">Beautifully</span>
             </h1>
             <p className="mt-5 max-w-md text-base font-medium leading-7 text-white/85 sm:text-lg sm:leading-8">
@@ -394,7 +394,7 @@ const TourMain = () => {
             </p>
             <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:items-stretch">
               <Link to="/destinations" className="ql-btn-primary min-h-11 rounded-[10px] px-5 text-xs font-bold">Explore Destinations</Link>
-              <Link to="/tours" className="inline-flex min-h-11 items-center justify-center rounded-[10px] border border-white/55 bg-white/10 px-5 text-xs font-bold text-white backdrop-blur-sm transition hover:-translate-y-0.5 hover:border-white hover:bg-white hover:text-[#061b3a]">View Packages</Link>
+              <Link to="/tours" className="inline-flex min-h-11 items-center justify-center rounded-[10px] border border-white/55 bg-white/10 px-5 text-xs font-bold text-white backdrop-blur-sm transition hover:-translate-y-0.5 hover:border-white hover:bg-white hover:text-[var(--c-navy)]">View Packages</Link>
             </div>
           </div>
         </div>
@@ -404,12 +404,12 @@ const TourMain = () => {
         <span className="pointer-events-none absolute bottom-0 left-0 hidden h-full w-[2px] origin-bottom rotate-[8deg] bg-[var(--c-brand)] xl:block" />
         <div className="relative mx-auto w-full max-w-[460px] xl:max-w-[430px]">
           <div className="flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.13em] text-slate-600"><span className="h-0.5 w-12 bg-[var(--c-brand)]" />Plan your journey</div>
-          <h2 className="mt-3 text-[40px] font-medium leading-[0.98] tracking-[-0.03em] text-[#061b3a] [font-family:Georgia,'Times_New_Roman',serif] sm:text-[44px]">Find Your<br />Perfect Trip</h2>
+          <h2 className="mt-3 text-[40px] font-medium leading-[0.98] tracking-[-0.03em] text-[var(--c-navy)] sm:text-[44px]">Find Your<br />Perfect Trip</h2>
           <p className="mt-2 text-[13px] text-slate-600">Handpicked destinations. Unforgettable experiences.</p>
 
           <form onSubmit={onSubmit} className="mt-5 space-y-2.5">
             <div className="relative flex min-h-[54px] items-center gap-3 rounded-[10px] border border-slate-200 bg-white px-4 py-2 shadow-sm transition-colors hover:border-emerald-300">
-              <MapPin size={20} className="shrink-0 text-[#061b3a]" />
+              <MapPin size={20} className="shrink-0 text-[var(--c-navy)]" />
               <div className="min-w-0 flex-1"><span className="block text-[13px] font-bold leading-tight text-slate-900">Destination</span><PlaceSearchInput value={where} onChange={setWhere} suggestions={placeSuggestions} placeholder="Where do you want to go?" anchorToParent inputClassName="mt-1 w-full bg-transparent text-xs text-slate-600 outline-none placeholder:text-slate-400" /></div>
               <ChevronDown size={16} className="shrink-0 text-slate-400" />
             </div>
@@ -424,14 +424,14 @@ const TourMain = () => {
           <div className="mt-3 grid grid-cols-2 gap-2">
             <Link
               to="/custom-plan-request"
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-[11px] font-semibold text-[#294052] shadow-[0_2px_8px_rgba(6,27,58,0.04)] transition hover:border-[rgba(var(--c-brand-rgb),0.38)] hover:bg-[#f5fbf8] hover:text-[var(--c-brand-dark)]"
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-[11px] font-semibold text-[#294052] shadow-[0_2px_8px_rgba(var(--c-brand-rgb),0.04)] transition hover:border-[rgba(var(--c-brand-rgb),0.38)] hover:bg-[#f5fbf8] hover:text-[var(--c-brand-dark)]"
             >
               <SlidersHorizontal size={13} />
               Custom request
             </Link>
             <Link
               to="/book"
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-[#061b3a] px-3 text-[11px] font-semibold text-white shadow-[0_4px_12px_rgba(6,27,58,0.14)] transition hover:bg-[#0b2c54]"
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-[var(--c-navy)] px-3 text-[11px] font-semibold text-white shadow-[0_4px_12px_rgba(var(--c-brand-rgb),0.14)] transition hover:bg-[#0b2c54]"
             >
               <BookOpenCheck size={13} />
               Book directly
@@ -439,7 +439,7 @@ const TourMain = () => {
           </div>
 
           <div className="mt-3 grid grid-cols-3 divide-x divide-slate-200 border-t border-slate-100 pt-3">
-            {HERO_POINTS.map(({ icon: Icon, label }) => <div key={label} className="flex flex-col items-center gap-1 px-2 text-center text-[9px] font-semibold leading-3 text-slate-700 sm:flex-row sm:text-left sm:text-[10px]"><Icon size={18} className="shrink-0 text-[#061b3a]" /><span>{label}</span></div>)}
+            {HERO_POINTS.map(({ icon: Icon, label }) => <div key={label} className="flex flex-col items-center gap-1 px-2 text-center text-[9px] font-semibold leading-3 text-slate-700 sm:flex-row sm:text-left sm:text-[10px]"><Icon size={18} className="shrink-0 text-[var(--c-navy)]" /><span>{label}</span></div>)}
           </div>
         </div>
       </aside>

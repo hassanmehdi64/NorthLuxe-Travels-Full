@@ -5,7 +5,7 @@ const CTASection = () => {
   return (
     <section className="bg-theme-bg py-8 lg:py-10">
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10">
-        <div className="relative overflow-hidden rounded-[1.25rem] border border-slate-200/80 bg-white shadow-[0_4px_18px_rgba(6,27,58,0.055)]">
+        <div className="relative overflow-hidden rounded-[1.25rem] border border-slate-200/80 bg-white shadow-[0_4px_18px_rgba(var(--c-brand-rgb),0.055)]">
           <span className="absolute inset-x-0 top-0 h-0.5 bg-[var(--c-brand)]" />
 
           <div className="relative grid lg:grid-cols-[minmax(0,1fr)_360px]">
@@ -15,7 +15,7 @@ const CTASection = () => {
                 Personal Travel Planning
               </div>
 
-              <h2 className="mx-auto mt-3 max-w-2xl text-2xl font-bold leading-tight tracking-tight text-[#061b3a] sm:text-3xl lg:mx-0 lg:text-[34px]">
+              <h2 className="mx-auto mt-3 max-w-2xl text-2xl font-bold leading-tight tracking-tight text-[var(--c-navy)] sm:text-3xl lg:mx-0 lg:text-[34px]">
                 Your Northern Pakistan journey,
                 <span className="text-[var(--c-brand)]"> thoughtfully planned.</span>
               </h2>
@@ -54,7 +54,7 @@ const CTASection = () => {
 
               <div className="mt-5 border-t border-slate-200/80 pt-4">
                 <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Typical response</p>
-                <p className="mt-1 text-xs font-semibold text-[#061b3a]">Within 30 to 60 minutes</p>
+                <p className="mt-1 text-xs font-semibold text-[var(--c-navy)]">Within 30 to 60 minutes</p>
               </div>
             </div>
           </div>

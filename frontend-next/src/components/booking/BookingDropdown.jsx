@@ -1,126 +1,15 @@
-import { useEffect, useRef, useState } from "react";
-import { ChevronDown } from "lucide-react";
-
-const BookingDropdown = ({
-  value,
-  onChange,
-  options,
-  placeholder = "Select an option",
-  disabled = false,
-}) => {
-  const [open, setOpen] = useState(false);
-  const [openUpward, setOpenUpward] = useState(false);
-  const menuRef = useRef(null);
-  const selectedOption = options.find((item) => item.value === value);
-
-  useEffect(() => {
-    if (!open) return;
-    const handleOutside = (event) => {
-      if (!menuRef.current?.contains(event.target)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleOutside);
-    return () => document.removeEventListener("mousedown", handleOutside);
-  }, [open]);
-
-  useEffect(() => {
-    if (disabled) setOpen(false);
-  }, [disabled]);
-
-  useEffect(() => {
-    if (!open) return;
-    const rect = menuRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const viewportHeight =
-      window.innerHeight || document.documentElement.clientHeight;
-    const spaceBelow = viewportHeight - rect.bottom;
-    const spaceAbove = rect.top;
-    const dropdownNeed = 270;
-    setOpenUpward(spaceBelow < dropdownNeed && spaceAbove > spaceBelow);
-  }, [open, options.length]);
-
+const BookingDropdown = ({ value, onChange, options = [], placeholder = "Select an option", disabled = false }) => {
+  const selectedOption = options.find((item) => String(item.value) === String(value ?? ""));
   return (
-    <div className="relative min-w-0" ref={menuRef}>
-      <button
-        type="button"
-        className={`min-h-[44px] w-full overflow-hidden rounded-[0.625rem] border px-3.5 py-2.5 text-left text-[13px] text-theme outline-none transition ${
-          disabled
-            ? "cursor-not-allowed border-[#dde3ea] bg-[#f7f8fa] text-muted"
-            : open
-              ? "cursor-pointer border-[rgba(var(--c-brand-rgb),0.65)] bg-white shadow-[0_0_0_3px_rgba(var(--c-brand-rgb),0.09)]"
-              : "cursor-pointer border-[rgba(15,47,87,0.14)] bg-[#fbfcfd] hover:border-[rgba(var(--c-brand-rgb),0.45)] hover:bg-white"
-        }`}
-        disabled={disabled}
-        onClick={() => setOpen((prev) => !prev)}
-        aria-expanded={open}
-      >
-        <div className="min-w-0 pr-7">
-          <span className="block truncate font-semibold">
-            {selectedOption?.label || placeholder}
-          </span>
-          {selectedOption?.description ? (
-            <span className="mt-1 block text-xs leading-4 text-muted">
-              {selectedOption.description}
-            </span>
-          ) : null}
-        </div>
-        <ChevronDown
-          size={14}
-          className={`pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted transition ${
-            open ? "rotate-180" : ""
-          }`}
-        />
-      </button>
-
-      {!disabled && open ? (
-        <div
-          className={`absolute z-[120] max-h-[min(18rem,70vh)] w-full min-w-0 overflow-hidden rounded-xl border border-[rgba(15,47,87,0.12)] bg-white p-1.5 shadow-[0_18px_40px_rgba(15,47,87,0.13)] ${
-            openUpward ? "bottom-full mb-2" : "top-full mt-2"
-          }`}
-        >
-          <div className="max-h-[inherit] space-y-1 overflow-auto">
-            {options.map((item) => {
-              const isActive = item.value === value;
-              return (
-                <button
-                  key={item.value}
-                  type="button"
-                  onClick={() => {
-                    onChange(item.value);
-                    setOpen(false);
-                  }}
-                  className={`w-full cursor-pointer rounded-lg px-3 py-2.5 text-left text-[13px] transition ${
-                    isActive
-                      ? "bg-[rgba(var(--c-brand-rgb),0.1)] text-[var(--c-brand-dark)]"
-                      : "bg-white text-theme hover:bg-[rgba(var(--c-brand-rgb),0.045)]"
-                  }`}
-                >
-                  <div className="flex min-w-0 items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className={`break-words ${isActive ? "font-bold" : "font-semibold"}`}>
-                        {item.label}
-                      </p>
-                      {item.description ? (
-                        <p className={`mt-1 text-xs leading-4 ${isActive ? "text-[#2B2B2B]/70" : "text-muted"}`}>
-                          {item.description}
-                        </p>
-                      ) : null}
-                    </div>
-                    {item.badge ? (
-                      <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${
-                        isActive ? "bg-white text-[#2B2B2B]" : "bg-[#f3f5f7] text-subheading"
-                      }`}>
-                        {item.badge}
-                      </span>
-                    ) : null}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      ) : null}
+    <div className="min-w-0">
+      <select className="ql-input booking-native-select" value={value ?? ""} disabled={disabled} onChange={(event) => {
+        const option = options.find((item) => String(item.value) === event.target.value);
+        onChange(option ? option.value : event.target.value);
+      }}>
+        {!options.some((item) => String(item.value) === "") && <option value="" disabled>{placeholder}</option>}
+        {options.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+      </select>
+      {selectedOption?.description && <p className="mt-1 text-[11px] leading-5 text-muted">{selectedOption.description}</p>}
     </div>
   );
 };

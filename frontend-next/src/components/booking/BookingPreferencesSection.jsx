@@ -39,7 +39,7 @@ const BookingPreferencesSection = ({
   };
 
   return (
-    <div className="space-y-5 py-1 sm:space-y-6">
+    <div className="space-y-4 py-1 sm:space-y-5">
       <div>
         <p className="text-base font-semibold tracking-tight text-theme">Choose payment</p>
         <p className="mt-1 text-xs text-muted">Select how you want to complete this booking.</p>
@@ -60,7 +60,7 @@ const BookingPreferencesSection = ({
                 onClick={() => selectMethod(method.key)}
                 className={`flex min-h-[48px] items-center justify-center gap-2 rounded-lg px-3 py-2 text-center transition ${
                   active
-                    ? "bg-white text-theme shadow-[0_2px_8px_rgba(15,47,87,0.08)]"
+                    ? "bg-white text-theme "
                     : "text-muted hover:bg-white/60 hover:text-theme"
                 }`}
               >
@@ -90,7 +90,7 @@ const BookingPreferencesSection = ({
                 onClick={() => setForm((p) => ({ ...p, paymentPlan: plan.value }))}
                 className={`min-h-[38px] rounded-md px-4 py-2 text-[12px] font-semibold transition ${
                   form.paymentPlan === plan.value
-                    ? "bg-white text-theme shadow-[0_1px_5px_rgba(15,47,87,0.08)]"
+                    ? "bg-white text-theme "
                     : "text-muted hover:text-theme"
                 }`}
               >
@@ -102,7 +102,7 @@ const BookingPreferencesSection = ({
       ) : null}
 
       {isManualPayment ? (
-        <div className="space-y-4 border-t border-booking pt-5">
+        <div className="space-y-4 border-t border-booking pt-4">
           {selectedReceivingAccount ? (
             <div className="flex flex-col gap-2 rounded-lg bg-[#f3f8f5] px-3.5 py-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
@@ -155,7 +155,7 @@ const BookingPreferencesSection = ({
         </label>
       ) : null}
 
-      <div className="flex flex-col-reverse gap-2.5 border-t border-booking pt-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col-reverse gap-2.5 border-t border-booking pt-4 sm:flex-row sm:items-center sm:justify-between">
         <button type="button" className="ql-btn-secondary w-full sm:w-auto" onClick={onBack}>Back</button>
         <button type="button" className="ql-btn-primary w-full sm:w-auto" disabled={!isTravelerSectionValid || !isTravelSectionValid || !isPreferencesSectionValid} onClick={onContinue}>Review booking</button>
       </div>

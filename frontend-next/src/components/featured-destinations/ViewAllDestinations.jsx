@@ -38,7 +38,7 @@ const ViewAllDestinations = () => {
                 <span className="h-px w-6 bg-[var(--c-brand)]" />
                 Destination collection
               </div>
-              <h2 className="text-xl font-bold tracking-tight text-[#061b3a] sm:text-2xl">
+              <h2 className="text-xl font-bold tracking-tight text-[var(--c-navy)] sm:text-2xl">
                 Choose where your journey begins
               </h2>
             </div>
@@ -64,12 +64,13 @@ const ViewAllDestinations = () => {
                 destination={destination}
                 index={index}
                 small
+                showDescription={false}
               />
             ))}
           </div>
         ) : (
           <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-14 text-center">
-            <h3 className="text-base font-bold text-[#061b3a]">No destinations available yet</h3>
+            <h3 className="text-base font-bold text-[var(--c-navy)]">No destinations available yet</h3>
             <p className="mt-1 text-xs text-slate-500">Published destinations will appear here automatically.</p>
           </div>
         )}
