@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { NavLink } from "@/lib/router";
-import { LogOut, X } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { adminNavItems } from "./navConfig";
 import { useAuth } from "../../context/useAuth";
 import { useNotifications } from "../../hooks/useCms";
@@ -188,7 +188,7 @@ const Sidebar = ({
   const visibilityClass = isSidebarOpen
     ? "translate-x-0"
     : "-translate-x-full sm:translate-x-0";
-  const desktopWidth = isSidebarCollapsed ? "sm:w-24" : "sm:w-72";
+  const desktopWidth = isSidebarCollapsed ? "sm:w-18" : "sm:w-56";
 
   return (
     <aside
@@ -199,35 +199,28 @@ const Sidebar = ({
         ${visibilityClass}
       `}>
       <div className="flex flex-col h-full">
-        <div className="relative border-b border-white/30 px-4 py-4">
-          <div
-            className={`flex min-w-0 items-center px-4 ${
-              isSidebarCollapsed ? "justify-center sm:px-0" : "justify-start"
-            }`}>
-            <img
-              src="/logo-light.png"
-              alt="North Luxe"
-              className="h-16 w-auto object-contain lg:h-20"
-            />
-          </div>
+        <div className="admin-sidebar-brand">
+          <NavLink to="/" aria-label="North Luxe website" className={isSidebarCollapsed ? "admin-brand-collapsed" : ""}>
+            <img src="/logo-dark.png" alt="North Luxe" />
+          </NavLink>
         </div>
 
         <div className="px-4 pt-4">
           <div
-            className={`rounded-[1.3rem] border border-white/35 bg-white/74 px-4 py-4 shadow-[0_10px_24px_rgba(148,163,184,0.08)] backdrop-blur-xl ${isSidebarCollapsed ? "sm:px-2.5" : ""}`}>
+            className={`rounded-[1.3rem] border border-white/35 bg-white/74 px-3 py-3 shadow-[0_10px_24px_rgba(148,163,184,0.08)] backdrop-blur-xl ${isSidebarCollapsed ? "sm:px-2.5" : ""}`}>
             <div
               className={`flex items-center gap-3 ${isSidebarCollapsed ? "sm:flex-col sm:justify-center" : ""}`}>
               <div className="relative shrink-0">
                 <img
                   src={getUserAvatar(user)}
                   alt={user?.name || "North Luxe Team"}
-                  className="h-12 w-12 rounded-[1rem] border-2 border-white/80 object-cover shadow-[0_10px_24px_rgba(15,23,42,0.14)]"
+                  className="h-9 w-9 rounded-lg border-2 border-white/80 object-cover shadow-[0_10px_24px_rgba(15,23,42,0.14)]"
                 />
                 <span className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-[var(--admin-accent)]" />
               </div>
               <div
                 className={`${isSidebarCollapsed ? "sm:hidden" : "min-w-0"}`}>
-                <p className="truncate text-[14px] font-black text-[var(--admin-text)]">
+                <p className="truncate text-[14px] font-medium text-[var(--admin-text)]">
                   {user?.name || "North Luxe Team"}
                 </p>
                 <p className="mt-1 text-[11px] font-semibold text-[var(--admin-muted)]">
@@ -238,42 +231,25 @@ const Sidebar = ({
           </div>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-4 py-4">
-          {visibleNavItems.map((item) => (
-            <NavLink
-              key={item.id}
-              to={item.path}
-              end={item.path === "/admin"}
-              className="mb-1.5">
-              {({ isActive }) => (
-                <div
-                  className="admin-soft-nav-link flex items-center justify-between gap-3 px-4 py-3 text-sm font-bold"
-                  data-active={isActive ? "true" : "false"}
-                  title={isSidebarCollapsed ? item.label : undefined}>
-                  <span
-                    className={`inline-flex min-w-0 items-center gap-3 ${isSidebarCollapsed ? "sm:w-full sm:justify-center" : ""}`}>
-                    <span
-                      className={`inline-flex h-10 w-10 items-center justify-center rounded-2xl ${
-                        isActive
-                          ? "bg-[rgba(var(--c-brand-rgb),0.12)] text-[var(--admin-accent)] shadow-[0_10px_22px_rgba(15,23,42,0.05)]"
-                          : "bg-white/70 text-[var(--admin-muted)]"
-                      }`}>
-                      <item.icon size={18} />
-                    </span>
-                    <span
-                      className={`${isSidebarCollapsed ? "sm:hidden" : "truncate"}`}>
-                      {item.label}
-                    </span>
-                  </span>
-                  {badgeCounts[item.id] > 0 && !isSidebarCollapsed ? (
-                    <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-[var(--admin-accent)] px-2 py-1 text-[10px] font-black leading-none text-white shadow-[0_10px_22px_rgba(155,108,255,0.26)]">
-                      {badgeCounts[item.id] > 99 ? "99+" : badgeCounts[item.id]}
-                    </span>
-                  ) : null}
-                </div>
-              )}
-            </NavLink>
-          ))}
+        <nav className="admin-sidebar-navigation flex-1 overflow-y-auto" aria-label="Admin navigation">
+          {[
+            ["Operations", ["overview", "bookings", "contacts"]],
+            ["Website", ["tours", "gallery", "blogs", "testimonials", "content"]],
+            ["Workspace", ["users", "settings"]],
+          ].map(([group, ids]) => {
+            const items = visibleNavItems.filter((item) => ids.includes(item.id));
+            if (!items.length) return null;
+            return <section className="admin-nav-group" key={group}>
+              <p className={`admin-nav-group-label ${isSidebarCollapsed ? "sm:hidden" : ""}`}>{group}</p>
+              {items.map((item) => <NavLink key={item.id} to={item.path} end={item.path === "/admin"} aria-label={item.label}>
+                {({ isActive }) => <div className={`admin-soft-nav-link admin-brand-nav-link ${isSidebarCollapsed ? "admin-nav-collapsed" : ""}`} data-active={String(isActive)} title={isSidebarCollapsed ? item.label : undefined}>
+                  <item.icon size={16} aria-hidden="true" />
+                  <span className={isSidebarCollapsed ? "sm:hidden" : "truncate"}>{item.label}</span>
+                  {badgeCounts[item.id] > 0 && !isSidebarCollapsed ? <span className="admin-nav-count">{badgeCounts[item.id] > 99 ? "99+" : badgeCounts[item.id]}</span> : null}
+                </div>}
+              </NavLink>)}
+            </section>;
+          })}
         </nav>
 
         <div className="border-t border-white/30 p-4">

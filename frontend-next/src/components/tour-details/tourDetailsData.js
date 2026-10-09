@@ -257,7 +257,7 @@ export const buildPackageOverview = (tour) => [
 
 export const buildDetailedDescription = (tour) =>
   tour.description ||
-  `${tour.title} takes you through ${tour.location || "Northern Pakistan"} with a structured day-by-day plan focused on scenic exploration, practical travel timing, and reliable support. The route is arranged to reduce fatigue, keep comfort consistent, and give meaningful stops for landscapes, culture, and local experiences. This package works well for travelers who want a clean balance of sightseeing, convenience, and predictable logistics throughout ${tour.durationLabel || `${tour.durationDays || 0} days`}.`;
+  tour.shortDescription || "";
 
 const DEFAULT_TRANSPORT_NOTE =
   "Prices are for transport only. Hotels, meals, boating, entry tickets, jeep charges, and personal expenses are not included.";

@@ -1,0 +1,60 @@
+/* Shared action, card and gallery geometry across website and workspace. */
+.public-site, .admin-shell { --ui-radius: 8px; --ui-gap: 12px; }
+.public-site :is(.ql-btn-primary,.ql-btn-secondary,.ql-btn-ghost),
+.admin-shell.admin-shell-soft :is(.admin-soft-button,.admin-soft-button-ghost,.admin-soft-button-subtle) {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  min-height: 40px; padding: 9px 14px; border: 1px solid transparent; border-radius: 6px;
+  font: 500 12px/1.5 "Montserrat", sans-serif; text-transform: none; letter-spacing: normal;
+  box-shadow: none; transform: none; cursor: pointer;
+}
+.public-site .ql-btn-primary, .admin-shell.admin-shell-soft .admin-soft-button { background: #00875a; border-color: #00875a; color: white; }
+.public-site .ql-btn-primary:hover, .admin-shell.admin-shell-soft .admin-soft-button:hover { background: #006d49; border-color: #006d49; }
+.public-site :is(.ql-btn-secondary,.ql-btn-ghost), .admin-shell.admin-shell-soft :is(.admin-soft-button-ghost,.admin-soft-button-subtle) { background: var(--admin-surface,#fff); color: var(--admin-text,#002a50); border-color: var(--admin-border,#e2e8ee); }
+.public-site :is(.ql-btn-secondary,.ql-btn-ghost):hover, .admin-shell.admin-shell-soft :is(.admin-soft-button-ghost,.admin-soft-button-subtle):hover { border-color: #00875a; background: var(--admin-surface-muted,#edf6f2); }
+.public-site .ql-btn-icon, .admin-shell.admin-shell-soft .admin-soft-icon-button { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 6px; box-shadow: none; transform: none; }
+.public-site :is(.ql-btn-primary,.ql-btn-secondary,.ql-btn-ghost):disabled,
+.admin-shell :is(.admin-soft-button,.admin-soft-button-ghost):disabled { opacity: .5; cursor: not-allowed; }
+.brand-card { background: var(--admin-surface,var(--c-surface,#fff)); border: 1px solid var(--admin-border,var(--c-border,#e2e8ee)); border-radius: var(--ui-radius,8px); box-shadow: none; }
+.public-site :is(.luxe-tour-card,.luxe-blog-card,.luxe-content-card,.tour-booking-card,.tour-detail-header),
+.admin-shell.admin-shell-soft :is(.admin-soft-panel,.admin-soft-form,.admin-soft-table,.admin-soft-kpi) { border-radius: var(--ui-radius); box-shadow: none; }
+.brand-gallery-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: var(--ui-gap,12px); align-items: start; }
+.brand-gallery-grid > * { min-width: 0; }
+.brand-gallery-grid.tour-photo-grid { grid-template-columns: repeat(var(--photo-columns,3),minmax(0,1fr)); }
+.brand-gallery-tile { display: block; position: relative; height: auto; aspect-ratio: 4/3; overflow: hidden; border-radius: var(--ui-radius,8px); border: 1px solid var(--c-border,#e2e8ee); background: var(--c-hover,#edf6f2); box-shadow: none; }
+.brand-gallery-tile img { width: 100%; height: 100%; object-fit: cover; }
+.brand-gallery-tile:hover { border-color: #00875a; }
+.brand-gallery-card { border-radius: var(--ui-radius,8px); box-shadow: none; }
+.brand-gallery-card > div:last-child { background: var(--admin-surface,#fff); backdrop-filter: none; border-color: var(--admin-border,#e2e8ee); border-radius: 0 0 8px 8px; }
+.brand-gallery-card h3 { font-size: 12px; font-weight: 500; text-transform: none; letter-spacing: normal; }
+.public-site .brand-gallery-tile img { transition: none; transform: none; }
+.inbox-message-card .admin-soft-badge { font-size: 9px; letter-spacing: normal; text-transform: none; }
+.admin-inbox { display: grid; grid-template-columns: minmax(260px,.85fr) minmax(0,1.4fr); gap: 16px; min-height: 500px; height: calc(100dvh - 130px); }
+.inbox-list { min-width: 0; overflow-y: auto; padding-right: 4px; }
+.inbox-heading { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.inbox-heading svg { color: var(--admin-accent); }
+.inbox-search { width: 100%; min-height: 40px; padding: 10px 12px; border: 1px solid var(--admin-border); margin-bottom: 12px; }
+.inbox-message-card { display: block; width: 100%; padding: 14px; margin-bottom: 10px; text-align: left; cursor: pointer; }
+.inbox-message-card:hover, .inbox-message-card[data-selected="true"] { border-color: var(--admin-accent); background: var(--admin-surface-muted); }
+.inbox-message-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; font-weight: 500; }
+.inbox-message-heading time { font-size: 10px; font-weight: 400; color: var(--admin-muted); flex-shrink: 0; }
+.inbox-message-card h3 { font-size: 12px; font-weight: 500; margin: 7px 0 4px; }
+.inbox-message-card > p { font-size: 11px; line-height: 1.8; color: var(--admin-muted); }
+.inbox-detail { display: flex; min-width: 0; min-height: 0; }
+.inbox-empty { display: grid; place-content: center; flex: 1; text-align: center; padding: 24px; gap: 10px; color: var(--admin-muted); font-size: 12px; }
+.inbox-empty svg { margin-inline: auto; color: var(--admin-accent); }
+.inbox-message-detail { display: flex; flex: 1; min-width: 0; flex-direction: column; overflow: hidden; }
+.inbox-detail-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--admin-border); }
+.inbox-detail-body { flex: 1; overflow-y: auto; padding: 18px; }
+.inbox-detail-body h2 { font-size: 16px; font-weight: 500; }
+.inbox-contact-meta { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 8px; font-size: 11px; color: var(--admin-muted); overflow-wrap: anywhere; }
+.inbox-contact-meta span { display: inline-flex; align-items: center; gap: 5px; }
+.inbox-message-content { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--admin-border); }
+.inbox-message-content h3 { font-size: 13px; font-weight: 500; margin-bottom: 10px; }
+.inbox-message-content > p { white-space: pre-line; font-size: 13px; line-height: 1.9; overflow-wrap: anywhere; }
+.inbox-reply { padding: 14px 16px; border-top: 1px solid var(--admin-border); }
+.inbox-reply textarea { width: 100%; min-height: 110px; padding: 12px; border: 1px solid var(--admin-border); resize: vertical; }
+.inbox-reply-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+@media (max-width:1023px) { .brand-gallery-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+@media (max-width:767px) { .brand-gallery-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } .admin-inbox { grid-template-columns: minmax(0,1fr); height: auto; min-height: 60vh; } .admin-inbox .inbox-list.is-selected { display: none; } .admin-inbox .inbox-detail.is-empty { display: none; } .inbox-message-detail { min-height: 65vh; } }
+@media (max-width:639px) { .brand-gallery-grid.tour-photo-grid { grid-template-columns: repeat(2,minmax(0,1fr)); grid-auto-flow: row; grid-auto-columns: auto; overflow: visible; gap: var(--ui-gap); } .tour-photo-grid > :only-child { grid-column: 1/-1; } .public-site :is(.ql-btn-primary,.ql-btn-secondary,.ql-btn-ghost), .admin-shell :is(.admin-soft-button,.admin-soft-button-ghost) { min-height: 44px; } }
+@media (max-width:359px) { .brand-gallery-grid, .brand-gallery-grid.tour-photo-grid { grid-template-columns: minmax(0,1fr); } }

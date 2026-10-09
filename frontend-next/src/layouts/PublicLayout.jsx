@@ -4,6 +4,7 @@ import { SiteNavigation, SiteFooter } from "../components/home/SiteChrome";
 import WhatsAppFloatButton from "../components/common/WhatsAppFloatButton";
 import { useSettings } from "../hooks/useCms";
 import "../styles/public-theme.css";
+import "../styles/ui-consistency.css";
 
 const PublicLayout = ({ children }) => {
   const { data: settings } = useSettings(true);

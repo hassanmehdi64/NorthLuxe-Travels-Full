@@ -39,7 +39,9 @@ const ProfileDropdown = () => {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="group flex items-center gap-3 rounded-[1.35rem] border border-white/35 bg-white/70 px-3.5 py-2.5 shadow-[0_12px_28px_rgba(148,163,184,0.08)] backdrop-blur-xl transition-all focus:outline-none hover:-translate-y-0.5"
+        aria-expanded={isOpen}
+        aria-label="Account menu"
+        className="admin-profile-trigger group flex items-center gap-3 rounded-[1.35rem] border border-white/35 bg-white/70 px-3.5 py-2.5 shadow-[0_12px_28px_rgba(148,163,184,0.08)] backdrop-blur-xl transition-all focus:outline-none hover:-translate-y-0.5"
       >
         <div className="text-right hidden sm:block">
           <p className="text-[11px] font-black uppercase tracking-tight text-[var(--admin-text)]">
@@ -63,7 +65,7 @@ const ProfileDropdown = () => {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 z-50 mt-3 w-60 rounded-[1.5rem] border border-white/35 bg-white/88 py-2 shadow-[0_24px_50px_rgba(148,163,184,0.18)] backdrop-blur-2xl animate-in fade-in slide-in-from-top-2">
+        <div className="admin-profile-menu absolute right-0 z-50 mt-3 w-60 rounded-[1.5rem] border border-white/35 bg-white/88 py-2 shadow-[0_24px_50px_rgba(148,163,184,0.18)] backdrop-blur-2xl animate-in fade-in slide-in-from-top-2">
           {/* User Email Header */}
           <div className="mb-1 border-b border-white/35 px-5 py-4">
             <p className="text-[10px] font-black uppercase tracking-widest text-[var(--admin-muted)]">

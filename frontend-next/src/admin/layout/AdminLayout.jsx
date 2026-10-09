@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useLocation } from "@/lib/router";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
+import "../../styles/admin-brand.css";
+import "../../styles/ui-consistency.css";
 
 const AdminLayout = ({ children }) => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -91,7 +93,7 @@ const AdminLayout = ({ children }) => {
         />
 
         {/* Dynamic Content Outlet */}
-        <main className="relative z-[1] flex-1 overflow-y-auto px-1.5 pb-4 pt-4 sm:px-2 sm:pb-5 sm:pt-5 lg:px-6 lg:pb-8 lg:pt-6 xl:px-8">
+        <main className="admin-workspace relative z-[1] flex-1 overflow-y-auto px-1.5 pb-4 pt-4 sm:px-2 sm:pb-5 sm:pt-5 lg:px-6 lg:pb-8 lg:pt-6 xl:px-8">
           <div className="mx-auto max-w-[1520px]">
             {children}
           </div>

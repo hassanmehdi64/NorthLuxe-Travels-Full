@@ -1,6 +1,8 @@
+import { ArrowLeft, ArrowRight, Eye, EyeOff, LockKeyhole } from "lucide-react";
+import "../styles/admin-brand.css";
 import Loader from "../components/spinner/Loader";
 import { useState } from "react";
-import { Navigate, useLocation, useNavigate } from "@/lib/router";
+import { Link, Navigate, useLocation, useNavigate } from "@/lib/router";
 import { useAuth } from "../context/useAuth";
 import { getApiErrorMessage } from "../lib/apiError";
 
@@ -9,6 +11,7 @@ const Login = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -34,52 +37,25 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-theme-bg flex items-center justify-center p-6">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-md rounded-3xl border border-theme bg-theme-surface p-8 space-y-5 shadow-[0_24px_48px_rgba(15,23,42,0.12)]"
-      >
-        <div className="pb-2 border-b border-theme">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--c-brand)]">Team Access</p>
-          <h1 className="text-2xl font-bold text-theme mt-1">Welcome Back</h1>
-          <p className="text-sm text-muted mt-1">Sign in with your Admin or Editor credentials.</p>
-        </div>
-
-        <label>
-          <span className="text-[10px] font-black uppercase tracking-[0.14em] text-muted">Email</span>
-        <input
-          type="email"
-          required
-          placeholder="name@northluxe.com"
-          className="mt-2 w-full p-3 rounded-xl border border-theme bg-white text-sm font-semibold text-theme outline-none focus:ring-4 focus:ring-[var(--c-brand)]/20 focus:border-[var(--c-brand)]"
-          value={form.email}
-          onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
-        />
-        </label>
-
-        <label>
-          <span className="text-[10px] font-black uppercase tracking-[0.14em] text-muted">Password</span>
-        <input
-          type="password"
-          required
-          placeholder="Password"
-          className="mt-2 w-full p-3 rounded-xl border border-theme bg-white text-sm font-semibold text-theme outline-none focus:ring-4 focus:ring-[var(--c-brand)]/20 focus:border-[var(--c-brand)]"
-          value={form.password}
-          onChange={(e) => setForm((prev) => ({ ...prev, password: e.target.value }))}
-        />
-        </label>
-
-        {error && <p className="text-sm text-rose-600 font-semibold">{error}</p>}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="ql-btn-primary w-full py-3 text-sm font-black uppercase tracking-[0.14em]"
-        >
-          {loading ? "Signing in..." : "Sign In"}
-        </button>
-      </form>
-    </div>
+    <main className="admin-login-page">
+      <Link to="/" className="admin-login-back"><ArrowLeft size={14} />Back to website</Link>
+      <div className="admin-login-shell">
+        <aside className="admin-login-brand">
+          <div className="admin-login-logo"><img src="/logo-dark.png" alt="North Luxe" /></div>
+          <div><p className="admin-login-eyebrow">North Luxe workspace</p><h2>Everything for your next journey.</h2><p>Manage bookings, content and your team in one place.</p></div>
+          <span><LockKeyhole size={14} />Team access</span>
+        </aside>
+        <form onSubmit={handleSubmit} className="admin-login-form" aria-labelledby="login-title" aria-busy={loading}>
+          <div><h1 id="login-title">Welcome back</h1><p>Sign in to your admin or editor account.</p></div>
+          <label htmlFor="admin-login-email">Email address</label>
+          <input id="admin-login-email" type="email" autoComplete="username" required placeholder="name@northluxe.com" value={form.email} onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))} disabled={loading} />
+          <label htmlFor="admin-login-password">Password</label>
+          <div className="admin-login-password"><input id="admin-login-password" type={showPassword ? "text" : "password"} autoComplete="current-password" required placeholder="Enter your password" value={form.password} onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))} disabled={loading} /><button type="button" aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} onClick={() => setShowPassword((prev) => !prev)}>{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}</button></div>
+          {error && <p className="admin-login-error" role="alert">{error}</p>}
+          <button type="submit" disabled={loading} className="admin-login-submit">{loading ? "Signing in..." : "Sign in"}<ArrowRight size={15} /></button>
+        </form>
+      </div>
+    </main>
   );
 };
 

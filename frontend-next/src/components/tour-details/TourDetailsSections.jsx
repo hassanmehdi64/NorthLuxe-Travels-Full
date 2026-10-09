@@ -115,7 +115,7 @@ export const TourDetailsActions = ({
       <Link
         to="/custom-plan-request"
         state={getCustomRequestState(tour)}
-        className={`inline-flex w-full cursor-pointer items-center justify-center rounded-lg border border-[rgba(15,23,42,0.12)] bg-theme-surface font-semibold text-theme transition hover:border-[rgba(var(--c-brand-rgb),0.4)] hover:text-[var(--c-brand)] whitespace-nowrap ${buttonSize}`}>
+        className={`ql-btn-secondary inline-flex w-full cursor-pointer items-center justify-center whitespace-nowrap ${buttonSize}`}>
         Custom Request
       </Link>
     </div>
@@ -134,14 +134,14 @@ export const TourImageGallery = ({ images = [], title }) => {
   const handleImageError = (image) => setFailedImages((current) => current.includes(image) ? current : [...current, image]);
   return (
     <section className="tour-photo-gallery" aria-label={`${title} photos`}>
-      <div className="tour-photo-grid" style={{ "--photo-columns": Math.min(visibleImages.length, 3) }}>
+      <div className="brand-gallery-grid tour-photo-grid" style={{ "--photo-columns": Math.min(visibleImages.length, 3) }}>
         {visibleImages.map((image, index) => (
-          <a key={image} href={image} target="_blank" rel="noreferrer" className="tour-photo-tile" aria-label={`Open ${title} photo ${index + 1} at full size`}>
+          <a key={image} href={image} target="_blank" rel="noreferrer" className="brand-gallery-tile tour-photo-tile" aria-label={`Open ${title} photo ${index + 1} at full size`}>
             <GalleryImage src={image} alt={`${title}, photo ${index + 1}`} loading={index === 0 ? "eager" : "lazy"} onError={() => handleImageError(image)} />
           </a>
         ))}
       </div>
-      {validImages.length > 3 && <button type="button" onClick={() => setShowAll((current) => !current)} aria-expanded={showAll} className="mt-3 text-xs font-medium text-[var(--c-brand)] hover:underline">{showAll ? "Show fewer photos" : `Show all ${validImages.length} photos`}</button>}
+      {validImages.length > 3 && <button type="button" onClick={() => setShowAll((current) => !current)} aria-expanded={showAll} className="ql-btn-secondary mt-3">{showAll ? "Show fewer photos" : `Show all ${validImages.length} photos`}</button>}
     </section>
   );
 };

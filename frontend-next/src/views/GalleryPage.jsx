@@ -31,13 +31,13 @@ const GalleryPage = () => {
         </div>
 
         {galleryItems.length ? (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          <div className="brand-gallery-grid">
             {galleryItems.map((img, idx) => (
               <button
                 key={`${img.src}-${idx}`}
                 type="button"
                 onClick={() => setSelectedImg(img)}
-                className="group relative aspect-[4/3] overflow-hidden rounded-xl border border-slate-200/70 bg-[var(--c-navy)] text-left shadow-[0_3px_12px_rgba(var(--c-brand-rgb),0.06)] transition-[border-color,box-shadow] duration-300 hover:border-[rgba(var(--c-brand-rgb),0.45)] hover:shadow-[0_8px_20px_rgba(var(--c-brand-rgb),0.11)]"
+                className="brand-gallery-tile group relative text-left"
               >
                 <img
                   src={img.src}

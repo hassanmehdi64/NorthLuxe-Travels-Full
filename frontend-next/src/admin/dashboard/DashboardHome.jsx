@@ -5,12 +5,10 @@ import {
   Volume2,
   BookOpen,
   Briefcase,
-  CreditCard,
   FolderOpen,
   Image,
   MessageSquare,
   ShieldCheck,
-  Users,
 } from "lucide-react";
 import {
   useBookings,
@@ -90,12 +88,6 @@ const DashboardHome = () => {
   const activeCurrency = displayCurrency(settings?.currency || "PKR");
 
   const stats = overview?.stats || {};
-  const unreadBookingCodes = new Set(
-    notifications
-      .filter((item) => !item?.isRead && String(item?.type || "") === "Bookings")
-      .map((item) => `${item?.title || ""} ${item?.message || ""}`),
-  );
-
   const latestBookings = [...(overview?.latestBookings || bookings)]
     .sort((a, b) => {
       const aRecent = isRecentlyReceived(a?.createdAt || a?.date);
@@ -113,225 +105,61 @@ const DashboardHome = () => {
   const pendingPaymentVerifications = bookings.filter((item) => {
     const status = String(item.status || "").toLowerCase();
     const paymentStatus = String(item.payment || "").toLowerCase();
-    const method = item.paymentMethod || "";
-    if (!isManualPaymentMethod(method)) return false;
-    return (
-      paymentStatus.includes("pending") ||
-      paymentStatus.includes("unverified") ||
-      status === "pending"
-    );
+    if (!isManualPaymentMethod(item.paymentMethod || "")) return false;
+    return paymentStatus.includes("pending") || paymentStatus.includes("unverified") || status === "pending";
   }).length;
 
   const cards = [
-    {
-      title: "Weekly Sales",
-      value: formatNumber(stats.totalBookings ?? bookings.length),
-      hint: "New bookings processed",
-      tone: "peach",
-    },
-    {
-      title: "Weekly Orders",
-      value: formatCurrencyAmount(stats.totalRevenue || 0, activeCurrency),
-      hint: "Confirmed collections",
-      tone: "sky",
-    },
-    {
-      title: "Visitors Online",
-      value: formatNumber(stats.totalUsers ?? users.length),
-      hint: "Active customer touchpoints",
-      tone: "mint",
-    },
-    {
-      title: "Pending Payments",
-      value: formatNumber(pendingPaymentVerifications),
-      hint: "Need verification",
-      tone: "violet",
-    },
+    { title: "Total bookings", value: formatNumber(stats.totalBookings ?? bookings.length), hint: "Bookings received" },
+    { title: "Revenue", value: formatCurrencyAmount(stats.totalRevenue || 0, activeCurrency), hint: "Confirmed collections" },
+    { title: "Users", value: formatNumber(stats.totalUsers ?? users.length), hint: "Registered accounts" },
+    { title: "Pending payments", value: formatNumber(pendingPaymentVerifications), hint: "Need verification" },
   ];
-
   const quickLinks = [
-    {
-      title: "Review Payments",
-      desc: "Check manual payment claims and booking proofs.",
-      to: "/admin/bookings",
-      icon: ShieldCheck,
-    },
-    {
-      title: "Custom Booking Requests",
-      desc: "Review tailored trip requests saved in booking management.",
-      to: "/admin/bookings",
-      icon: MessageSquare,
-    },
-    {
-      title: "Notifications",
-      desc: "Track fresh booking and system updates.",
-      to: "/admin/notifications",
-      icon: Bell,
-    },
-    {
-      title: "Content Control",
-      desc: `Tours ${tours.length} - Blogs ${blogs.length} - Media ${gallery.length}`,
-      to: "/admin/tours",
-      icon: FolderOpen,
-    },
-    {
-      title: "Manage Activities",
-      desc: `${activities.length} total entries. Add or update activity data.`,
-      to: "/admin/activities",
-      icon: Briefcase,
-    },
-    {
-      title: "Manage Services",
-      desc: `${services.length} total entries. Add or update service data.`,
-      to: "/admin/services",
-      icon: BookOpen,
-    },
+    { title: "Review payments", to: "/admin/bookings", icon: ShieldCheck },
+    { title: "Custom requests", to: "/admin/bookings", icon: MessageSquare },
+    { title: "Notifications", to: "/admin/notifications", icon: Bell },
+    { title: "Manage tours", to: "/admin/tours", icon: FolderOpen },
+    { title: "Manage activities", to: "/admin/activities", icon: Briefcase },
+    { title: "Manage services", to: "/admin/services", icon: BookOpen },
   ];
 
   return (
-    <div className="space-y-8">
-      <div className="admin-soft-panel p-5 md:p-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div>
-            <p className="admin-soft-label text-[var(--admin-accent)]">Overview</p>
-            <h1 className="admin-page-title mt-2 normal-case">
-              Dashboard Overview
-            </h1>
-            <p className="admin-page-subtitle mt-2 max-w-2xl">
-              A softer control center for bookings, payments, team activity, and content updates.
-            </p>
+    <div className="admin-dashboard">
+      <header className="admin-dashboard-heading">
+        <div><h1 className="admin-page-title">Overview</h1><p className="admin-page-subtitle">Bookings, payments and website content.</p></div>
+        <div className="admin-dashboard-heading-actions"><button type="button" onClick={playTestNotificationSound} className="admin-soft-button-ghost"><Volume2 size={14} />Test sound</button><Link to="/" className="admin-soft-button-ghost">View website<ArrowRight size={13} /></Link></div>
+      </header>
+      <section className="admin-dashboard-metrics" aria-label="Business metrics">
+        {cards.map((card) => <article key={card.title} className="admin-soft-kpi"><p className="admin-metric-label">{card.title}</p><p className="admin-metric-value">{card.value}</p><p className="admin-metric-hint">{card.hint}</p></article>)}
+      </section>
+      <section className="admin-dashboard-attention" aria-label="Operational updates">
+        <Link to="/admin/notifications"><Bell size={15} /><span>Unread updates</span><strong>{unreadNotifications}</strong><ArrowRight size={13} /></Link>
+        <Link to="/admin/bookings"><MessageSquare size={15} /><span>Custom requests</span><strong>{customPlanRequests}</strong><ArrowRight size={13} /></Link>
+      </section>
+      <div className="admin-dashboard-columns">
+        <section className="admin-soft-panel admin-recent-bookings">
+          <div className="admin-panel-heading"><h2 className="admin-section-title">Recent bookings</h2><Link to="/admin/bookings">View all<ArrowRight size={12} /></Link></div>
+          <div className="admin-booking-list">
+            {latestBookings.length ? latestBookings.map((item) => <Link key={item.id || item.bookingCode} to={item.id ? `/admin/bookings/${item.id}` : "/admin/bookings"} className="admin-booking-row">
+              <div className="min-w-0"><p className="admin-booking-name">{item.user || item.customer || "Guest"}{isRecentlyReceived(item.createdAt || item.date) && <span className="admin-soft-badge admin-soft-badge-primary">New</span>}</p><p className="admin-booking-tour">{item.tour || item.tourTitle || item.bookingCode || "Tour booking"}</p></div>
+              <div className="admin-booking-amount"><p>{formatCurrencyAmount(item.amount || 0, item.currency || "PKR")}</p><span className="admin-soft-badge admin-soft-badge-muted">{item.status || "pending"}</span></div>
+            </Link>) : <p className="admin-empty-note">No bookings yet.</p>}
           </div>
-          <button
-            type="button"
-            onClick={playTestNotificationSound}
-            className="admin-soft-button-ghost self-start"
-          >
-            <Volume2 size={15} />
-            Test Sound
-          </button>
-        </div>
+        </section>
+        <section className="admin-soft-panel admin-quick-actions">
+          <div className="admin-panel-heading"><h2 className="admin-section-title">Quick actions</h2></div>
+          {quickLinks.map(({ title, to, icon: Icon }) => <Link key={title} to={to} className="admin-quick-action"><span className="admin-action-icon"><Icon size={15} /></span><span>{title}</span><ArrowRight size={13} /></Link>)}
+        </section>
       </div>
-
-      <div className="flex items-end justify-between gap-3">
-        <div>
-          <h2 className="admin-soft-label">
-            Live Snapshot
-          </h2>
-          <p className="admin-soft-muted mt-1 text-xs">
-            Soft-glance metrics for operations, guests, and requests.
-          </p>
+      <section className="admin-soft-panel admin-content-summary">
+        <div className="admin-panel-heading"><h2 className="admin-section-title">Website content</h2></div>
+        <div className="admin-content-links">
+          {[["Tours", tours.length, "/admin/tours", Briefcase], ["Activities", activities.length, "/admin/activities", Briefcase], ["Services", services.length, "/admin/services", BookOpen], ["Blogs", blogs.length, "/admin/blogs", BookOpen], ["Media", gallery.length, "/admin/gallery", Image]].map(([label, count, to, Icon]) => <Link key={label} to={to}><Icon size={15} /><span>{label}</span><strong>{count}</strong></Link>)}
         </div>
-        <p className="admin-soft-muted hidden sm:block text-[11px] font-semibold">
-          Updated {new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {cards.map((card) => {
-          return (
-            <div
-              key={card.title}
-              className="admin-soft-kpi"
-              data-tone={card.tone}
-            >
-              <div className="relative z-[1]">
-                <div className="min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[var(--admin-muted)]">{card.title}</p>
-              <p className="mt-2.5 text-[1.8rem] font-black tracking-tight text-[var(--admin-text)] sm:text-[1.95rem]">{card.value}</p>
-                </div>
-              </div>
-              <p className="relative z-[1] mt-2.5 text-[13px] font-semibold text-[var(--admin-muted)]">{card.hint}</p>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="grid xl:grid-cols-3 gap-5">
-        <div className="admin-soft-table xl:col-span-2 overflow-hidden">
-          <div className="flex items-center justify-between border-b border-white/30 px-6 py-5">
-            <div>
-              <h2 className="admin-section-title">Recent Bookings</h2>
-              <p className="admin-soft-muted text-xs">Latest customer transactions and status.</p>
-            </div>
-            <Link to="/admin/bookings" className="admin-soft-button-ghost px-4 py-2">
-              View All
-              <ArrowRight size={12} />
-            </Link>
-          </div>
-
-          <div className="divide-y divide-white/25">
-            {latestBookings.length ? (
-              latestBookings.slice(0, 6).map((item) => {
-                const isLatest = isRecentlyReceived(item?.createdAt || item?.date);
-                return (
-                <div key={item.id} className={`flex items-center justify-between gap-3 px-6 py-4 ${isLatest ? "bg-white/28" : ""}`}>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="admin-soft-heading text-sm font-semibold">{item.user || item.customer || "Guest"}</p>
-                      {isLatest ? <span className="admin-soft-badge admin-soft-badge-primary">New</span> : null}
-                    </div>
-                    <p className="admin-soft-muted text-xs">{item.tour || item.tourTitle || item.bookingCode || "Tour Booking"}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="admin-soft-heading text-sm font-bold">
-                      {formatCurrencyAmount(item.amount || 0, item.currency || "PKR")}
-                    </p>
-                    <p className="admin-soft-muted text-[10px] uppercase font-black tracking-[0.12em]">{item.status || "pending"}</p>
-                  </div>
-                </div>
-              );})
-            ) : (
-              <p className="admin-soft-muted px-6 py-10 text-sm">No booking data available yet.</p>
-            )}
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div className="admin-soft-panel p-5">
-            <h3 className="admin-section-title text-[0.98rem]">Quick Actions</h3>
-            <div className="mt-3 space-y-2.5">
-              {quickLinks.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.title}
-                    to={item.to}
-                    className="block rounded-[1.15rem] border border-white/35 bg-white/62 px-3.5 py-3 transition hover:-translate-y-0.5 hover:border-[rgba(32,183,122,0.18)] hover:bg-white/82"
-                  >
-                    <div className="flex items-start gap-2.5">
-                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-white/55 bg-[linear-gradient(135deg,rgba(32,183,122,0.12),rgba(15,47,87,0.08))] text-[var(--admin-accent)]">
-                        <Icon size={14} />
-                      </span>
-                      <div>
-                        <p className="admin-soft-heading text-sm font-semibold">{item.title}</p>
-                        <p className="admin-soft-muted mt-0.5 text-xs">{item.desc}</p>
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="admin-soft-panel p-5">
-            <h3 className="admin-section-title text-[0.98rem]">Content Snapshot</h3>
-            <div className="mt-4 space-y-3 text-sm text-slate-700 dark:text-slate-200">
-              <p className="flex items-center justify-between"><span className="inline-flex items-center gap-1.5"><Briefcase size={13} /> Tours</span><b>{tours.length}</b></p>
-              <p className="flex items-center justify-between"><span className="inline-flex items-center gap-1.5"><Briefcase size={13} /> Activities</span><b>{activities.length}</b></p>
-              <p className="flex items-center justify-between"><span className="inline-flex items-center gap-1.5"><BookOpen size={13} /> Services</span><b>{services.length}</b></p>
-              <p className="flex items-center justify-between"><span className="inline-flex items-center gap-1.5"><BookOpen size={13} /> Blogs</span><b>{blogs.length}</b></p>
-              <p className="flex items-center justify-between"><span className="inline-flex items-center gap-1.5"><Image size={13} /> Gallery Media</span><b>{gallery.length}</b></p>
-            </div>
-          </div>
-        </div>
-      </div>
+      </section>
     </div>
   );
 };
 
 export default DashboardHome;
-
-
-
-
-

@@ -355,15 +355,15 @@ const GalleryList = () => {
       </div>
 
       {/* --- GALLERY GRID --- */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <div className="brand-gallery-grid">
         {filteredItems.map((item) => (
             <div
               key={item.id}
-              className={`group admin-soft-panel relative overflow-visible rounded-[1.2rem] border border-white/55 bg-white/80 p-0 shadow-[0_14px_28px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_34px_rgba(15,23,42,0.1)] ${
+              className={`brand-gallery-card group admin-soft-panel relative overflow-visible p-0 ${
                 openMenuId === item.id ? "z-50" : "z-10"
               }`}
             >
-              <div className="overflow-hidden rounded-t-[1.2rem]">
+              <div className="overflow-hidden rounded-t-lg">
                 {/* Badge */}
                 <div className="absolute left-3 top-3 z-20">
                   <span className="rounded-full border border-white/25 bg-white/92 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.22em] text-[var(--c-navy)] shadow-sm backdrop-blur-md">
@@ -383,7 +383,7 @@ const GalleryList = () => {
                 <img
                   src={item.url}
                   alt={item.title}
-                  className="aspect-[1.18/1] w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                  className="aspect-[4/3] w-full object-cover"
                 />
               </div>
 
@@ -402,7 +402,7 @@ const GalleryList = () => {
                       onClick={() =>
                         setOpenMenuId((current) => (current === item.id ? "" : item.id))
                       }
-                      className="admin-soft-icon-button !h-7 !w-7 !rounded-full !border-slate-200 !bg-white"
+                      className="admin-soft-icon-button"
                     >
                       <MoreVertical size={14} />
                     </button>

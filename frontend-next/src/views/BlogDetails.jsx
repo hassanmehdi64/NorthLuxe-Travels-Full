@@ -55,7 +55,7 @@ const BlogDetails = () => {
             {readingTime ? <span className="inline-flex items-center gap-1.5"><Clock3 size={12} />{readingTime} min read</span> : null}
           </div>
           <h1 className="mt-3 text-[24px] font-medium leading-[1.3] text-[var(--c-navy)] sm:text-[30px]">{blog.title}</h1>
-          {blog.excerpt ? <p className="mt-3 text-[13px] leading-6 text-slate-500">{blog.excerpt}</p> : null}
+          {blog.excerpt && String(blog.content || blog.description || "").trim() !== blog.excerpt.trim() ? <p className="mt-3 text-[13px] leading-6 text-slate-500">{blog.excerpt}</p> : null}
         </header>
 
         {blog.image ? <div className="blog-article-cover mx-auto mt-5 max-w-[800px] overflow-hidden rounded-lg bg-slate-100"><img src={blog.image} alt={blog.title} decoding="async" onError={(event) => { if (event.currentTarget.dataset.fallbackApplied) return; event.currentTarget.dataset.fallbackApplied = "true"; event.currentTarget.src = "/gb.jpg"; }} className="h-[200px] w-full object-cover sm:h-[300px]" /></div> : null}

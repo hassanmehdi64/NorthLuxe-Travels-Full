@@ -25,7 +25,6 @@ export const DetailMediaGrid = ({ images = [], title }) => {
   const uniqueImages = [...new Set(images.filter(Boolean))]
     .filter((image) => !failedImages.includes(image))
     .slice(0, 5);
-  const secondaryImages = uniqueImages.slice(1, 3);
   if (!uniqueImages.length) return null;
 
   const hideFailedImage = (image) => {
@@ -35,29 +34,10 @@ export const DetailMediaGrid = ({ images = [], title }) => {
   };
 
   return (
-    <section className={`grid overflow-hidden rounded-xl border border-slate-200 bg-slate-100 ${uniqueImages.length > 1 ? "gap-1 md:grid-cols-[minmax(0,2fr)_minmax(210px,1fr)]" : ""}`}>
-      <div className="overflow-hidden">
-        <img
-          src={uniqueImages[0]}
-          alt={title}
-          onError={() => hideFailedImage(uniqueImages[0])}
-          className="h-[180px] w-full object-cover transition-transform duration-700 hover:scale-[1.02] sm:h-[230px] md:h-[300px]"
-        />
-      </div>
-      {secondaryImages.length ? (
-        <div className={`grid gap-1 ${secondaryImages.length > 1 ? "grid-cols-2 md:grid-cols-1" : "grid-cols-1"}`}>
-          {secondaryImages.map((image, index) => (
-            <div key={image} className="overflow-hidden">
-              <img
-                src={image}
-                alt={`${title} ${index + 2}`}
-                onError={() => hideFailedImage(image)}
-                className={`w-full object-cover transition-transform duration-700 hover:scale-[1.03] ${secondaryImages.length === 1 ? "h-28 sm:h-36 md:h-[300px]" : "h-24 sm:h-28 md:h-[148px]"}`}
-              />
-            </div>
-          ))}
-        </div>
-      ) : null}
+    <section className="brand-gallery-grid tour-photo-grid" style={{ "--photo-columns": Math.min(uniqueImages.length, 3) }} aria-label={`${title} photos`}>
+      {uniqueImages.map((image, index) => <div className="brand-gallery-tile" key={image}>
+        <img src={image} alt={`${title}, photo ${index + 1}`} loading={index === 0 ? "eager" : "lazy"} onError={() => hideFailedImage(image)} />
+      </div>)}
     </section>
   );
 };
@@ -82,13 +62,11 @@ export const DetailFacts = ({ items = [] }) => {
   );
 };
 
-export const DetailAside = ({ eyebrow, title, text, buttonLabel }) => (
-  <aside className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_6px_18px_rgba(var(--c-brand-rgb),0.045)] lg:sticky lg:top-24">
+export const DetailAside = ({ title, buttonLabel }) => (
+  <aside className="brand-card overflow-hidden lg:sticky lg:top-24">
     <div className="h-0.5 bg-[var(--c-brand)]" />
     <div className="p-4">
-    <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[var(--c-brand)]">{eyebrow}</p>
-    <h2 className="mt-1.5 text-base font-bold tracking-tight text-[var(--c-navy)]">{title}</h2>
-    {text ? <p className="mt-2 text-xs leading-5 text-slate-500">{text}</p> : null}
+    <h2 className="text-sm font-medium text-[var(--c-navy)]">{title}</h2>
     <Link to="/custom-plan-request" className="ql-btn-primary mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg px-4 text-xs font-semibold">
       {buttonLabel}
       <MoveUpRight size={13} />
