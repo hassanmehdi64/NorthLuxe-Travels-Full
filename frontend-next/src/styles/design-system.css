@@ -49,26 +49,6 @@
   }
   .destination-tile-skeleton { aspect-ratio: 16 / 11; }
 
-  /* Phones: turn a card grid into a horizontal swipe row to keep the page short. */
-  @media (max-width: 639px) {
-    .scroll-row-mobile {
-      display: grid;
-      grid-auto-flow: column;
-      grid-auto-columns: 84%;
-      grid-template-columns: none;
-      gap: 12px;
-      margin-inline: -16px;
-      padding: 2px 16px 6px;
-      overflow-x: auto;
-      overscroll-behavior-x: contain;
-      scroll-padding-inline: 16px;
-      scroll-snap-type: x mandatory;
-      scrollbar-width: none;
-    }
-    .scroll-row-mobile::-webkit-scrollbar { display: none; }
-    .scroll-row-mobile > * { scroll-snap-align: start; }
-  }
-
   /* ---------- Typography ---------- */
   .eyebrow {
     display: inline-flex;
@@ -442,22 +422,6 @@
 @keyframes skeleton-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 @keyframes fade-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes toast-progress { from { transform: scaleX(1); } to { transform: scaleX(0); } }
-@keyframes hero-pan {
-  0%, 100% { transform: scale(1.05) translate3d(0, 0, 0); }
-  50% { transform: scale(1.1) translate3d(0, -1.5%, 0); }
-}
-@keyframes hero-pan-reverse {
-  0%, 100% { transform: scale(1.05) translate3d(0, -1.5%, 0); }
-  50% { transform: scale(1.1) translate3d(-1.25%, 0, 0); }
-}
-.reveal { animation: fade-up 420ms ease-out both; }
-.scroll-reveal { opacity: 0; transform: translateY(16px); transition: opacity 500ms ease-out, transform 500ms ease-out; }
-.scroll-reveal.is-visible { opacity: 1; transform: none; }
-@media (prefers-reduced-motion: reduce) {
-  .reveal { animation: none; }
-  .scroll-reveal { opacity: 1; transform: none; transition: none; }
-}
-
 /* ---------- Scrollbars used by dropdowns and the calendar ---------- */
 .brand-dropdown-scroll { scrollbar-width: thin; scrollbar-color: var(--color-line-strong) transparent; }
 .brand-dropdown-scroll::-webkit-scrollbar { width: 6px; }
@@ -702,3 +666,106 @@
 .brand-search-calendar .rdp-button_previous:disabled .rdp-chevron,
 .brand-search-calendar .rdp-button_next:disabled .rdp-chevron { fill: var(--color-line-strong); }
 .brand-search-calendar .rdp-day_button:focus-visible { outline: 2px solid var(--color-brand); outline-offset: 1px; }
+
+/* =====================================================================
+   Motion & media (Carousel, HeroSlider, Reveal, Lightbox, micro-interactions)
+   Only opacity and transform animate. Reduced motion turns movement off.
+   ===================================================================== */
+@layer components {
+  /* ---------- Carousel ---------- */
+  .carousel-viewport { overflow: hidden; margin-inline: -4px; padding: 4px; } /* room for card shadows/focus rings */
+  .carousel-track { display: flex; touch-action: pan-y pinch-zoom; margin-left: -16px; }
+  .carousel-slide { flex-grow: 0; flex-shrink: 0; min-width: 0; padding-left: 16px; }
+  .carousel-slide > * { height: 100%; }
+  .carousel-arrows { display: none; }
+  @media (min-width: 1024px) {
+    .carousel-arrows { display: block; }
+    .carousel-arrow {
+      position: absolute; top: 38%; z-index: 2;
+      display: grid; place-items: center; width: 40px; height: 40px;
+      border: 1px solid var(--color-line); border-radius: 999px;
+      background: var(--color-surface); color: var(--color-navy-900);
+      box-shadow: var(--shadow-raised);
+      transition: opacity 150ms ease, transform 150ms ease, color 150ms ease;
+    }
+    .carousel-arrow:first-child { left: -20px; }
+    .carousel-arrow:last-child { right: -20px; }
+    .carousel-arrow:hover { color: var(--color-brand-700); transform: scale(1.06); }
+    .carousel-arrow:disabled { opacity: 0; pointer-events: none; }
+    .carousel-arrow:focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; }
+  }
+  .carousel-dots { display: flex; justify-content: center; gap: 6px; margin-top: 16px; }
+  .carousel-dot { width: 24px; height: 24px; display: grid; place-items: center; }
+  .carousel-dot::before { content: ""; width: 6px; height: 6px; border-radius: 999px; background: var(--color-navy-900); opacity: .2; transition: opacity 200ms ease, transform 200ms ease; }
+  .carousel-dot[aria-current="true"]::before { background: var(--color-brand); opacity: 1; transform: scale(1.35); }
+  .carousel-dot:focus-visible { outline: 2px solid var(--color-brand); border-radius: 999px; }
+
+  /* ---------- Hero slider (fades between full-bleed photos) ---------- */
+  .hero-slider, .hero-slider-viewport { position: absolute; inset: 0; overflow: hidden; }
+  .hero-slider-track { display: flex; height: 100%; touch-action: pan-y pinch-zoom; }
+  .hero-slider-slide { position: relative; flex: 0 0 100%; min-width: 0; height: 100%; }
+  .hero-slider-slide img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .hero-slider-controls {
+    position: absolute; z-index: 2; right: 16px; bottom: 72px;
+    display: flex; align-items: center; gap: 4px;
+    padding: 4px 6px; border-radius: 999px; background: rgb(6 20 38 / 0.35); backdrop-filter: blur(6px);
+  }
+  @media (max-width: 639px) { .hero-slider-controls { top: 16px; bottom: auto; } } /* clear of the hero buttons on phones */
+  @media (min-width: 640px) { .hero-slider-controls { right: 24px; bottom: 80px; } }
+  @media (min-width: 1280px) { .hero-slider-controls { right: calc((100vw - var(--container-site)) / 2); } }
+  .hero-slider-toggle { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 999px; color: #fff; }
+  .hero-slider-toggle:hover { background: rgb(255 255 255 / 0.15); }
+  .hero-slider-dot { position: relative; width: 28px; height: 28px; display: grid; place-items: center; }
+  .hero-slider-dot::before { content: ""; width: 20px; height: 3px; border-radius: 3px; background: rgb(255 255 255 / 0.4); }
+  .hero-slider-dot[aria-current="true"]::before { background: rgb(255 255 255 / 0.4); }
+  .hero-slider-progress {
+    position: absolute; left: 4px; right: 4px; top: 50%; height: 3px; margin-top: -1.5px; border-radius: 3px;
+    background: #fff; transform-origin: left center; transform: scaleX(1);
+  }
+  .hero-slider-progress[data-playing="true"] { animation: hero-progress linear both; }
+  .hero-slider-toggle:focus-visible, .hero-slider-dot:focus-visible { outline: 2px solid #fff; outline-offset: 1px; border-radius: 999px; }
+  @keyframes hero-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+  /* ---------- Reveal (set by components/motion/Reveal) ---------- */
+  [data-reveal] { transition: opacity 600ms ease, transform 600ms cubic-bezier(0.22, 1, 0.36, 1); transition-delay: var(--reveal-delay, 0ms); }
+  [data-reveal="hidden"] { opacity: 0; transform: translateY(14px); }
+  [data-reveal="shown"] { opacity: 1; transform: none; }
+
+  /* ---------- Micro-interactions ---------- */
+  .card-hover { transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease; }
+  .card-hover:hover { transform: translateY(-3px); }
+  .btn { transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, box-shadow 150ms ease, transform 150ms ease; }
+  .btn:active:not(:disabled) { transform: translateY(1px); }
+
+  /* Dropdown and calendar menus: short fade/scale in from the trigger. */
+  .brand-search-menu[data-state="open"], .brand-search-calendar[data-state="open"] { animation: menu-in 160ms cubic-bezier(0.22, 1, 0.36, 1); transform-origin: var(--radix-select-content-transform-origin, var(--radix-popover-content-transform-origin, var(--radix-dropdown-menu-content-transform-origin, top))); }
+  .brand-search-menu[data-state="closed"], .brand-search-calendar[data-state="closed"] { animation: menu-out 110ms ease-in forwards; }
+  @keyframes menu-in { from { opacity: 0; transform: translateY(-4px) scale(0.98); } to { opacity: 1; transform: none; } }
+  @keyframes menu-out { from { opacity: 1; } to { opacity: 0; transform: scale(0.98); } }
+
+  /* Accordions (<details>): smooth open/close where the browser supports it. */
+  @supports (interpolate-size: allow-keywords) {
+    :root { interpolate-size: allow-keywords; }
+    details::details-content { height: 0; overflow: clip; transition: height 260ms ease, content-visibility 260ms allow-discrete; }
+    details[open]::details-content { height: auto; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-reveal] { transition: none; opacity: 1; transform: none; }
+    .card-hover:hover, .btn:active:not(:disabled), .carousel-arrow:hover { transform: none; }
+    .hero-slider-progress { animation: none !important; }
+    .brand-search-menu, .brand-search-calendar { animation: none !important; }
+    details::details-content { transition: none; }
+  }
+}
+
+/* Lightbox theme (library CSS is unlayered, so these stay unlayered too). */
+.yarl__root.brand-lightbox {
+  --yarl__color_backdrop: rgb(6 20 38 / 0.96);
+  --yarl__color_button: rgb(255 255 255 / 0.85);
+  --yarl__color_button_active: #ffffff;
+  --yarl__slide_title_font_size: 1rem;
+  font-family: var(--font-jakarta), system-ui, sans-serif;
+}
+.yarl__root.brand-lightbox .yarl__counter { top: auto; bottom: 0; left: 50%; transform: translateX(-50%); padding: 12px; font-size: 0.875rem; color: rgb(255 255 255 / 0.8); } /* bottom-centre, away from the caption */
+.yarl__root.brand-lightbox .yarl__button:focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; border-radius: 8px; }
