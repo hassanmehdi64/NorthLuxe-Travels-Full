@@ -7,6 +7,18 @@ import { SiteSetting } from "../models/SiteSetting.js";
 import { Tour } from "../models/Tour.js";
 import { generateBookingCode } from "../utils/bookingCode.js";
 import { calculateBookingQuote } from "../utils/pricing.js";
+import { WRITABLE_FIELDS, pickWritable } from "../utils/fieldPolicy.js";
+import { recordPayment, verifyStripeIntentForBooking } from "../utils/payments.js";
+
+// Payment slips must be an uploaded image (data URL) or an https link; anything else
+// (e.g. javascript: URLs) is dropped. ~7 MB cap on the encoded string.
+const sanitizeSlip = (value) => {
+  const slip = String(value || "").trim();
+  if (!slip || slip.length > 7_000_000) return "";
+  if (/^data:image\/(png|jpe?g|webp|gif);base64,[a-z0-9+/=\s]+$/i.test(slip)) return slip;
+  if (/^https:\/\/[^\s"'<>]+$/i.test(slip)) return slip;
+  return "";
+};
 
 const router = express.Router();
 const SETTINGS_KEY = "default";
@@ -196,8 +208,9 @@ router.post(
           guests:
             Math.max(1, Number(payload.adults || payload.groupSize || 1)) +
             Math.max(0, Number(payload.children || 0)),
-          totalAmount: Number(payload.totalAmount || 0),
-          advanceAmount: Number(payload.advanceAmount || 0),
+          // Custom requests are priced by staff later; never trust client totals.
+          totalAmount: 0,
+          advanceAmount: 0,
           days: 1,
           selections: payload.facilities || {},
           breakdown: {},
@@ -232,10 +245,13 @@ router.post(
           },
         ];
     const advanceAmount = quote.advanceAmount;
-    const paymentVerified = Boolean(payload.paymentVerified);
-    const paidAmount = paymentVerified ? advanceAmount : 0;
-    const remainingAmount = Math.max(0, totalAmount - paidAmount);
-    const paymentMethod = payload.paymentMethod || "pay_on_arrival";
+    // Payment fields are server-owned. A booking starts unpaid; money is recorded only
+    // after server-side verification (Stripe below, JazzCash callback, or staff entry).
+    const paymentVerified = false;
+    const paidAmount = 0;
+    const remainingAmount = totalAmount;
+    const allowedMethods = ["visa_card", "easypaisa", "jazzcash", "pay_on_arrival", "bank_transfer"];
+    const paymentMethod = allowedMethods.includes(payload.paymentMethod) ? payload.paymentMethod : "pay_on_arrival";
     const manualPayment = ["visa_card", "pay_on_arrival"].includes(paymentMethod)
       ? {
           senderName: "",
@@ -250,19 +266,14 @@ router.post(
           senderNumber: payload.manualPayment?.senderNumber || "",
           sentAmount: Number(payload.manualPayment?.sentAmount || 0),
           sentAt: payload.manualPayment?.sentAt || null,
-          slip: payload.manualPayment?.slip || "",
+          slip: sanitizeSlip(payload.manualPayment?.slip),
           slipName: payload.manualPayment?.slipName || "",
         };
     const hasManualReference = Boolean(payload.transactionReference?.trim());
-    const paymentStatus = paymentVerified
-      ? paidAmount >= totalAmount
-        ? "Paid"
-        : "Partially Paid"
-      : paymentMethod === "pay_on_arrival"
-        ? "Pending"
-        : hasManualReference
-          ? "Verification Pending"
-          : "Pending";
+    const paymentStatus =
+      paymentMethod !== "pay_on_arrival" && (hasManualReference || payload.paymentIntentId)
+        ? "Verification Pending"
+        : "Pending";
 
     const customRequest = bookingType === "custom"
       ? normalizeCustomRequest({
@@ -295,22 +306,11 @@ router.post(
       remainingAmount,
       currency: "PKR",
       paymentMethod,
-      paymentIntentId: payload.paymentIntentId || "",
+      paymentIntentId: "",
       paymentVerified,
-      transactionReference: payload.transactionReference || "",
+      transactionReference: String(payload.transactionReference || "").trim().slice(0, 120),
       manualPayment,
-      paymentHistory:
-        paymentVerified && advanceAmount > 0
-          ? [
-              {
-                amount: advanceAmount,
-                method: paymentMethod,
-                status: "confirmed",
-                reference: payload.transactionReference || payload.paymentIntentId || "",
-                paidAt: new Date(),
-              },
-            ]
-          : [],
+      paymentHistory: [],
       pricingBreakdown: {
         days: quote.days,
         guests: quote.guests,
@@ -326,8 +326,8 @@ router.post(
       notes: payload.notes || "",
       bookingType,
       isCustomTour: bookingType === "custom",
-      source: payload.source || "website",
-      status: paymentVerified ? "confirmed" : "pending",
+      source: "website",
+      status: "pending",
       paymentStatus,
     });
 
@@ -337,7 +337,7 @@ router.post(
       message: `${booking.customerName} requested ${tour?.title || "a custom booking"} (${booking.status}).`,
     });
 
-    const { sendBookingConfirmationEmail, sendPaymentConfirmationEmail } = await import("../utils/email.js");
+    const { sendBookingConfirmationEmail } = await import("../utils/email.js");
     await sendBookingConfirmationEmail({
       to: booking.email,
       customerName: booking.customerName,
@@ -355,22 +355,35 @@ router.post(
       currency: booking.currency,
     });
 
-    if (paymentVerified && advanceAmount > 0) {
-      await sendPaymentConfirmationEmail({
-        to: booking.email,
-        customerName: booking.customerName,
-        bookingCode,
-        amountPaid: advanceAmount,
-        paymentMethod,
-        transactionReference: booking.transactionReference || payload.paymentIntentId || "N/A",
-        remainingBalance: booking.remainingAmount,
-        bookingStatus: booking.status,
-        currency: booking.currency,
-      });
+    // Card bookings: confirm the payment with Stripe ourselves (amount, currency, status,
+    // not reused). Only then is it recorded. Failures leave the booking for staff review.
+    let paymentVerificationNote = "";
+    if (paymentMethod === "visa_card" && payload.paymentIntentId) {
+      const check = await verifyStripeIntentForBooking({ paymentIntentId: payload.paymentIntentId, booking });
+      if (check.ok) {
+        booking.paymentIntentId = check.intent.id;
+        await recordPayment({
+          booking,
+          amount: Number(check.intent.amount_received ?? check.intent.amount) / 100,
+          method: "visa_card",
+          reference: check.intent.id,
+          provider: "stripe",
+        });
+      } else {
+        paymentVerificationNote = check.reason;
+        await Notification.create({
+          type: "Bookings",
+          title: "Payment needs review",
+          message: `${booking.bookingCode}: card payment could not be verified (${check.reason}).`,
+        });
+      }
     }
 
     const populated = await booking.populate(["tour", "designedTour"]);
-    res.status(201).json({ item: toBookingResponse(populated) });
+    res.status(201).json({
+      item: toBookingResponse(populated),
+      ...(paymentVerificationNote ? { paymentVerificationNote } : {}),
+    });
   }),
 );
 router.use(requireAuth, requireRole("Admin"));
@@ -405,7 +418,8 @@ router.get(
 router.patch(
   "/:id",
   asyncHandler(async (req, res) => {
-    const payload = { ...req.body };
+    // Payment fields are never accepted here; see POST /payments/confirm.
+    const payload = pickWritable(req.body, WRITABLE_FIELDS.booking.admin);
     const current = await Booking.findById(req.params.id);
     if (!current) return res.status(404).json({ message: "Booking not found" });
 
@@ -434,26 +448,13 @@ router.patch(
       };
     }
 
-    if (payload.paymentVerified === true && payload.paidAmount === undefined) {
-      payload.paidAmount = Number(current.paidAmount || 0) || Number(current.advanceAmount || 0);
-    }
-
-    if (payload.paidAmount !== undefined || payload.totalAmount !== undefined) {
-      const totalAmount = Number(payload.totalAmount ?? current.totalAmount);
-      const paidAmount = Number(payload.paidAmount ?? current.paidAmount);
-      payload.remainingAmount = Math.max(0, totalAmount - paidAmount);
-      if (paidAmount >= totalAmount) payload.paymentStatus = "Paid";
-      else if (paidAmount > 0) payload.paymentStatus = "Partially Paid";
-      else payload.paymentStatus = payload.paymentStatus || "Pending";
-    }
-
     const booking = await Booking.findByIdAndUpdate(req.params.id, payload, {
       new: true,
       runValidators: true,
     }).populate(["tour", "designedTour"]);
     if (!booking) return res.status(404).json({ message: "Booking not found" });
 
-    if (payload.status || payload.paymentStatus || payload.customItinerary) {
+    if (payload.status || payload.customItinerary) {
       await Notification.create({
         type: "Bookings",
         title: payload.customItinerary ? "Custom Itinerary Updated" : "Booking Updated",

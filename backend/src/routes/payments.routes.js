@@ -1,21 +1,24 @@
 import express from "express";
-import Stripe from "stripe";
 import crypto from "crypto";
 import { env } from "../config/env.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
+import { requireAuth, requireRole } from "../middleware/auth.js";
+import { escapeHtml } from "../utils/escapeHtml.js";
+import { getStripe } from "../utils/stripeClient.js";
+import {
+  getExpectedOnlineCharge,
+  normalizePaymentMethod,
+  recordPayment,
+} from "../utils/payments.js";
 import { Booking } from "../models/Booking.js";
 import { Notification } from "../models/Notification.js";
 
 const router = express.Router();
 export const paymentsWebhookRouter = express.Router();
 
-const stripe = env.stripeSecretKey ? new Stripe(env.stripeSecretKey) : null;
 const isJazzCashConfigured = Boolean(
   env.jazzCashMerchantId && env.jazzCashPassword && env.jazzCashIntegritySalt,
 );
-
-const normalizePaymentMethod = (value = "visa_card") =>
-  value === "card_request" ? "visa_card" : value;
 
 const toStripeAmount = (amount) => Math.max(1, Math.round(Number(amount || 0) * 100));
 
@@ -94,10 +97,19 @@ const verifyJazzCashSecureHash = (fields, integritySalt) => {
   if (!receivedHash || !integritySalt) {
     return false;
   }
-  return buildJazzCashSecureHash(fields, integritySalt) === receivedHash;
+  const expectedHash = buildJazzCashSecureHash(fields, integritySalt);
+  const a = Buffer.from(expectedHash, "utf8");
+  const b = Buffer.from(receivedHash, "utf8");
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
 };
 
-const renderJazzCashReturnPage = ({ success, heading, message, bookingCode, reference }) => `<!doctype html>
+// Every interpolated value is escaped: these come from the (untrusted) gateway POST.
+const renderJazzCashReturnPage = ({ success, heading: rawHeading, message: rawMessage, bookingCode: rawCode, reference: rawRef }) => {
+  const heading = escapeHtml(rawHeading);
+  const message = escapeHtml(rawMessage);
+  const bookingCode = escapeHtml(rawCode);
+  const reference = escapeHtml(rawRef);
+  return `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -120,85 +132,26 @@ const renderJazzCashReturnPage = ({ success, heading, message, bookingCode, refe
         ${bookingCode ? `<p><strong>Booking:</strong> ${bookingCode}</p>` : ""}
         ${reference ? `<p><strong>Reference:</strong> ${reference}</p>` : ""}
       </div>` : ""}
-      <a href="${env.clientOrigin}/tours">Back to Tours</a>
+      <a href="${escapeHtml(env.clientOrigin)}/tours">Back to Tours</a>
     </div>
   </body>
 </html>`;
+};
 
-const recordConfirmedPayment = async ({
-  booking,
-  amount,
-  paymentMethod,
-  paymentIntentId,
-  transactionReference,
-  provider = "stripe",
-}) => {
-  const normalizedAmount = Number(amount || 0);
-  if (!booking || normalizedAmount <= 0) return booking;
-
-  const normalizedMethod = normalizePaymentMethod(paymentMethod || booking.paymentMethod || "visa_card");
-  const reference = String(transactionReference || paymentIntentId || "").trim();
-  const alreadyRecorded = reference
-    ? booking.paymentHistory.some((item) => item.reference === reference && item.status === "confirmed")
-    : false;
-
-  if (alreadyRecorded && booking.paymentVerified) {
-    return booking;
-  }
-
-  booking.paidAmount = Number(booking.paidAmount || 0) + normalizedAmount;
-  booking.remainingAmount = Math.max(0, Number(booking.totalAmount || 0) - booking.paidAmount);
-  booking.advanceAmount = Number(booking.advanceAmount || 0) || normalizedAmount;
-  booking.paymentMethod = normalizedMethod;
-  booking.paymentIntentId = paymentIntentId || booking.paymentIntentId;
-  booking.transactionReference = reference || booking.transactionReference;
-  booking.paymentVerified = true;
-  booking.paymentStatus =
-    booking.paidAmount >= Number(booking.totalAmount || 0)
-      ? "Paid"
-      : booking.paidAmount > 0
-        ? "Partially Paid"
-        : "Pending";
-
-  if (booking.status === "pending") {
-    booking.status = "confirmed";
-  }
-
-  if (!alreadyRecorded) {
-    booking.paymentHistory.push({
-      amount: normalizedAmount,
-      method: normalizedMethod,
-      status: "confirmed",
-      reference,
-      paidAt: new Date(),
-    });
-  }
-
-  await booking.save();
-
-  await Notification.create({
-    type: "Bookings",
-    title: "Payment Confirmed",
-    message: `${booking.bookingCode} paid ${booking.currency} ${normalizedAmount} via ${provider}.`,
+const recordConfirmedPayment = async ({ booking, amount, paymentMethod, paymentIntentId, transactionReference, provider = "stripe" }) => {
+  if (paymentIntentId && !booking.paymentIntentId) booking.paymentIntentId = paymentIntentId;
+  const { booking: updated } = await recordPayment({
+    booking,
+    amount,
+    method: paymentMethod,
+    reference: transactionReference || paymentIntentId,
+    provider,
   });
-
-  const { sendPaymentConfirmationEmail } = await import("../utils/email.js");
-  await sendPaymentConfirmationEmail({
-    to: booking.email,
-    customerName: booking.customerName,
-    bookingCode: booking.bookingCode,
-    amountPaid: normalizedAmount,
-    paymentMethod: normalizedMethod,
-    transactionReference: reference || "N/A",
-    remainingBalance: booking.remainingAmount,
-    bookingStatus: booking.status,
-    currency: booking.currency,
-  });
-
-  return booking;
+  return updated;
 };
 
 const fetchCheckoutSession = async (sessionId) => {
+  const stripe = getStripe();
   if (!stripe) {
     throw new Error("Stripe is not configured.");
   }
@@ -237,6 +190,7 @@ const finalizeCheckoutSession = async (session) => {
 paymentsWebhookRouter.post(
   "/",
   asyncHandler(async (req, res) => {
+    const stripe = getStripe();
     if (!stripe || !env.stripeWebhookSecret) {
       return res.status(400).json({ message: "Stripe webhook is not configured." });
     }
@@ -278,7 +232,7 @@ router.post(
       return res.status(404).json({ message: "Booking not found." });
     }
 
-    const chargeAmount = Number(booking.advanceAmount || booking.totalAmount || 0);
+    const chargeAmount = getExpectedOnlineCharge(booking);
     if (chargeAmount <= 0) {
       return res.status(400).json({ message: "Booking amount must be greater than zero." });
     }
@@ -334,27 +288,41 @@ router.post(
   "/jazzcash/return",
   asyncHandler(async (req, res) => {
     const payload = req.body || {};
-    const bookingId = payload.ppmpf_1 || payload.pp_CustomerID || "";
-    const booking = bookingId ? await Booking.findById(bookingId).populate("tour") : null;
-    const responseCode = String(payload.pp_ResponseCode || payload.responseCode || "").trim();
-    const responseMessage = String(payload.pp_ResponseMessage || payload.responseMessage || "").trim();
-    const secureHashValid = payload.pp_SecureHash
-      ? verifyJazzCashSecureHash(payload, env.jazzCashIntegritySalt)
-      : true;
-    const success = responseCode === "000" && secureHashValid && booking;
+    const bookingId = String(payload.ppmpf_1 || payload.pp_CustomerID || "").trim();
+    const booking = /^[a-f0-9]{24}$/i.test(bookingId) ? await Booking.findById(bookingId).populate("tour") : null;
+    const responseCode = String(payload.pp_ResponseCode || "").trim();
+    const responseMessage = String(payload.pp_ResponseMessage || "").trim();
+    const txnRefNo = String(payload.pp_TxnRefNo || "").trim();
+
+    // Every check must pass before any money is recorded:
+    // 1. a valid HMAC signature (unsigned responses are rejected),
+    // 2. the transaction reference issued for THIS booking by /jazzcash/session,
+    // 3. the exact amount and currency we asked JazzCash to charge,
+    // 4. a success response code.
+    const secureHashValid = Boolean(env.jazzCashIntegritySalt) && verifyJazzCashSecureHash(payload, env.jazzCashIntegritySalt);
+    const referenceMatches = Boolean(booking && txnRefNo && booking.paymentIntentId === txnRefNo);
+    const expectedAmount = booking ? formatJazzCashAmount(getExpectedOnlineCharge(booking)) : "";
+    const amountMatches = Boolean(booking && String(payload.pp_Amount || "").trim() === expectedAmount);
+    const currencyMatches = String(payload.pp_TxnCurrency || "PKR").trim().toUpperCase() === "PKR";
+    const verified = secureHashValid && referenceMatches && amountMatches && currencyMatches;
+    const success = verified && responseCode === "000";
 
     if (success) {
       await recordConfirmedPayment({
         booking,
-        amount: Number(payload.pp_Amount || 0) / 100,
-        paymentMethod: "visa_card",
-        paymentIntentId: payload.pp_TxnRefNo || booking.paymentIntentId || "",
-        transactionReference:
-          payload.pp_RetreivalReferenceNo ||
-          payload.pp_TxnRefNo ||
-          booking.transactionReference ||
-          "",
+        amount: Number(payload.pp_Amount) / 100,
+        paymentMethod: "jazzcash",
+        paymentIntentId: txnRefNo,
+        transactionReference: String(payload.pp_RetreivalReferenceNo || txnRefNo).trim(),
         provider: "jazzcash",
+      });
+    } else if (!verified) {
+      console.warn("[jazzcash] rejected return", {
+        bookingFound: Boolean(booking),
+        secureHashValid,
+        referenceMatches,
+        amountMatches,
+        currencyMatches,
       });
     }
 
@@ -362,11 +330,12 @@ router.post(
       success: Boolean(success),
       heading: success ? "Payment Completed" : "Payment Not Completed",
       message: success
-        ? "Your JazzCash debit card payment was received successfully. The booking has been updated."
-        : responseMessage || (!secureHashValid ? "JazzCash response could not be verified." : "JazzCash did not confirm the payment."),
-      bookingCode: booking?.bookingCode || payload.ppmpf_2 || "",
-      reference:
-        payload.pp_RetreivalReferenceNo || payload.pp_TxnRefNo || booking?.transactionReference || "",
+        ? "Your JazzCash payment was received successfully. The booking has been updated."
+        : !verified
+          ? "This payment response could not be verified. If money was deducted, please contact us with your booking code."
+          : responseMessage || "JazzCash did not confirm the payment.",
+      bookingCode: booking?.bookingCode || "",
+      reference: success ? txnRefNo : "",
     });
 
     res.status(success ? 200 : 400).type("html").send(html);
@@ -376,6 +345,7 @@ router.post(
 router.post(
   "/checkout-session",
   asyncHandler(async (req, res) => {
+    const stripe = getStripe();
     if (!stripe) {
       return res.status(400).json({ message: "Stripe is not configured on the server." });
     }
@@ -394,7 +364,7 @@ router.post(
       return res.status(404).json({ message: "Booking not found." });
     }
 
-    const chargeAmount = Number(booking.advanceAmount || booking.totalAmount || 0);
+    const chargeAmount = getExpectedOnlineCharge(booking);
     if (chargeAmount <= 0) {
       return res.status(400).json({ message: "Booking amount must be greater than zero." });
     }
@@ -483,6 +453,7 @@ router.post(
     }
 
     if (method === "visa_card") {
+      const stripe = getStripe();
       if (!stripe) {
         return res.status(400).json({ message: "Stripe is not configured on the server." });
       }
@@ -540,6 +511,7 @@ router.post(
     }
 
     if (paymentMethod === "visa_card") {
+      const stripe = getStripe();
       if (!stripe) {
         return res.status(400).json({ message: "Stripe is not configured on the server." });
       }
@@ -554,40 +526,62 @@ router.post(
       });
     }
 
-    const verified = Boolean(transactionReference?.trim());
+    // Manual methods are verified by staff in the admin, never automatically.
     res.json({
-      verified,
-      status: verified ? "verified" : "pending",
-      provider: "mock",
+      verified: false,
+      status: "pending_manual_review",
+      provider: "manual",
       transactionReference: transactionReference || paymentIntentId || "",
     });
   }),
 );
 
+// Manual payment entry (cash, bank transfer, balance on arrival…). Admin only; every
+// entry is stored in the booking's payment history with who recorded it and when.
 router.post(
   "/confirm",
+  requireAuth,
+  requireRole("Admin"),
   asyncHandler(async (req, res) => {
-    const { bookingId, paidAmount, paymentMethod, transactionReference } = req.body;
+    const { bookingId, paidAmount, amount: rawAmount, paymentMethod, transactionReference, note, paidAt } = req.body || {};
+    if (!/^[a-f0-9]{24}$/i.test(String(bookingId || ""))) {
+      return res.status(400).json({ message: "A valid bookingId is required" });
+    }
     const booking = await Booking.findById(bookingId).populate("tour");
     if (!booking) return res.status(404).json({ message: "Booking not found" });
-
-    const amount = Number(paidAmount || 0);
-    if (!amount || amount <= 0) {
-      return res.status(400).json({ message: "Paid amount must be greater than zero" });
+    if (booking.status === "cancelled") {
+      return res.status(409).json({ message: "Cannot record a payment on a cancelled booking" });
     }
 
-    const updatedBooking = await recordConfirmedPayment({
+    const amount = Number(rawAmount ?? paidAmount ?? 0);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return res.status(400).json({ message: "Paid amount must be greater than zero" });
+    }
+    const outstanding = Math.max(0, Number(booking.totalAmount || 0) - Number(booking.paidAmount || 0));
+    if (Number(booking.totalAmount || 0) > 0 && amount > outstanding) {
+      return res.status(400).json({ message: `Amount exceeds the outstanding balance (${booking.currency} ${outstanding})` });
+    }
+
+    const paidDate = paidAt ? new Date(paidAt) : new Date();
+    const { booking: updatedBooking, duplicate } = await recordPayment({
       booking,
       amount,
-      paymentMethod,
-      transactionReference,
-      provider: "manual_confirmation",
+      method: normalizePaymentMethod(paymentMethod || booking.paymentMethod),
+      reference: transactionReference,
+      provider: "manual",
+      recordedBy: req.user,
+      note,
+      paidAt: Number.isNaN(paidDate.getTime()) ? new Date() : paidDate,
     });
+    if (duplicate) {
+      return res.status(409).json({ message: "A payment with this reference is already recorded" });
+    }
 
     res.json({
       bookingId: updatedBooking._id.toString(),
       bookingCode: updatedBooking.bookingCode,
       paidAmount: amount,
+      totalPaid: updatedBooking.paidAmount,
       remainingBalance: updatedBooking.remainingAmount,
       paymentStatus: updatedBooking.paymentStatus,
       paymentMethod: updatedBooking.paymentMethod,

@@ -116,6 +116,12 @@ const paymentHistorySchema = new mongoose.Schema(
     status: { type: String, default: "confirmed" },
     reference: { type: String, default: "" },
     paidAt: { type: Date, default: Date.now },
+    // Audit trail: which channel recorded it and, for manual entries, which staff member.
+    provider: { type: String, default: "" },
+    note: { type: String, default: "" },
+    recordedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    recordedByName: { type: String, default: "" },
+    recordedAt: { type: Date, default: Date.now },
   },
   { _id: false },
 );
