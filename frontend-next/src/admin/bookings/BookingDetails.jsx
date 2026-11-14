@@ -1,43 +1,13 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "@/lib/router";
-import {
-  ArrowLeft,
-  BadgeCheck,
-  CalendarDays,
-  ChevronDown,
-  CreditCard,
-  Check,
-  FileText,
-  MapPinned,
-  ShieldCheck,
-  UserRound,
-  Wallet,
-  XCircle,
-  PlusSquare,
-  Printer,
-  PencilLine,
-  Trash2,
-  Upload,
-} from "lucide-react";
+import { useParams } from "@/lib/router";
+import { BadgeCheck, CalendarX2, ExternalLink, FileText, PencilLine, Printer, Wallet, XCircle } from "lucide-react";
 import { useAdminTours, useBooking, useConfirmBookingPayment, useUpdateBooking } from "../../hooks/useCms";
 import { useToast } from "../../context/ToastContext";
 import { html } from "../../lib/html.mjs";
-
-const statusStyles = {
-  pending: "bg-amber-50 text-amber-700 border-amber-200",
-  confirmed: "bg-blue-50 text-blue-700 border-blue-200",
-  completed: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  cancelled: "bg-rose-50 text-rose-700 border-rose-200",
-};
-
-const paymentStyles = {
-  Pending: "bg-slate-100 text-slate-700 border-slate-200",
-  "Verification Pending": "bg-amber-50 text-amber-700 border-amber-200",
-  "Partially Paid": "bg-sky-50 text-sky-700 border-sky-200",
-  Paid: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  Failed: "bg-rose-50 text-rose-700 border-rose-200",
-  Refunded: "bg-violet-50 text-violet-700 border-violet-200",
-};
+import { formatCurrencyAmount } from "../../utils/currency";
+import { Badge, Button, Card, DetailList, EmptyState, ErrorState, PageHeader, Skeleton, StatusBadge, useConfirm } from "../ui";
+import { BookingStepper, DetailSection, Fact, TextSection, formatDate, hasValue, humanize } from "./BookingDetailParts";
+import ItineraryDrawer from "./ItineraryDrawer";
 
 const prettifyValue = (value, fallback = "-") => {
   if (value === undefined || value === null || value === "") return fallback;
@@ -102,89 +72,6 @@ const getStandardBookingDetails = (booking, fallbackTour = null) => {
     description: tourDetails.description || tourDetails.shortDescription || "",
   };
 };
-
-const InfoChip = ({ label, value, accent = false }) => (
-  <div className="rounded-[0.95rem] border border-white/35 bg-white/76 px-4 py-3 shadow-[0_8px_18px_rgba(15,23,42,0.03)]">
-    <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[var(--admin-muted)]">{label}</p>
-    <p className={`mt-1.5 text-[14px] font-bold leading-5 ${accent ? "text-[var(--admin-text)]" : "text-slate-700 dark:text-slate-200"}`}>
-      {value || "-"}
-    </p>
-  </div>
-);
-
-const DetailRow = ({ label, value, accent = false, multiline = false }) => (
-  <div className={`gap-3 border-b border-white/30 py-3.5 last:border-b-0 ${multiline ? "space-y-2" : "flex flex-col items-start justify-between gap-1.5 sm:flex-row sm:gap-4"}`}>
-    <span className="shrink-0 text-[10px] font-black uppercase tracking-[0.12em] text-[var(--admin-muted)] sm:pt-0.5">{label}</span>
-    {multiline ? (
-      <p className="whitespace-pre-line rounded-[0.9rem] border border-white/30 bg-white/70 px-3.5 py-3 text-[12.5px] font-medium leading-6 text-slate-600 dark:text-slate-300">
-        {value || "-"}
-      </p>
-    ) : (
-      <span
-        className={[
-          "w-full text-left text-[13.5px] font-semibold leading-6 sm:max-w-[62%] sm:text-right",
-          accent ? "text-[var(--admin-text)]" : "text-slate-700 dark:text-slate-200",
-        ].join(" ")}
-      >
-        {value || "-"}
-      </span>
-    )}
-  </div>
-);
-
-const SectionCard = ({ icon: Icon, title, children }) => (
-  <section className="admin-soft-panel rounded-[1.35rem] p-4 md:p-5">
-    <div className="flex items-center gap-3 border-b border-white/30 pb-3">
-      <span className="inline-flex h-8 w-8 items-center justify-center rounded-[0.9rem] border border-white/45 bg-white/72 text-[var(--admin-accent)] shadow-[0_6px_14px_rgba(15,23,42,0.04)]">
-        <Icon size={15} />
-      </span>
-      <h2 className="text-[15px] font-black tracking-tight text-[var(--admin-text)]">{title}</h2>
-    </div>
-    <div className="pt-3">{children}</div>
-  </section>
-);
-
-const SummaryMetric = ({ label, value, tone = "default" }) => {
-  const toneClass = {
-    default: "border-white/35 bg-white/74",
-    success: "border-emerald-200 bg-emerald-50/85",
-    warning: "border-amber-200 bg-amber-50/85",
-  }[tone] || "border-white/35 bg-white/74";
-
-  return (
-    <div className={`rounded-[1rem] border px-4 py-3 shadow-[0_8px_18px_rgba(15,23,42,0.03)] ${toneClass}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[var(--admin-muted)]">{label}</p>
-      <p className="mt-1.5 text-[15px] font-black leading-5 text-[var(--admin-text)]">{value}</p>
-    </div>
-  );
-};
-
-const BookingStage = ({ title, active = false, done = false }) => (
-  <div className="flex min-w-0 items-center gap-2.5 rounded-[0.95rem] border border-white/30 bg-white/62 px-3 py-2.5">
-    <span
-      className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-xs font-black ${
-        done
-          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-          : active
-            ? "border-amber-200 bg-amber-50 text-amber-700"
-            : "border-white/35 bg-white/70 text-[var(--admin-muted)]"
-      }`}
-    >
-      {done ? "✓" : ""}
-    </span>
-    <p className={`text-sm font-bold ${active || done ? "text-[var(--admin-text)]" : "text-[var(--admin-muted)]"}`}>
-      {title}
-    </p>
-  </div>
-);
-
-const bookingActionButtonClass =
-  "inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[1rem] px-4 text-[15px] font-bold transition-all duration-200";
-const bookingActionGhostClass = `${bookingActionButtonClass} admin-soft-button-ghost`;
-const bookingActionSuccessClass =
-  `${bookingActionButtonClass} border border-emerald-200 bg-emerald-50 text-emerald-700 hover:-translate-y-[1px] hover:border-emerald-300 hover:bg-emerald-100 hover:text-emerald-800`;
-const bookingActionDangerClass =
-  `${bookingActionButtonClass} border border-rose-200 bg-white text-rose-600 hover:-translate-y-[1px] hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700`;
 
 const parseLegacyPlanDays = (value = "") => {
   const text = String(value || "").trim();
@@ -295,15 +182,43 @@ const createItineraryDraft = (booking, context, isCustomBooking) => {
   };
 };
 
+
+const errorMessage = (error, fallback) => error?.response?.data?.message || fallback;
+
+const DetailsSkeleton = () => (
+  <div aria-busy="true" aria-label="Loading booking" className="space-y-5">
+    <Skeleton className="h-4 w-24" />
+    <Skeleton className="h-7 w-64" />
+    <div className="rounded-card border border-line bg-surface p-5">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
+        {Array.from({ length: 5 }, (_, index) => (
+          <div key={index} className="space-y-2">
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="h-5 w-24" />
+          </div>
+        ))}
+      </div>
+    </div>
+    <div className="grid gap-5 xl:grid-cols-3">
+      <Skeleton className="h-48 rounded-card xl:col-span-2" />
+      <Skeleton className="h-48 rounded-card" />
+    </div>
+  </div>
+);
+
 const BookingDetails = () => {
   const { id } = useParams();
   const toast = useToast();
-  const { data: booking, refetch: refetchBooking } = useBooking(id);
+  const confirm = useConfirm();
+  const { data: booking, refetch: refetchBooking, isLoading, isError, error } = useBooking(id);
   const { data: tours = [] } = useAdminTours();
   const updateBooking = useUpdateBooking();
   const confirmBookingPayment = useConfirmBookingPayment();
   const [isItineraryFormOpen, setIsItineraryFormOpen] = useState(false);
   const [openPlanDay, setOpenPlanDay] = useState(0);
+  const [pendingAction, setPendingAction] = useState("");
+  const [titleError, setTitleError] = useState("");
+  const [saveError, setSaveError] = useState("");
   const [itineraryForm, setItineraryForm] = useState({
     planDays: [{ title: "", plan: "" }],
     title: "",
@@ -343,7 +258,27 @@ const BookingDetails = () => {
     });
   };
 
-  if (!booking) return <div className="admin-soft-muted p-6">Loading booking...</div>;
+  if (!booking) {
+    if (isLoading) return <DetailsSkeleton />;
+    const notFound = !isError || error?.response?.status === 404;
+    if (notFound) {
+      return (
+        <Card>
+          <EmptyState
+            icon={CalendarX2}
+            title="Booking not found"
+            description="It may have been deleted, or the link is wrong."
+            action={<Button to="/admin/bookings">Back to bookings</Button>}
+          />
+        </Card>
+      );
+    }
+    return (
+      <Card>
+        <ErrorState description={errorMessage(error, "The booking could not be loaded.")} onRetry={() => refetchBooking()} />
+      </Card>
+    );
+  }
 
   const isCustomBooking = booking.bookingType === "custom" || booking.isCustomTour;
   const request = getCustomRequestDetails(booking);
@@ -391,15 +326,20 @@ const BookingDetails = () => {
     const context = isCustomBooking ? getCustomRequestDetails(booking) : getStandardBookingDetails(booking, linkedTour);
     setItineraryForm(createItineraryDraft(booking, context, isCustomBooking));
     setOpenPlanDay(0);
+    setTitleError("");
+    setSaveError("");
     setIsItineraryFormOpen(true);
   };
 
+
   const handleSaveItinerary = async (event) => {
     event.preventDefault();
+    setSaveError("");
     if (!itineraryForm.title.trim()) {
-      toast.error("Missing title", "Please add an itinerary title first.");
+      setTitleError("Add an itinerary title before saving.");
       return;
     }
+    setTitleError("");
 
     try {
       await updateBooking.mutateAsync({
@@ -421,10 +361,10 @@ const BookingDetails = () => {
         },
       });
       await refetchBooking();
-      toast.success("Itinerary saved", "The custom tour plan is now saved in the database and reloaded here.");
+      toast.success("Itinerary saved", "The tour plan is saved to this booking.");
       setIsItineraryFormOpen(false);
     } catch (error) {
-      toast.error("Save failed", error?.response?.data?.message || "Could not save the itinerary right now.");
+      setSaveError(errorMessage(error, "Could not save the itinerary right now."));
     }
   };
 
@@ -836,430 +776,321 @@ const BookingDetails = () => {
     setTimeout(() => win.print(), 350);
   };
 
+  // ---------- presentation ----------
+  const currency = booking.currency || "PKR";
+  const money = (value) => formatCurrencyAmount(value, currency);
+  const actualPaid = Number(booking.paidAmount || 0);
+  const balance = booking.remainingAmount || Math.max(totalAmount - paidAmount, 0);
+  const paidPercent = totalAmount > 0 ? Math.min(100, Math.round((actualPaid / totalAmount) * 100)) : 0;
+  const guests = booking.groupSize || booking.adults || request.persons;
+  const travelDateLabel = isCustomBooking ? travelWindow || "Flexible" : formatDate(booking.date);
+  const tripTitle = isCustomBooking ? request.preferredDestinations : booking.tour;
+  const paymentHistory = Array.isArray(booking.paymentHistory) ? booking.paymentHistory : [];
+  const manual = booking.manualPayment || {};
+  const addOns = booking.facilities?.addOns?.length ? booking.facilities.addOns.map((item) => humanize(item)).join(", ") : "";
+  const stageLabels = { created: "Created", advance: "Advance received", verified: "Payment review", confirmed: "Confirmed" };
+
+  const canConfirm = !isCustomBooking && booking.status === "pending";
+  const canVerifyAdvance = !isCustomBooking && !booking.paymentVerified && booking.paymentMethod !== "pay_on_arrival";
+  const canCancel = !isCustomBooking && booking.status !== "cancelled";
+  const busy = Boolean(pendingAction);
+
+  const runAction = async (key, action, failureTitle) => {
+    setPendingAction(key);
+    try {
+      await action();
+    } catch (actionError) {
+      toast.error(failureTitle, errorMessage(actionError, "Please try again."));
+    } finally {
+      setPendingAction("");
+    }
+  };
+
+  const handleConfirmBooking = async () => {
+    const ok = await confirm({
+      title: "Confirm booking?",
+      description: `${booking.customer || "This customer"}'s booking will be marked as confirmed.`,
+      confirmLabel: "Confirm booking",
+      cancelLabel: "Not now",
+      tone: "primary",
+    });
+    if (ok) runAction("confirm", () => updateStatus("confirmed"), "Could not confirm booking");
+  };
+
+  const handleVerifyAdvance = async () => {
+    const suggestedAdvance = booking.advanceAmount || Math.round(Number(booking.amount || 0) * 0.1);
+    const ok = await confirm({
+      title: "Verify advance payment?",
+      description: `Records an advance of ${money(suggestedAdvance)} (${humanize(booking.paymentMethod || "bank_transfer")}) as verified for ${booking.customer || "this customer"}'s booking.`,
+      confirmLabel: "Verify advance",
+      cancelLabel: "Not now",
+      tone: "primary",
+    });
+    if (ok) runAction("verify", verifyAdvancePayment, "Could not verify payment");
+  };
+
+  const handleCancelBooking = async () => {
+    const ok = await confirm({
+      title: "Cancel this booking?",
+      description: `${booking.customer || "This customer"}'s booking status will change to cancelled.`,
+      confirmLabel: "Cancel booking",
+      cancelLabel: "Keep booking",
+    });
+    if (ok) runAction("cancel", () => updateStatus("cancelled"), "Could not cancel booking");
+  };
+
+  const itineraryItems = hasSavedItinerary
+    ? [
+        ["Route", savedItinerary.route || request.preferredDestinations],
+        ["Duration", savedItinerary.durationLabel || travelWindow || "Custom duration"],
+        ["Final budget", formatCurrencyAmount(savedItinerary.finalBudget, savedItinerary.currency || currency)],
+        ["Hotel plan", savedItinerary.hotelPlan || humanize(request.hotelPreference)],
+        ["Vehicle plan", savedItinerary.vehiclePlan || humanize(request.vehiclePreference)],
+        ["Saved", savedItinerary.savedAt ? formatDate(savedItinerary.savedAt, true) : "Just now"],
+      ]
+    : [];
+
   return (
-    <div className="mx-auto max-w-[1480px] space-y-4">
-      <section className="admin-soft-panel rounded-[1.5rem] p-5 md:p-6">
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_390px]">
-          <div className="space-y-4">
-            <Link to="/admin/bookings" className="admin-soft-button-ghost inline-flex w-fit items-center gap-2 px-4 py-2.5 text-[11px] font-black tracking-[0.01em]">
-              <ArrowLeft size={14} />
-              Back to Bookings
-            </Link>
-            <div className="space-y-2">
-              <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#7184a0]">Booking Details</p>
-              <h1 className="text-[2.15rem] font-black tracking-[-0.04em] text-[#132847]">Booking #{booking.bookingCode}</h1>
-              <p className="max-w-3xl text-[15px] leading-7 text-[#7184a0]">
-                {isCustomBooking
-                  ? "Review customer request, travel setup, payment progress, and itinerary actions from one organized workspace."
-                  : "Review customer information, tour setup, payment progress, and booking actions from one organized workspace."}
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2.5">
-              <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] ${statusStyles[booking.status] || "bg-slate-100 text-slate-700 border-slate-200"}`}>
-                {prettifyValue(booking.status, "Pending")}
-              </span>
-              {!isCustomBooking ? (
-                <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] ${paymentStyles[booking.payment] || "bg-slate-100 text-slate-700 border-slate-200"}`}>
-                  {booking.payment || "Pending"}
-                </span>
-              ) : null}
-              <span className="inline-flex items-center gap-2 rounded-full border border-[#dbe5f0] bg-[#eef4fb] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-[#7184a0]">
-                {booking.date ? new Date(booking.date).toLocaleDateString() : "Date Pending"}
-              </span>
-            </div>
-          </div>
+    <div className="space-y-5">
+      <PageHeader
+        back={{ to: "/admin/bookings", label: "Bookings" }}
+        documentTitle={`Booking ${booking.bookingCode || ""}`.trim()}
+        title={
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <span>Booking {booking.bookingCode ? `#${booking.bookingCode}` : ""}</span>
+            <span className="flex flex-wrap items-center gap-1.5">
+              <StatusBadge status={booking.status || "pending"} />
+              {!isCustomBooking ? <StatusBadge status={booking.payment || "Pending"} /> : null}
+              {isCustomBooking ? <Badge tone="brand">Custom request</Badge> : null}
+            </span>
+          </span>
+        }
+        description={[booking.customer, tripTitle].filter(Boolean).join(" · ")}
+      />
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <InfoChip label="Customer" value={booking.customer || "Not provided"} accent />
-            <InfoChip label="Tour" value={isCustomBooking ? request.preferredDestinations : booking.tour || "Not provided"} accent />
-            <InfoChip label="Advance Paid" value={`${booking.currency || "PKR"} ${booking.advanceAmount || 0}`} />
-            <InfoChip label="Balance Left" value={`${booking.currency || "PKR"} ${booking.remainingAmount || Math.max(totalAmount - paidAmount, 0)}`} />
-          </div>
-        </div>
-      </section>
-
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1.7fr)_minmax(300px,0.95fr)]">
-        <section className="admin-soft-panel rounded-[1.35rem] p-5">
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-[16px] font-black text-[#132847]">Booking Progress</h2>
-            </div>
-            <div className="relative grid gap-4 sm:grid-cols-4">
-              <div className="absolute left-5 right-5 top-4 hidden h-[3px] rounded-full bg-[#23ad67] sm:block" />
-              {bookingStages.map((stage, index) => (
-                <div key={stage.key} className="relative z-[1] flex flex-col items-start gap-3 sm:items-center">
-                  <span className={`inline-flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-black ${
-                    stage.done || stage.active
-                      ? "border-[#23ad67] bg-[#23ad67] text-white"
-                      : "border-[#dce6ef] bg-white text-[#90a0b5]"
-                  }`}>
-                    {stage.done ? <Check size={14} /> : index + 1}
-                  </span>
-                  <p className={`text-[13px] font-bold ${stage.done || stage.active ? "text-[#132847]" : "text-[#8091a7]"}`}>
-                    {stage.title.replace("Payment Verification", "Payment Review")}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="admin-soft-panel rounded-[1.35rem] p-5">
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-[16px] font-black text-[#132847]">Payment Progress</h2>
-              <p className="mt-2 text-[14px] font-semibold text-[#7184a0]">{`${booking.currency || "PKR"} ${paidAmount || 0} paid of ${booking.currency || "PKR"} ${totalAmount || 0}`}</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="h-4 flex-1 overflow-hidden rounded-full bg-[#e8eef4]">
-                <div className="h-full rounded-full bg-[#23ad67]" style={{ width: `${paymentPercent}%` }} />
-              </div>
-              <span className="text-[14px] font-black text-[#132847]">{paymentPercent}%</span>
-            </div>
-          </div>
-        </section>
-      </section>
-
-      <div className="grid gap-4 xl:grid-cols-3">
-        <SectionCard icon={UserRound} title="Customer Information">
-          <DetailRow label="Name" value={booking.customer || "Not provided"} accent />
-          <DetailRow label="Email" value={booking.email || "Not provided"} />
-          <DetailRow label="Phone" value={booking.phone || "Not provided"} />
-          <DetailRow label="Group Size" value={booking.groupSize || booking.adults || request.persons || "Not provided"} />
-        </SectionCard>
-
-        <SectionCard icon={MapPinned} title="Tour & Payment">
-          <DetailRow label="Tour" value={isCustomBooking ? request.preferredDestinations : booking.tour || "Not provided"} accent />
-          <DetailRow label="Travel Date" value={isCustomBooking ? (travelWindow || "Flexible") : (booking.date ? new Date(booking.date).toLocaleDateString() : "Not provided")} />
-          <DetailRow label="Payment Method" value={prettifyValue(booking.paymentMethod, "Not provided")} />
-          <DetailRow label="Payment Verified" value={booking.paymentVerified ? "Yes" : "No"} />
-          <DetailRow label="Paid Amount" value={`${booking.currency || "PKR"} ${booking.paidAmount || 0}`} />
-          <DetailRow label="Remaining Amount" value={`${booking.currency || "PKR"} ${booking.remainingAmount || 0}`} />
-        </SectionCard>
-
-        <SectionCard icon={Wallet} title="Booking Actions">
-          <div className="space-y-3">
-            {!isCustomBooking && booking.status === "pending" ? (
-              <button
-                onClick={() =>
-                  toast.confirm(
-                    "Confirm Booking?",
-                    `This will mark ${booking.customer}'s booking as confirmed.`,
-                    () => updateStatus("confirmed"),
-                    { confirmLabel: "Confirm" },
-                  )
-                }
-                className="admin-soft-button inline-flex w-full min-h-12 items-center justify-center gap-2 text-[15px] font-bold"
-              >
-                <BadgeCheck size={15} />
-                Confirm Booking
-              </button>
-            ) : null}
-            <button onClick={handleOpenItineraryEditor} className={`${bookingActionGhostClass} text-[#132847]`}>
-              <PencilLine size={14} />
-              Edit Itinerary
-            </button>
-            {!isCustomBooking && !booking.paymentVerified && booking.paymentMethod !== "pay_on_arrival" ? (
-              <button
-                onClick={() =>
-                  toast.confirm(
-                    "Verify Advance Payment?",
-                    `This will verify the advance payment for ${booking.customer}'s booking.`,
-                    verifyAdvancePayment,
-                    { confirmLabel: "Verify" },
-                  )
-                }
-                className={bookingActionSuccessClass}
-              >
-                Verify Advance Payment
-              </button>
-            ) : null}
-            {!isCustomBooking && booking.status !== "cancelled" ? (
-              <button
-                onClick={() =>
-                  toast.confirm(
-                    "Cancel Booking?",
-                    `This will change ${booking.customer}'s booking status to cancelled.`,
-                    () => updateStatus("cancelled"),
-                    { confirmLabel: "Cancel", tone: "danger" },
-                  )
-                }
-                className={bookingActionDangerClass}
-              >
-                Cancel Booking
-              </button>
-            ) : null}
-            <Link to="/admin/bookings" className={bookingActionGhostClass}>
-              <ArrowLeft size={14} />
-              Back to List
-            </Link>
-          </div>
-        </SectionCard>
-
-        {!isCustomBooking ? (
-          <section className="admin-soft-panel rounded-[1.35rem] p-4 md:p-5 xl:col-span-2">
-            <div className="flex items-center gap-3 border-b border-white/30 pb-3">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-[0.9rem] border border-white/45 bg-white/72 text-[var(--admin-accent)] shadow-[0_6px_14px_rgba(15,23,42,0.04)]">
-                <CreditCard size={15} />
-              </span>
-              <h2 className="text-[15px] font-black tracking-tight text-[var(--admin-text)]">Client Payment Details</h2>
-            </div>
-            <div className="grid gap-x-8 gap-y-0 pt-3 md:grid-cols-2">
-              <DetailRow label="Sender Name" value={booking.manualPayment?.senderName || "Not provided"} />
-              <DetailRow label="Sender Number / Account" value={booking.manualPayment?.senderNumber || "Not provided"} />
-              <DetailRow label="Amount Sent" value={booking.manualPayment?.sentAmount ? `${booking.currency} ${booking.manualPayment.sentAmount}` : "Not provided"} />
-              <DetailRow label="Payment Date" value={booking.manualPayment?.sentAt ? new Date(booking.manualPayment.sentAt).toLocaleString() : "Not provided"} />
-              <DetailRow label="Reference" value={booking.transactionReference || "Not provided"} />
-              <DetailRow label="Reference Slip" value={booking.manualPayment?.slipName || (booking.manualPayment?.slip ? "Uploaded" : "Not uploaded")} />
-            </div>
-          </section>
+      {/* Primary actions: stay in reach while scrolling on larger screens. */}
+      <div className="z-20 -mx-2 flex flex-wrap items-center gap-2 bg-canvas/95 px-2 py-2 backdrop-blur md:sticky md:top-16">
+        {canConfirm ? (
+          <Button variant="primary" icon={BadgeCheck} onClick={handleConfirmBooking} loading={pendingAction === "confirm"} disabled={busy}>
+            Confirm booking
+          </Button>
         ) : null}
-
-        {!isCustomBooking ? (
-          <SectionCard icon={FileText} title="Reference Slip">
-            <div className="space-y-3">
-              <div className="flex min-h-[180px] flex-col items-center justify-center rounded-[1.15rem] border border-[#dbe5f0] bg-[#fbfdff] px-4 text-center">
-                {booking.manualPayment?.slip ? (
-                  <a
-                    href={booking.manualPayment.slip}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex flex-col items-center gap-3 text-[#129655]"
-                  >
-                    <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#e5f5ec] text-[#129655]">
-                      <Upload size={22} />
-                    </span>
-                    <span className="text-[15px] font-bold">Preview uploaded slip</span>
-                    <span className="text-[13px] text-[#7184a0]">{booking.manualPayment?.slipName || "View payment proof"}</span>
-                  </a>
-                ) : (
-                  <>
-                    <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#e5f5ec] text-[#129655]">
-                      <Upload size={22} />
-                    </span>
-                    <p className="mt-4 text-[15px] font-bold text-[#7184a0]">No slip uploaded</p>
-                    <p className="mt-1 text-[13px] text-[#94a3b8]">Customer-uploaded payment proof will appear here automatically.</p>
-                  </>
-                )}
-              </div>
-            </div>
-          </SectionCard>
+        {canVerifyAdvance ? (
+          <Button variant={canConfirm ? "secondary" : "primary"} icon={Wallet} onClick={handleVerifyAdvance} loading={pendingAction === "verify"} disabled={busy}>
+            Verify advance
+          </Button>
         ) : null}
-
-        <SectionCard icon={ShieldCheck} title="Identity Details">
-          {!isCustomBooking ? (
-            <>
-              <DetailRow label="Traveler Type" value={prettifyValue(booking.identity?.travelerType, "Not provided")} />
-              <DetailRow label="Local ID" value={[prettifyValue(booking.identity?.local?.type, ""), booking.identity?.local?.value].filter(Boolean).join(" / ") || "Not provided"} />
-              <DetailRow label="Country" value={booking.identity?.international?.country || "Not provided"} />
-              <DetailRow label="Passport" value={booking.identity?.international?.passportNumber || "Not provided"} />
-            </>
-          ) : (
-            <>
-              <DetailRow label="Persons" value={request.persons || "Not provided"} />
-              <DetailRow label="Children Below 3" value={request.childrenBelowThree} />
-              <DetailRow label="Budget" value={request.budget || "Not provided"} />
-              <DetailRow label="Budget Mode" value={prettifyValue(request.budgetMode, "Not provided")} />
-            </>
-          )}
-        </SectionCard>
-
-        <SectionCard icon={CalendarDays} title="Facilities & Add-ons">
-          <DetailRow label="Hotel" value={prettifyValue(isCustomBooking ? request.hotelPreference : booking.facilities?.hotelType, "Not selected")} />
-          <DetailRow label="Vehicle" value={prettifyValue(isCustomBooking ? request.vehiclePreference : booking.facilities?.vehicleType, "Not selected")} />
-          {!isCustomBooking ? <DetailRow label="Meals" value={prettifyValue(booking.facilities?.meals, "Not selected")} /> : null}
-          {!isCustomBooking ? <DetailRow label="Add-ons" value={booking.facilities?.addOns?.length ? booking.facilities.addOns.map((item) => prettifyValue(item, item)).join(", ") : "None"} multiline /> : null}
-          {isCustomBooking ? <DetailRow label="Requirements" value={request.requirements || "Not provided"} multiline /> : null}
-        </SectionCard>
-
-        <SectionCard icon={FileText} title="Admin Notes">
-          <div className="rounded-[1rem] border border-white/35 bg-white/74 px-4 py-3.5 text-[13.5px] leading-6 text-slate-600 dark:text-slate-300">
-            {booking.notes || booking.specialRequirements || "No admin notes added yet."}
-          </div>
-        </SectionCard>
-
-        {(isCustomBooking || hasSavedItinerary || isItineraryFormOpen) ? (
-          <section className="xl:col-span-2">
-            <SectionCard icon={FileText} title="Created Tour Plan">
-              {hasSavedItinerary ? (
-                <>
-                  <DetailRow label="Itinerary Title" value={savedItinerary.title} accent />
-                  <DetailRow label="Route" value={savedItinerary.route || request.preferredDestinations || "Not provided"} />
-                  <DetailRow label="Duration" value={savedItinerary.durationLabel || travelWindow || "Custom Duration"} />
-                  <DetailRow label="Final Budget" value={`${savedItinerary.currency || booking.currency || "PKR"} ${savedItinerary.finalBudget || 0}`} />
-                  <DetailRow label="Hotel Plan" value={savedItinerary.hotelPlan || prettifyValue(request.hotelPreference, "Not selected")} />
-                  <DetailRow label="Vehicle Plan" value={savedItinerary.vehiclePlan || prettifyValue(request.vehiclePreference, "Not selected")} />
-                  <DetailRow label="Status" value={prettifyValue(savedItinerary.status, "Draft")} />
-                  <DetailRow label="Saved At" value={savedItinerary.savedAt ? new Date(savedItinerary.savedAt).toLocaleString() : "Just now"} />
-                  {itineraryDays.length ? (
-                    <div className="space-y-3.5 border-b border-white/30 py-3.5 last:border-b-0">
-                      <span className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--admin-muted)]">Day-wise Plan</span>
-                      <div className="space-y-3">
-                        {itineraryDays.map((item, index) => (
-                          <div key={`saved-day-${index}`} className="rounded-[1rem] border border-white/35 bg-white/72 px-4 py-3.5 shadow-[0_8px_18px_rgba(15,23,42,0.03)]">
-                            <p className="text-[14px] font-black text-[var(--admin-text)]">{`Day ${index + 1}${item.title ? `: ${item.title}` : ""}`}</p>
-                            <p className="mt-1.5 whitespace-pre-line text-[13.5px] font-medium leading-6 text-slate-600 dark:text-slate-300">{item.plan || "No plan added yet."}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : null}
-                  {extraNotes ? <DetailRow label="Extra Notes" value={extraNotes} multiline /> : null}
-                </>
-              ) : (
-                <p className="text-sm text-[var(--admin-muted)]">No itinerary has been created yet for this booking.</p>
-              )}
-            </SectionCard>
-          </section>
+        <Button icon={PencilLine} onClick={handleOpenItineraryEditor} disabled={busy}>
+          {hasSavedItinerary ? "Edit itinerary" : "Create itinerary"}
+        </Button>
+        {hasSavedItinerary ? (
+          <Button icon={Printer} onClick={handlePrintTourPlan}>
+            Print itinerary
+          </Button>
         ) : null}
-
-          {isItineraryFormOpen ? (
-            <section className="admin-soft-form rounded-[1.35rem] p-4 md:p-5 xl:col-span-2">
-              <div className="border-b border-white/30 pb-4">
-                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[var(--c-brand)]">Edit Itinerary</p>
-                <h2 className="mt-1.5 text-[15px] font-bold tracking-tight text-slate-950">Tour Plan Builder</h2>
-                <p className="mt-1 text-[13px] text-slate-500">The selected tour data is prefilled here. Update the itinerary and save it for this booking.</p>
-              </div>
-              <form onSubmit={handleSaveItinerary} className="mt-4 grid gap-3.5 md:grid-cols-2">
-                <label className="space-y-2.5">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Itinerary Title</span>
-                  <input className="w-full rounded-lg px-3 py-2 text-sm text-slate-900 outline-none" value={itineraryForm.title} onChange={(e) => setItineraryForm((prev) => ({ ...prev, title: e.target.value }))} />
-                </label>
-                <label className="space-y-2.5">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Route</span>
-                  <input className="w-full rounded-lg px-3 py-2 text-sm text-slate-900 outline-none" value={itineraryForm.route} onChange={(e) => setItineraryForm((prev) => ({ ...prev, route: e.target.value }))} />
-                </label>
-                <label className="space-y-2.5">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Duration</span>
-                  <input className="w-full rounded-lg px-3 py-2 text-sm text-slate-900 outline-none" value={itineraryForm.durationLabel} onChange={(e) => setItineraryForm((prev) => ({ ...prev, durationLabel: e.target.value }))} />
-                </label>
-                <div className="grid grid-cols-[110px_minmax(0,1fr)] gap-3">
-                  <label className="space-y-2.5">
-                    <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Currency</span>
-                    <input className="w-full rounded-lg px-3 py-2 text-sm text-slate-900 outline-none" value={itineraryForm.currency} onChange={(e) => setItineraryForm((prev) => ({ ...prev, currency: e.target.value }))} />
-                  </label>
-                  <label className="space-y-2.5">
-                    <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Final Budget</span>
-                    <input type="number" min="0" className="w-full rounded-lg px-3 py-2 text-sm text-slate-900 outline-none" value={itineraryForm.finalBudget} onChange={(e) => setItineraryForm((prev) => ({ ...prev, finalBudget: Number(e.target.value || 0) }))} />
-                  </label>
-                </div>
-                <label className="space-y-2.5">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Hotel Plan</span>
-                  <input className="w-full rounded-lg px-3 py-2 text-sm text-slate-900 outline-none" value={itineraryForm.hotelPlan} onChange={(e) => setItineraryForm((prev) => ({ ...prev, hotelPlan: e.target.value }))} />
-                </label>
-                <label className="space-y-2.5">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Vehicle Plan</span>
-                  <input className="w-full rounded-lg px-3 py-2 text-sm text-slate-900 outline-none" value={itineraryForm.vehiclePlan} onChange={(e) => setItineraryForm((prev) => ({ ...prev, vehiclePlan: e.target.value }))} />
-                </label>
-                <label className="space-y-3 md:col-span-2">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Day-wise Itinerary</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setItineraryForm((prev) => ({
-                          ...prev,
-                          planDays: [...prev.planDays, { title: "", plan: "" }],
-                        }));
-                        setOpenPlanDay(itineraryForm.planDays.length);
-                      }}
-                      className="admin-soft-button-ghost inline-flex items-center gap-1.5 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--c-brand)]"
-                    >
-                      <PlusSquare size={13} />
-                      Add Day
-                    </button>
-                  </div>
-                  <div className="space-y-3">
-                    {itineraryForm.planDays.map((item, index) => (
-                      <div key={`itinerary-day-${index}`} className="overflow-hidden rounded-[1rem] border border-slate-200 bg-slate-50">
-                        <button
-                          type="button"
-                          onClick={() => setOpenPlanDay((prev) => (prev === index ? -1 : index))}
-                          className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
-                        >
-                          <p className="text-sm font-medium text-slate-900">{`Day ${index + 1}${item.title ? `: ${item.title}` : ""}`}</p>
-                          <div className="flex items-center gap-2">
-                            <ChevronDown size={15} className={`text-slate-500 transition-transform ${openPlanDay === index ? "rotate-180" : ""}`} />
-                          </div>
-                        </button>
-
-                        {openPlanDay === index ? (
-                          <div className="space-y-3 border-t border-slate-200 px-4 py-4">
-                            <input
-                              className="w-full rounded-lg bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none"
-                              value={item.title}
-                              onChange={(e) =>
-                                setItineraryForm((prev) => ({
-                                  ...prev,
-                                  planDays: prev.planDays.map((dayItem, dayIndex) =>
-                                    dayIndex === index ? { ...dayItem, title: e.target.value } : dayItem,
-                                  ),
-                                }))
-                              }
-                              placeholder="Day title"
-                            />
-                            <textarea
-                              rows={4}
-                              className="w-full rounded-lg bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none"
-                              value={item.plan}
-                              onChange={(e) =>
-                                setItineraryForm((prev) => ({
-                                  ...prev,
-                                  planDays: prev.planDays.map((dayItem, dayIndex) =>
-                                    dayIndex === index ? { ...dayItem, plan: e.target.value } : dayItem,
-                                  ),
-                                }))
-                              }
-                              placeholder="Short day plan"
-                            />
-                            {itineraryForm.planDays.length > 1 ? (
-                              <div className="flex justify-end">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setItineraryForm((prev) => ({
-                                      ...prev,
-                                      planDays: prev.planDays.filter((_, dayIndex) => dayIndex !== index),
-                                    }));
-                                    setOpenPlanDay((prev) => {
-                                      if (prev === index) return Math.max(0, index - 1);
-                                      if (prev > index) return prev - 1;
-                                      return prev;
-                                    });
-                                  }}
-                                  className="admin-soft-button-ghost inline-flex items-center gap-1.5 text-rose-600"
-                                >
-                                  <Trash2 size={12} />
-                                  Remove Day
-                                </button>
-                              </div>
-                            ) : null}
-                          </div>
-                        ) : null}
-                      </div>
-                    ))}
-                  </div>
-                </label>
-                <label className="space-y-2.5 md:col-span-2">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Extra Notes</span>
-                  <textarea rows={4} className="w-full rounded-lg px-3 py-2 text-sm text-slate-900 outline-none" value={itineraryForm.planDetails} onChange={(e) => setItineraryForm((prev) => ({ ...prev, planDetails: e.target.value }))} placeholder="Extra notes" />
-                </label>
-                <label className="space-y-2.5 md:col-span-2 max-w-[240px]">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Plan Status</span>
-                  <select className="w-full rounded-lg px-3 py-2 text-sm text-slate-900 outline-none" value={itineraryForm.status} onChange={(e) => setItineraryForm((prev) => ({ ...prev, status: e.target.value }))}>
-                    <option value="draft">Draft</option>
-                    <option value="final">Final</option>
-                  </select>
-                </label>
-                <div className="md:col-span-2 flex flex-wrap gap-3 pt-2">
-                  <button type="submit" className="admin-soft-button inline-flex items-center gap-2"><FileText size={14} />Save Itinerary</button>
-                  <button type="button" onClick={handlePrintTourPlan} className="admin-soft-button-ghost inline-flex items-center gap-2 text-[var(--c-brand)]"><Printer size={14} />Print Final Itinerary</button>
-                  <button type="button" onClick={() => setIsItineraryFormOpen(false)} className="admin-soft-button-ghost inline-flex items-center gap-2">Close</button>
-                </div>
-              </form>
-            </section>
-          ) : null}
+        {canCancel ? (
+          <Button variant="danger" icon={XCircle} onClick={handleCancelBooking} loading={pendingAction === "cancel"} disabled={busy} className="sm:ml-auto">
+            Cancel booking
+          </Button>
+        ) : null}
       </div>
+
+      <Card>
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3 lg:grid-cols-5">
+          <Fact label={isCustomBooking ? "Travel window" : "Travel date"} value={travelDateLabel} />
+          <Fact label="Guests" value={guests} />
+          <Fact label="Total" value={money(totalAmount)} />
+          <Fact label="Paid" value={money(actualPaid)} emphasis={actualPaid > 0} />
+          <Fact label="Balance" value={money(balance)} />
+        </dl>
+        <div className="mt-4 flex items-center gap-3" title={`${paidPercent}% paid`}>
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-line" role="progressbar" aria-label="Amount paid" aria-valuemin={0} aria-valuemax={100} aria-valuenow={paidPercent}>
+            <div className="h-full rounded-full bg-brand" style={{ width: `${paidPercent}%` }} />
+          </div>
+          <span className="text-xs font-semibold tabular-nums text-subtle">{paidPercent}% paid</span>
+        </div>
+        <div className="mt-4 border-t border-line pt-4">
+          <BookingStepper stages={bookingStages.map((stage) => ({ ...stage, title: stageLabels[stage.key] || stage.title }))} />
+        </div>
+      </Card>
+
+      <div className="grid items-start gap-5 xl:grid-cols-3">
+        <div className="space-y-5 xl:col-span-2">
+          {isCustomBooking ? (
+            <DetailSection
+              title="Trip & travellers"
+              keep={["Requested destinations", "Travel window"]}
+              items={[
+                ["Requested destinations", request.preferredDestinations],
+                ["Source tour", request.sourceTourTitle],
+                ["Travel window", travelWindow || "Flexible"],
+                ["Persons", request.persons],
+                ["Children below 3", request.childrenBelowThree],
+                ["Budget", request.budget],
+                ["Budget mode", humanize(request.budgetMode)],
+              ]}
+            />
+          ) : (
+            <DetailSection
+              title="Trip & travellers"
+              items={[
+                ["Tour", booking.tour],
+                ["Travel date", formatDate(booking.date)],
+                ["Group size", guests],
+              ]}
+            />
+          )}
+
+          <DetailSection
+            title="Pricing & payments"
+            keep={["Payment verified"]}
+            items={[
+              ["Advance due", booking.advanceAmount ? money(booking.advanceAmount) : ""],
+              ["Payment method", humanize(booking.paymentMethod)],
+              ["Payment verified", booking.paymentVerified ? "Yes" : "No"],
+              ["Reference", booking.transactionReference],
+            ]}
+          >
+            {paymentHistory.length ? (
+              <div>
+                <h3 className="mb-2 text-[13px] font-semibold text-navy-900">Payment history</h3>
+                <ul className="divide-y divide-line">
+                  {paymentHistory.map((entry, index) => (
+                    <li key={`${entry.reference || "payment"}-${index}`} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-2.5 first:pt-0 last:pb-0">
+                      <div className="min-w-0">
+                        <p className="font-semibold tabular-nums text-navy-900">{money(entry.amount)}</p>
+                        <p className="mt-0.5 break-words text-xs text-subtle">
+                          {[humanize(entry.method), humanize(entry.provider), entry.reference, entry.recordedByName ? `by ${entry.recordedByName}` : ""]
+                            .filter(Boolean)
+                            .join(" · ") || "—"}
+                        </p>
+                      </div>
+                      <span className="text-xs text-subtle">{formatDate(entry.paidAt, true)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </DetailSection>
+
+          {!isCustomBooking ? (
+            <DetailSection
+              title="Payment proof"
+              description="Details the customer submitted with their transfer."
+              items={[
+                ["Sender name", manual.senderName],
+                ["Sender number / account", manual.senderNumber],
+                ["Amount sent", manual.sentAmount ? money(manual.sentAmount) : ""],
+                ["Sent on", formatDate(manual.sentAt, true)],
+              ]}
+            >
+              {manual.slip ? (
+                <Button href={manual.slip} target="_blank" rel="noreferrer" icon={FileText} iconRight={ExternalLink} size="sm">
+                  {manual.slipName || "View payment slip"}
+                </Button>
+              ) : null}
+            </DetailSection>
+          ) : null}
+
+          {hasSavedItinerary ? (
+            <Card
+              title={savedItinerary.title}
+              description={`Custom itinerary · ${humanize(savedItinerary.status || "draft")}`}
+              actions={
+                <>
+                  <Button size="sm" icon={PencilLine} onClick={handleOpenItineraryEditor}>Edit</Button>
+                  <Button size="sm" icon={Printer} onClick={handlePrintTourPlan}>Print</Button>
+                </>
+              }
+            >
+              <DetailList items={itineraryItems.filter(([, value]) => hasValue(value))} />
+              {itineraryDays.length ? (
+                <ol className="mt-4 space-y-3 border-t border-line pt-4">
+                  {itineraryDays.map((item, index) => (
+                    <li key={`saved-day-${index}`} className="flex gap-3">
+                      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-50 text-xs font-semibold text-brand-700">{index + 1}</span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-navy-900">{item.title || `Day ${index + 1}`}</p>
+                        {item.plan ? <p className="mt-0.5 whitespace-pre-line break-words text-sm leading-relaxed text-body">{item.plan}</p> : null}
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              ) : null}
+              {extraNotes ? (
+                <div className="mt-4 border-t border-line pt-4">
+                  <h3 className="text-[13px] font-semibold text-navy-900">Extra notes</h3>
+                  <p className="mt-1 whitespace-pre-line break-words text-sm leading-relaxed text-body">{extraNotes}</p>
+                </div>
+              ) : null}
+            </Card>
+          ) : isCustomBooking ? (
+            <Card title="Custom itinerary">
+              <EmptyState
+                className="py-6"
+                title="No itinerary yet"
+                description="Create a day-wise plan for this request. It can be printed and shared once saved."
+                action={<Button variant="primary" icon={PencilLine} onClick={handleOpenItineraryEditor}>Create itinerary</Button>}
+              />
+            </Card>
+          ) : null}
+        </div>
+
+        <div className="space-y-5">
+          <DetailSection
+            title="Customer"
+            className="xl:[&_dl]:grid-cols-1"
+            keep={["Name"]}
+            items={[
+              ["Name", booking.customer],
+              ["Email", booking.email ? <a href={`mailto:${booking.email}`} className="text-brand-700 hover:underline">{booking.email}</a> : ""],
+              ["Phone", booking.phone ? <a href={`tel:${booking.phone}`} className="text-brand-700 hover:underline">{booking.phone}</a> : ""],
+            ]}
+          />
+
+          {!isCustomBooking ? (
+            <DetailSection
+              title="Identity"
+              className="xl:[&_dl]:grid-cols-1"
+              items={[
+                ["Traveller type", humanize(booking.identity?.travelerType)],
+                ["Local ID", [humanize(booking.identity?.local?.type), booking.identity?.local?.value].filter(Boolean).join(" / ")],
+                ["Country", booking.identity?.international?.country],
+                ["Passport", booking.identity?.international?.passportNumber],
+              ]}
+            />
+          ) : null}
+
+          <DetailSection
+            title="Facilities & add-ons"
+            className="xl:[&_dl]:grid-cols-1"
+            items={[
+              ["Hotel", humanize(isCustomBooking ? request.hotelPreference : booking.facilities?.hotelType)],
+              ["Vehicle", humanize(isCustomBooking ? request.vehiclePreference : booking.facilities?.vehicleType)],
+              !isCustomBooking ? ["Meals", humanize(booking.facilities?.meals)] : null,
+              !isCustomBooking ? ["Add-ons", addOns] : null,
+            ]}
+          />
+
+          <TextSection title="Special requests" text={isCustomBooking ? request.requirements : booking.specialRequirements} />
+          <TextSection title="Admin notes" text={booking.notes} />
+        </div>
+      </div>
+
+      <ItineraryDrawer
+        open={isItineraryFormOpen}
+        onOpenChange={setIsItineraryFormOpen}
+        isEditing={hasSavedItinerary}
+        form={itineraryForm}
+        setForm={setItineraryForm}
+        openPlanDay={openPlanDay}
+        setOpenPlanDay={setOpenPlanDay}
+        onSubmit={handleSaveItinerary}
+        onPrint={handlePrintTourPlan}
+        saving={updateBooking.isPending}
+        titleError={titleError}
+        saveError={saveError}
+      />
     </div>
   );
 };

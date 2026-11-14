@@ -1,19 +1,25 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "@/lib/router";
-import {
-  Eye,
-  Search,
-  Filter,
-  Calendar,
-  MapPin,
-  Printer,
-  FileText,
-  Trash2,
-} from "lucide-react";
+import { CalendarCheck, Eye, FileText, Printer, Search, Trash2 } from "lucide-react";
 import { useBookings, useDeleteBooking } from "../../hooks/useCms";
 import { useNotifications, useUpdateNotification } from "../../hooks/useCms";
 import { useToast } from "../../context/ToastContext";
 import { html } from "../../lib/html.mjs";
+import { formatCurrencyAmount } from "../../utils/currency";
+import {
+  Badge,
+  Card,
+  EmptyState,
+  ErrorState,
+  Input,
+  PageHeader,
+  RowActions,
+  SkeletonRows,
+  StatusBadge,
+  TabPanel,
+  Tabs,
+  useConfirm,
+} from "../ui";
 
 const parseCustomRequest = (value = "") =>
   String(value || "")
@@ -31,8 +37,6 @@ const prettifyValue = (value, fallback = "-") => {
   if (value === undefined || value === null || value === "") return fallback;
   return String(value).replace(/_/g, " ");
 };
-const actionButtonClass = "admin-soft-icon-button inline-flex h-8 w-8 items-center justify-center rounded-lg border transition-all";
-
 
 const isRecentlyReceived = (value) => {
   if (!value) return false;
@@ -110,9 +114,44 @@ const openTourPlanPrint = (booking) => {
   setTimeout(() => win.print(), 350);
 };
 
+
+const humanizeValue = (value) => {
+  const text = prettifyValue(value, "").trim();
+  return text ? text.charAt(0).toUpperCase() + text.slice(1) : "";
+};
+
+const isCustom = (booking) => booking.bookingType === "custom" || booking.isCustomTour;
+
+const formatDate = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+};
+
+/** Amount shown for a row: saved itinerary budget for custom requests, booking total otherwise. */
+const getRowAmount = (booking, request) => {
+  if (!isCustom(booking)) return formatCurrencyAmount(booking.amount, booking.currency);
+  const itinerary = getSavedItinerary(booking);
+  return itinerary?.title || itinerary?.finalBudget
+    ? formatCurrencyAmount(itinerary.finalBudget, itinerary.currency || "PKR")
+    : request.budget;
+};
+
+const getRowTrip = (booking, request) => {
+  if (!isCustom(booking)) {
+    return { title: booking.tour || "—", meta: formatDate(booking.date || booking.createdAt) };
+  }
+  const requestedDates = [request.startDate, request.endDate]
+    .filter(Boolean)
+    .filter((item) => item !== "Flexible")
+    .join(" – ");
+  return { title: request.preferredDestinations, meta: requestedDates || "Flexible dates" };
+};
+
 const BookingManagement = () => {
   const toast = useToast();
-  const { data: bookings = [] } = useBookings();
+  const confirm = useConfirm();
+  const { data: bookings = [], isLoading, isError, refetch } = useBookings();
   const deleteBooking = useDeleteBooking();
   const { data: notifications = [] } = useNotifications();
   const updateNotification = useUpdateNotification();
@@ -121,13 +160,6 @@ const BookingManagement = () => {
   const [searchTerm, setSearchTerm] = useState(() => searchParams.get("search") || "");
   const [activeTab, setActiveTab] = useState("standard");
   const customTab = activeTab === "custom";
-
-  const statusStyles = {
-    pending: "bg-amber-50 text-amber-600 border-amber-100",
-    confirmed: "bg-blue-50 text-blue-600 border-blue-100",
-    completed: "bg-emerald-50 text-emerald-600 border-emerald-100",
-    cancelled: "bg-rose-50 text-rose-600 border-rose-100",
-  };
 
   useEffect(() => {
     const unreadBookingAlerts = notifications.filter(
@@ -208,283 +240,258 @@ const BookingManagement = () => {
     [filteredBookings],
   );
 
-  const handleDeleteBooking = (booking) => {
-    toast.confirm(
-      "Delete Booking?",
-      `This will permanently remove the booking for ${booking.customer}.`,
-      async () => {
-        await deleteBooking.mutateAsync(booking.id);
-        toast.success("Deleted", "Booking removed successfully.");
-      },
-      {
-        confirmLabel: "Delete",
-        tone: "danger",
-      },
-    );
+  const tabCounts = useMemo(() => {
+    const custom = bookings.filter(isCustom).length;
+    return { standard: bookings.length - custom, custom };
+  }, [bookings]);
+
+  const handleDeleteBooking = async (booking) => {
+    const ok = await confirm({
+      title: "Delete booking?",
+      description: `This permanently removes the booking for ${booking.customer || "this customer"}. This cannot be undone.`,
+      confirmLabel: "Delete booking",
+      cancelLabel: "Keep booking",
+    });
+    if (!ok) return;
+    try {
+      await deleteBooking.mutateAsync(booking.id);
+      toast.success("Deleted", "Booking removed successfully.");
+    } catch (error) {
+      toast.error("Delete failed", error?.response?.data?.message || "Could not delete the booking right now.");
+    }
   };
 
-  return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="admin-page-title">
-            Booking Management
-          </h1>
-          <p className="admin-page-subtitle">
-            Monitor, confirm, and manage customer reservations.
-          </p>
-        </div>
+  const bookingActions = (booking) => [
+    { label: "View booking", icon: Eye, to: `/admin/bookings/${booking.id}` },
+    { label: "Print itinerary", icon: Printer, onClick: () => openTourPlanPrint(booking), hidden: !getSavedItinerary(booking)?.title },
+    { label: "Delete booking", icon: Trash2, onClick: () => handleDeleteBooking(booking), danger: true },
+  ];
 
-        <div className="flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center">
-          <div className="group">
-            <input
-              type="text"
-              placeholder={customTab ? "Search by name, destinations, itinerary..." : "Search by name, booking code, email, tour..."}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2.5 text-xs font-medium md:w-72"
-            />
-          </div>
-          <button className="admin-soft-button-ghost flex items-center gap-2 whitespace-nowrap">
-            <Filter size={15} />
-            Filter
-          </button>
-        </div>
-      </div>
+  const planActions = (booking) => [
+    { label: "Print itinerary", icon: Printer, onClick: () => openTourPlanPrint(booking) },
+    { label: "View booking", icon: Eye, to: `/admin/bookings/${booking.id}` },
+  ];
 
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          onClick={() => setActiveTab("standard")}
-          className={`cursor-pointer rounded-xl border px-3.5 py-2 text-xs font-black transition-all ${
-            !customTab
-              ? "border-[var(--c-brand)] bg-[var(--c-brand)] text-white shadow-sm"
-              : "border-white/40 bg-white/55 text-[var(--admin-muted)] hover:border-[rgba(32,183,122,0.26)] hover:bg-white/80"
-          }`}
-        >
-          Standard Tour Booking
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("custom")}
-          className={`cursor-pointer rounded-xl border px-3.5 py-2 text-xs font-black transition-all ${
-            customTab
-              ? "border-[var(--c-brand)] bg-[var(--c-brand)] text-white shadow-sm"
-              : "border-white/40 bg-white/55 text-[var(--admin-muted)] hover:border-[rgba(32,183,122,0.26)] hover:bg-white/80"
-          }`}
-        >
-          Custom Booking Request
-        </button>
-      </div>
+  const emptyTitle = customTab ? "No custom booking requests found" : "No standard tour bookings found";
+  const emptyDescription = searchTerm.trim()
+    ? "Try a different search term to find the booking you need."
+    : customTab
+      ? "New custom requests will appear here with their form data and created plans."
+      : "Standard tour bookings will appear here once customers submit them.";
 
-      <div className="admin-soft-table overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left">
+  const renderBookings = () => {
+    if (isLoading) return <SkeletonRows rows={6} />;
+    if (isError) return <ErrorState description="The bookings list could not be loaded." onRetry={() => refetch()} />;
+    if (!filteredBookings.length) return <EmptyState icon={CalendarCheck} title={emptyTitle} description={emptyDescription} />;
+
+    const rows = filteredBookings.map((booking) => {
+      const request = getCustomRequestDetails(booking);
+      return {
+        booking,
+        request,
+        trip: getRowTrip(booking, request),
+        amount: getRowAmount(booking, request),
+        isLatest: isRecentlyReceived(booking?.createdAt || booking?.date),
+        persons: request.persons ? `${request.persons} ${Number(request.persons) === 1 ? "person" : "people"}` : "",
+      };
+    });
+
+    return (
+      <>
+        {/* Phones: stacked list */}
+        <ul className="divide-y divide-line md:hidden">
+          {rows.map(({ booking, trip, amount, isLatest, persons }) => (
+            <li key={booking.id} className="flex items-start gap-3 px-4 py-3.5">
+              <Link to={`/admin/bookings/${booking.id}`} className="min-w-0 flex-1">
+                <span className="flex flex-wrap items-center gap-2">
+                  <span className="truncate font-semibold text-navy-900">{booking.customer || "—"}</span>
+                  {isLatest ? <Badge tone="brand">New</Badge> : null}
+                </span>
+                <span className="mt-0.5 block truncate text-[13px] text-body">{trip.title}</span>
+                <span className="mt-0.5 block text-xs text-subtle">
+                  {[booking.bookingCode, trip.meta].filter(Boolean).join(" · ")}
+                </span>
+                <span className="mt-2 flex flex-wrap items-center gap-1.5">
+                  <span className="mr-1 text-[13px] font-semibold text-navy-900">{amount}</span>
+                  <StatusBadge status={booking.status} />
+                  {!customTab ? <StatusBadge status={booking.payment} /> : null}
+                  {customTab && persons ? <span className="text-xs text-subtle">{persons}</span> : null}
+                </span>
+              </Link>
+              <RowActions actions={bookingActions(booking)} />
+            </li>
+          ))}
+        </ul>
+
+        {/* Tablet and up: table */}
+        <div className="admin-table-wrap hidden md:block">
+          <table className="admin-table">
             <thead>
               <tr>
-                <th className="px-5 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-300">Customer Details</th>
-                <th className="px-5 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-300">{customTab ? "Request Details" : "Trip Info"}</th>
-                <th className="px-5 py-3 text-center text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-300">{customTab ? "Plan Summary" : "Payment"}</th>
-                <th className="px-5 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-300">Status</th>
-                <th className="px-5 py-3 text-right text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-300">Actions</th>
+                <th>Customer</th>
+                <th>{customTab ? "Request" : "Tour"}</th>
+                <th className="text-right">{customTab ? "Budget" : "Amount"}</th>
+                <th>Status</th>
+                <th><span className="sr-only">Actions</span></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/25 dark:divide-slate-800">
-              {filteredBookings.length ? filteredBookings.map((booking) => {
-                const isCustomBooking = booking.bookingType === "custom" || booking.isCustomTour;
-                const request = getCustomRequestDetails(booking);
-                const requestedDates = [request.startDate, request.endDate]
-                  .filter(Boolean)
-                  .filter((item) => item !== "Flexible")
-                  .join(" - ");
-
-                const isLatest = isRecentlyReceived(booking?.createdAt || booking?.date);
-                return (
-                  <tr key={booking.id} className={`group align-top transition-colors hover:bg-slate-50/30 dark:hover:bg-slate-800/50 ${isLatest ? "bg-[var(--c-brand)]/5" : ""}`}>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-2.5">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--c-brand)]/10 text-[11px] font-black uppercase text-[var(--c-brand)]">
-                          {booking.customer?.charAt(0) || "C"}
-                        </div>
-                        <div>
-                          <div className="mb-1 flex items-center gap-2">
-                            <p className="text-sm font-black leading-none text-slate-900 dark:text-slate-100">{booking.customer}</p>
-                            {isLatest ? <span className="admin-soft-badge admin-soft-badge-primary">New</span> : null}
-                          </div>
-                          <p className="text-[11px] font-bold text-slate-400 dark:text-slate-400">{booking.email}</p>
-                          <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-slate-400">{booking.phone || "No phone added"}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4">
-                      {isCustomBooking ? (
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-1.5 text-sm font-bold text-slate-700 dark:text-slate-100">
-                            <MapPin size={14} className="text-blue-500" />
-                            {request.preferredDestinations}
-                          </div>
-                          <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-tighter text-slate-400">
-                            <Calendar size={14} />
-                            {requestedDates || "Flexible dates"}
-                          </div>
-                          <p className="text-[11px] font-semibold text-slate-500">Source Tour: {request.sourceTourTitle}</p>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-1.5 text-sm font-bold text-slate-700 dark:text-slate-100">
-                            <MapPin size={14} className="text-blue-500" /> {booking.tour}
-                          </div>
-                          <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-tighter text-slate-400">
-                            <Calendar size={14} /> {new Date(booking.date || booking.createdAt).toLocaleDateString()}
-                          </div>
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-5 py-4 text-center">
-                      {isCustomBooking ? (
-                        <div className="inline-flex flex-col items-center gap-1.5">
-                          <span className="text-sm font-black text-slate-900 dark:text-slate-100">{getSavedItinerary(booking)?.title || getSavedItinerary(booking)?.finalBudget ? `${getSavedItinerary(booking).currency || "PKR"} ${getSavedItinerary(booking).finalBudget || 0}` : request.budget}</span>
-                          <span className="text-[10px] font-black uppercase tracking-tighter text-sky-600">{request.persons ? `${request.persons} person(s)` : "Guests not set"}</span>
-                          <span className="text-[10px] uppercase text-slate-400">{prettifyValue(request.vehiclePreference, "Vehicle flexible")}</span>
-                          <span className="text-[10px] uppercase text-slate-400">{prettifyValue(request.hotelPreference, "Hotel flexible")}</span>
-                          {getSavedItinerary(booking)?.title ? (
-                            <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-emerald-700">
-                              <FileText size={11} /> {getSavedItinerary(booking).title}
-                            </span>
-                          ) : null}
-                        </div>
-                      ) : (
-                        <div className="inline-flex flex-col items-center">
-                          <span className="text-sm font-black text-slate-900 dark:text-slate-100">{booking.currency} {booking.amount}</span>
-                          <span className={`text-[10px] font-black uppercase tracking-tighter ${booking.payment === "Paid" ? "text-emerald-500" : booking.payment === "Partially Paid" ? "text-blue-500" : "text-amber-500"}`}>{booking.payment}</span>
-                          <span className="text-[10px] uppercase text-slate-400">{booking.paymentMethod || "-"}</span>
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-5 py-4">
-                      <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${statusStyles[booking.status]}`}>
-                        {booking.status}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex justify-end gap-2">
-                        <Link
-                          to={`/admin/bookings/${booking.id}`}
-                          className={`${actionButtonClass} text-slate-400 hover:border-blue-100 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-slate-800`}
-                          title="View booking"
-                        >
-                          <Eye size={18} />
-                        </Link>
-                        {getSavedItinerary(booking)?.title ? (
-                          <button
-                            type="button"
-                            onClick={() => openTourPlanPrint(booking)}
-                            className={`${actionButtonClass} text-emerald-600 hover:border-emerald-100 hover:bg-emerald-50 dark:hover:bg-emerald-900/20`}
-                            title="Print itinerary"
-                          >
-                            <Printer size={17} />
-                          </button>
-                        ) : null}
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteBooking(booking)}
-                          className={`${actionButtonClass} text-rose-500 hover:border-rose-100 hover:bg-rose-50 dark:hover:bg-rose-900/20`}
-                          title="Delete booking"
-                        >
-                          <Trash2 size={17} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              }) : (
-                <tr>
-                  <td colSpan={5} className="px-5 py-12 text-center">
-                    <div className="mx-auto max-w-md space-y-2">
-                      <p className="text-sm font-black text-slate-700 dark:text-slate-100">
-                        {customTab ? "No custom booking requests found." : "No standard tour bookings found."}
-                      </p>
-                      <p className="text-sm text-slate-400 dark:text-slate-500">
-                        {searchTerm.trim()
-                          ? "Try a different search term to find the booking you need."
-                          : customTab
-                            ? "New custom requests will appear here with their actual form data and created plans."
-                            : "Standard tour bookings will appear here once customers submit them."}
-                      </p>
+            <tbody>
+              {rows.map(({ booking, trip, amount, isLatest, persons }) => (
+                <tr key={booking.id}>
+                  <td className="max-w-64">
+                    <div className="flex items-center gap-2">
+                      <Link to={`/admin/bookings/${booking.id}`} className="cell-primary truncate hover:text-brand-700">
+                        {booking.customer || "—"}
+                      </Link>
+                      {isLatest ? <Badge tone="brand">New</Badge> : null}
+                    </div>
+                    <div className="mt-0.5 text-xs text-subtle">{booking.bookingCode}</div>
+                  </td>
+                  <td className="max-w-72">
+                    <div className="truncate text-navy-900">{trip.title}</div>
+                    <div className="mt-0.5 text-xs text-subtle">{trip.meta}</div>
+                  </td>
+                  <td className="whitespace-nowrap text-right">
+                    <div className="font-semibold text-navy-900 tabular-nums">{amount}</div>
+                    <div className="mt-0.5 text-xs text-subtle">
+                      {customTab ? persons : humanizeValue(booking.paymentMethod)}
                     </div>
                   </td>
+                  <td>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <StatusBadge status={booking.status} />
+                      {!customTab ? <StatusBadge status={booking.payment} /> : null}
+                    </div>
+                  </td>
+                  <td className="w-px whitespace-nowrap">
+                    <RowActions actions={bookingActions(booking)} />
+                  </td>
                 </tr>
-              )}
+              ))}
             </tbody>
           </table>
         </div>
-      </div>
+      </>
+    );
+  };
 
-      <section className="admin-soft-panel space-y-4 p-5">
-          <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[var(--c-brand)]">{customTab ? "Custom Tour Plans" : "Standard Tour Plans"}</p>
-            <h2 className="admin-section-title mt-2 text-[1.05rem]">{customTab ? "Saved Itineraries for Custom Requests" : "Saved Itineraries for Standard Bookings"}</h2>
-            <p className="mt-1 text-[13px] text-slate-500 dark:text-slate-400">{customTab ? "Every itinerary created from a custom request is saved here so you can reopen or print it anytime." : "Every itinerary created for a standard booking is saved here so you can reopen or print it anytime."}</p>
+  const renderPlans = () => {
+    if (isLoading) return <SkeletonRows rows={2} />;
+    if (!createdPlans.length) {
+      return (
+        <EmptyState
+          icon={FileText}
+          title="No itineraries created yet"
+          description={`Open a ${customTab ? "custom request" : "standard booking"} and use Edit itinerary. The saved plan appears here automatically.`}
+        />
+      );
+    }
+
+    const rows = createdPlans.map((booking) => {
+      const itinerary = getSavedItinerary(booking);
+      return {
+        booking,
+        title: itinerary?.title || "Created tour plan",
+        meta: `${humanizeValue(itinerary?.status || "draft")} · ${formatCurrencyAmount(itinerary?.finalBudget, itinerary?.currency || "PKR")}`,
+        destination: customTab ? getCustomRequestDetails(booking).preferredDestinations : booking.tour || "Selected tour",
+      };
+    });
+
+    return (
+      <>
+        <ul className="divide-y divide-line md:hidden">
+          {rows.map(({ booking, title, meta, destination }) => (
+            <li key={`plan-${booking.id}`} className="flex items-start gap-3 px-4 py-3.5">
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-semibold text-navy-900">{title}</p>
+                <p className="mt-0.5 truncate text-[13px] text-body">{booking.customer} · {destination}</p>
+                <p className="mt-0.5 text-xs text-subtle">{meta}</p>
+              </div>
+              <RowActions actions={planActions(booking)} />
+            </li>
+          ))}
+        </ul>
+        <div className="admin-table-wrap hidden md:block">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Itinerary</th>
+                <th>{customTab ? "Requested destinations" : "Tour"}</th>
+                <th>Status</th>
+                <th><span className="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map(({ booking, title, meta, destination }) => (
+                <tr key={`plan-${booking.id}`}>
+                  <td className="max-w-56">
+                    <div className="cell-primary truncate">{booking.customer}</div>
+                    <div className="mt-0.5 text-xs text-subtle">{booking.bookingCode}</div>
+                  </td>
+                  <td className="max-w-72">
+                    <div className="truncate text-navy-900">{title}</div>
+                    <div className="mt-0.5 text-xs text-subtle">{meta}</div>
+                  </td>
+                  <td className="max-w-64 truncate">{destination}</td>
+                  <td><StatusBadge status={booking.status} /></td>
+                  <td className="w-px whitespace-nowrap">
+                    <RowActions actions={planActions(booking)} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </>
+    );
+  };
+
+  const tabContent = (
+    <div className="space-y-5">
+      <Card flush>{renderBookings()}</Card>
+      <Card
+        flush
+        title="Saved itineraries"
+        description={`Itineraries created for ${customTab ? "custom requests" : "standard bookings"}. Reopen or print them any time.`}
+      >
+        <div className="border-t border-line">{renderPlans()}</div>
+      </Card>
+    </div>
+  );
+
+  return (
+    <div>
+      <PageHeader
+        title="Bookings"
+        description="Monitor, confirm and manage customer reservations."
+        actions={
+          <div className="relative w-[calc(100vw-2rem)] sm:w-72">
+            <Search size={15} aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-subtle" />
+            <Input
+              type="search"
+              aria-label="Search bookings"
+              placeholder={customTab ? "Search name, destination, itinerary…" : "Search name, code, email, tour…"}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9"
+            />
           </div>
+        }
+      />
 
-          {createdPlans.length ? (
-            <div className="admin-soft-table overflow-hidden rounded-[1.25rem] border border-white/30 dark:border-slate-800">
-              <table className="w-full border-collapse text-left">
-                <thead>
-                  <tr>
-                    <th className="px-5 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Customer</th>
-                    <th className="px-5 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Created Itinerary</th>
-                    <th className="px-5 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Requested Destinations</th>
-                    <th className="px-5 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th>
-                    <th className="px-5 py-3 text-right text-[10px] font-black uppercase tracking-widest text-slate-400">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/25 dark:divide-slate-800">
-                  {createdPlans.map((booking) => {
-                    const request = getCustomRequestDetails(booking);
-                    return (
-                      <tr key={`plan-${booking.id}`} className="hover:bg-slate-50/40 dark:hover:bg-slate-800/40">
-                        <td className="px-5 py-3.5">
-                          <p className="text-sm font-black text-slate-900 dark:text-slate-100">{booking.customer}</p>
-                          <p className="mt-1 text-[11px] font-semibold text-slate-400">{booking.bookingCode}</p>
-                        </td>
-                        <td className="px-5 py-3.5">
-                          <p className="text-sm font-black text-slate-900 dark:text-slate-100">{getSavedItinerary(booking)?.title || "Created Tour Plan"}</p>
-                          <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{`${prettifyValue(getSavedItinerary(booking)?.status, "Draft")} ? ${getSavedItinerary(booking)?.currency || "PKR"} ${getSavedItinerary(booking)?.finalBudget || 0}`}</p>
-                        </td>
-                        <td className="px-5 py-3.5 text-sm font-semibold text-slate-600 dark:text-slate-300">{customTab ? request.preferredDestinations : booking.tour || "Selected Tour"}</td>
-                        <td className="px-5 py-3.5">
-                          <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${statusStyles[booking.status]}`}>{booking.status}</span>
-                        </td>
-                        <td className="px-5 py-3.5">
-                          <div className="flex justify-end gap-1.5">
-                            <Link to={`/admin/bookings/${booking.id}`} className="admin-soft-icon-button" data-tone="view">
-                              <Eye size={18} />
-                            </Link>
-                            <button
-                              type="button"
-                              onClick={() => openTourPlanPrint(booking)}
-                              className="admin-soft-icon-button"
-                              data-tone="print"
-                            >
-                              <Printer size={18} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="rounded-[1.5rem] border border-dashed border-slate-200 px-6 py-10 text-center dark:border-slate-700">
-              <p className="text-sm font-black text-slate-700 dark:text-slate-100">No itineraries have been created yet.</p>
-              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{customTab ? "Open a custom booking request and use Create Itinerary. The saved plan will appear here automatically." : "Open a standard booking and use Create Itinerary. The saved plan will appear here automatically."}</p>
-            </div>
-          )}
-      </section>
-
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        ariaLabel="Booking type"
+        items={[
+          { value: "standard", label: "Standard bookings", count: tabCounts.standard },
+          { value: "custom", label: "Custom requests", count: tabCounts.custom },
+        ]}
+      >
+        <TabPanel value="standard">{!customTab ? tabContent : null}</TabPanel>
+        <TabPanel value="custom">{customTab ? tabContent : null}</TabPanel>
+      </Tabs>
     </div>
   );
 };
