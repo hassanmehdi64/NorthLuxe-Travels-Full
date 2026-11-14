@@ -580,3 +580,8 @@
 .brand-calendar-clear { width: 100%; padding: 10px; border-top: 1px solid var(--color-line); border-radius: 0 0 var(--radius-card) var(--radius-card); color: var(--color-brand-700); font-size: 0.75rem; font-weight: 600; }
 .brand-calendar-clear:hover { background: var(--color-canvas); }
 }
+
+/* Floating chat buttons sit above sticky bottom bars (tour + booking pages, phones). */
+@media (max-width: 1023px) {
+  body[data-sticky-bar="true"] .site-chat-buttons { bottom: calc(84px + env(safe-area-inset-bottom)); }
+}

@@ -1,51 +1,37 @@
 import { useLocation } from "@/lib/router";
 import { FaFacebookMessenger, FaWhatsapp } from "react-icons/fa";
 import { useSettings } from "../../hooks/useCms";
+import { getWhatsAppHref } from "../../lib/whatsapp";
 
-const normalizePhone = (value) => String(value || "").replace(/[^\d]/g, "");
-const buildWhatsAppLink = (settings) => {
-  const configured = settings?.socialLinks?.whatsapp || "";
-  if (/^https?:\/\//i.test(configured)) return configured;
-
-  const phone = normalizePhone(settings?.whatsappNumber || settings?.sitePhone || "923001234567");
-  const message = encodeURIComponent(`Hello ${settings?.siteName || "North Luxe"}, I need help with a tour booking.`);
-  return `https://wa.me/${phone}?text=${message}`;
-};
-
+/**
+ * Floating chat buttons. Hidden when no WhatsApp/Messenger is configured.
+ * Pages with a sticky bottom bar set <body data-sticky-bar="true"> (see
+ * useStickyBottomBar) and the buttons move above it (styles/design-system.css).
+ */
 const WhatsAppFloatButton = () => {
   const { data: settings } = useSettings(true);
   const location = useLocation();
   if (location.pathname.startsWith("/admin")) return null;
 
-  const hasMobileBookingBar = /^\/tours\/[^/]+\/?$/.test(location.pathname);
   const messengerLink = settings?.socialLinks?.facebook || "";
-  const whatsappLink = buildWhatsAppLink(settings);
+  const whatsappLink = getWhatsAppHref(settings, `Hello ${settings?.siteName || "North Luxe"}, I need help with a tour booking.`);
+  if (!messengerLink && !whatsappLink) return null;
+
+  const buttonClass =
+    "grid h-12 w-12 place-items-center rounded-full text-white shadow-raised transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2";
 
   return (
-    <div className={`site-chat-buttons fixed right-4 z-[120] flex flex-col items-end gap-2.5 sm:right-6 ${hasMobileBookingBar ? "bottom-24 lg:bottom-6" : "bottom-4 sm:bottom-6"}`}>
+    <div className="site-chat-buttons fixed bottom-4 right-4 z-40 flex flex-col items-end gap-2.5 sm:bottom-6 sm:right-6">
       {messengerLink ? (
-        <a
-          href={messengerLink}
-          target="_blank"
-          rel="noreferrer"
-          aria-label="Message us on Messenger"
-          title="Message Us"
-          className="ql-btn-icon h-10 w-10 rounded-full border-[#0084ff] bg-[#0084ff] text-white shadow-xl [--btn-icon-hover-bg:#0866ff] [--btn-icon-hover-border:#0866ff] [--btn-icon-hover-text:#ffffff]"
-        >
-          <FaFacebookMessenger className="h-4 w-4" aria-hidden="true" />
+        <a href={messengerLink} target="_blank" rel="noreferrer" aria-label="Message us on Messenger" className={`${buttonClass} bg-[#0084ff]`}>
+          <FaFacebookMessenger className="h-5 w-5" aria-hidden="true" />
         </a>
       ) : null}
-
-      <a
-        href={whatsappLink}
-        target="_blank"
-        rel="noreferrer"
-        aria-label="Chat on WhatsApp"
-        title="WhatsApp"
-        className="ql-btn-icon h-10 w-10 rounded-full border-[#0da746] bg-[#0da746] text-white shadow-xl [--btn-icon-hover-bg:#0a8f3b] [--btn-icon-hover-border:#0a8f3b] [--btn-icon-hover-text:#ffffff]"
-      >
-        <FaWhatsapp className="h-4 w-4" aria-hidden="true" />
-      </a>
+      {whatsappLink ? (
+        <a href={whatsappLink} target="_blank" rel="noreferrer" aria-label="Chat with us on WhatsApp" className={`${buttonClass} bg-[#128c4a]`}>
+          <FaWhatsapp className="h-6 w-6" aria-hidden="true" />
+        </a>
+      ) : null}
     </div>
   );
 };
