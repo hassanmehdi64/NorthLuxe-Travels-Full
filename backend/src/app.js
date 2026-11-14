@@ -18,6 +18,10 @@ import toursRoutes from "./routes/tours.routes.js";
 import usersRoutes from "./routes/users.routes.js";
 import { getDbStatus } from "./config/db.js";
 import { errorHandler, notFound } from "./middleware/errorHandler.js";
+import { validateServerEnv } from "./config/validateEnv.js";
+
+// Refuse to serve requests with a missing or weak JWT secret.
+validateServerEnv();
 
 const app = express();
 

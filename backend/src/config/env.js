@@ -1,6 +1,10 @@
 import dotenv from "dotenv";
 
-dotenv.config();
+// Tests configure the environment explicitly and must never inherit real
+// credentials (production DB, SMTP, Stripe) from backend/.env.
+if (process.env.NODE_ENV !== "test") {
+  dotenv.config();
+}
 
 const isVercel = Boolean(process.env.VERCEL);
 const configuredOrigins = String(process.env.CLIENT_ORIGIN || "")
@@ -29,10 +33,11 @@ export const env = {
   clientOrigin: process.env.CLIENT_ORIGIN || "http://localhost:5173",
   clientOrigins: Array.from(new Set([...configuredOrigins, ...defaultOrigins])),
   clientOriginPatterns: defaultOriginPatterns,
-  jwtSecret: process.env.JWT_SECRET || "change-me",
+  // No fallbacks for secrets: see config/validateEnv.js (startup fails if weak/missing).
+  jwtSecret: process.env.JWT_SECRET || "",
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
-  adminEmail: process.env.ADMIN_EMAIL || "admin@northluxe.com",
-  adminPassword: process.env.ADMIN_PASSWORD || "Admin@123",
+  adminEmail: process.env.ADMIN_EMAIL || "",
+  adminPassword: process.env.ADMIN_PASSWORD || "",
   emailFrom: process.env.EMAIL_FROM || process.env.SMTP_FROM || "no-reply@northluxe.com",
   smtpHost: process.env.SMTP_HOST || process.env.EMAIL_HOST || "",
   smtpPort: Number(process.env.SMTP_PORT || process.env.EMAIL_PORT || 587),
