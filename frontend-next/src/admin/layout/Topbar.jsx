@@ -1,26 +1,48 @@
+"use client";
+
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@/lib/router";
-import { Bell, Moon, PanelLeftClose, PanelLeftOpen, Sun } from "lucide-react";
+import { Bell, Menu, Moon, PanelLeftClose, PanelLeftOpen, Search, Sun } from "lucide-react";
 import ProfileDropdown from "../profile/ProfileDropdown";
 import { useAdminBlogs, useBookings, useContacts, useGallery, useNotifications, useUsers } from "../../hooks/useCms";
 import { useAuth } from "../../context/useAuth";
+import { Badge, IconButton, Modal } from "../ui";
 
-/**
- * Topbar Component
- * Handles global search, mobile menu toggle, and quick notifications.
- */
-const Topbar = ({
-  onSidebarControlClick,
-  isSidebarCollapsed,
-  isSidebarOpen,
-  isDesktopSidebar,
-  theme,
-  setTheme,
-}) => {
+const SearchResults = ({ query, results, onOpen }) => {
+  if (!query.trim()) return null;
+  return results.length ? (
+    <ul className="grid gap-0.5">
+      {results.map((item) => (
+        <li key={item.id}>
+          <button
+            type="button"
+            onClick={() => onOpen(item.route)}
+            className="flex w-full items-center justify-between gap-3 rounded-control px-3 py-2.5 text-left transition-colors hover:bg-canvas focus-visible:bg-canvas"
+          >
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-semibold text-navy-900">{item.title}</span>
+              <span className="block truncate text-xs text-subtle">{item.subtitle}</span>
+            </span>
+            <Badge tone="neutral">{item.type}</Badge>
+          </button>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <div className="px-3 py-3">
+      <p className="text-sm font-semibold text-navy-900">No matches</p>
+      <p className="mt-0.5 text-xs text-subtle">Press Enter to search bookings for “{query.trim()}”.</p>
+    </div>
+  );
+};
+
+/** Top bar: sidebar control, global search, theme, notifications and account menu. */
+const Topbar = ({ collapsed, onToggleCollapsed, onOpenMobileNav, theme, onToggleTheme }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const searchRef = useRef(null);
   const isDark = theme === "dark";
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const isAdmin = user?.role === "Admin";
   const { data: notifications = [] } = useNotifications(isAdmin);
   const { data: bookings = [] } = useBookings(isAdmin);
@@ -31,13 +53,6 @@ const Topbar = ({
   const [globalQuery, setGlobalQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const unreadCount = notifications.filter((n) => !n.isRead).length;
-  const sidebarControlLabel = isDesktopSidebar
-    ? (isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar")
-    : (isSidebarOpen ? "Close sidebar" : "Open sidebar");
-
-  const toggleTheme = () => {
-    setTheme(isDark ? "light" : "dark");
-  };
 
   const globalResults = useMemo(() => {
     const query = globalQuery.trim().toLowerCase();
@@ -130,6 +145,7 @@ const Topbar = ({
   const openResult = (route) => {
     navigate(route);
     setIsSearchOpen(false);
+    setMobileSearchOpen(false);
   };
 
   const handleSearchSubmit = (event) => {
@@ -143,114 +159,69 @@ const Topbar = ({
     }
     navigate(`/admin/bookings?search=${encodeURIComponent(query)}`);
     setIsSearchOpen(false);
+    setMobileSearchOpen(false);
   };
 
+  const searchInput = (props) => (
+    <div className="relative">
+      <Search size={16} aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-subtle" />
+      <input
+        type="search"
+        value={globalQuery}
+        onChange={(event) => {
+          setGlobalQuery(event.target.value);
+          setIsSearchOpen(Boolean(event.target.value.trim()));
+        }}
+        onFocus={() => setIsSearchOpen(Boolean(globalQuery.trim()))}
+        onKeyDown={handleSearchSubmit}
+        placeholder="Search bookings, inquiries, users…"
+        aria-label="Search the admin"
+        className="input h-9 border-line bg-canvas pl-9 focus:bg-surface"
+        {...props}
+      />
+    </div>
+  );
+
   return (
-    <header
-      className="admin-soft-topbar sticky top-0 z-30 flex min-h-18 items-center justify-between gap-2 px-4 py-3 sm:px-5 lg:px-7"
-    >
-      {/* --- LEFT SECTION: MOBILE MENU & SMART SEARCH --- */}
-      <div className="flex flex-1 items-center gap-2 sm:gap-2.5">
-        <button
-          onClick={onSidebarControlClick}
-          className="admin-soft-icon-button h-9 w-9"
-          aria-label={sidebarControlLabel}
-          title={sidebarControlLabel}
-        >
-          {isDesktopSidebar
-            ? (isSidebarCollapsed ? <PanelLeftOpen size={16} className="sm:h-[1rem] sm:w-[1rem]" /> : <PanelLeftClose size={16} className="sm:h-[1rem] sm:w-[1rem]" />)
-            : (isSidebarOpen ? <PanelLeftClose size={16} className="sm:h-[1rem] sm:w-[1rem]" /> : <PanelLeftOpen size={16} className="sm:h-[1rem] sm:w-[1rem]" />)}
-        </button>
+    <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-2 border-b border-line bg-surface/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-surface/85 sm:px-6 lg:px-8">
+      <IconButton label="Open menu" icon={Menu} onClick={onOpenMobileNav} className="lg:hidden" tooltip={false} />
+      <IconButton
+        label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        icon={collapsed ? PanelLeftOpen : PanelLeftClose}
+        onClick={onToggleCollapsed}
+        className="hidden lg:inline-grid"
+      />
 
-        {/* Global Search Bar */}
-        <div ref={searchRef} className="relative hidden w-full max-w-xl sm:block">
-          <div className="admin-soft-search-shell group relative flex h-10 w-full items-center rounded-[1rem] border border-white/35 bg-white/70 px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] backdrop-blur-xl">
-          <input
-            type="text"
-            value={globalQuery}
-            onChange={(event) => {
-              setGlobalQuery(event.target.value);
-              setIsSearchOpen(Boolean(event.target.value.trim()));
-            }}
-            onFocus={() => setIsSearchOpen(Boolean(globalQuery.trim()))}
-            onKeyDown={handleSearchSubmit}
-            placeholder="Search bookings, blogs, users, gallery..."
-            className="admin-soft-search-input w-full border-none bg-transparent px-1 text-sm font-bold outline-none shadow-none ring-0"
+      <div ref={searchRef} className="relative hidden w-full max-w-md sm:block">
+        {searchInput()}
+        {isSearchOpen && (
+          <div className="absolute inset-x-0 top-[calc(100%+6px)] z-50 rounded-card border border-line bg-surface p-1.5 shadow-pop">
+            <SearchResults query={globalQuery} results={globalResults} onOpen={openResult} />
+          </div>
+        )}
+      </div>
+
+      <div className="ml-auto flex items-center gap-1">
+        <IconButton label="Search" icon={Search} onClick={() => setMobileSearchOpen(true)} className="sm:hidden" />
+        <IconButton label={isDark ? "Switch to light mode" : "Switch to dark mode"} icon={isDark ? Sun : Moon} onClick={onToggleTheme} />
+        {isAdmin && (
+          <IconButton
+            label={unreadCount ? `Notifications, ${unreadCount} unread` : "Notifications"}
+            icon={Bell}
+            to="/admin/notifications"
+            badge={unreadCount}
           />
-        </div>
-          {isSearchOpen ? (
-            <div className="admin-soft-panel absolute left-0 right-0 top-[calc(100%+0.7rem)] z-40 overflow-hidden rounded-[1.4rem] border border-white/40 p-2">
-              {globalResults.length ? (
-                globalResults.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => openResult(item.route)}
-                    className="flex w-full items-start justify-between gap-3 rounded-[1rem] px-3 py-3 text-left transition hover:bg-white/70"
-                  >
-                    <div>
-                      <p className="text-sm font-black text-[var(--admin-text)]">{item.title}</p>
-                      <p className="mt-1 text-xs text-[var(--admin-muted)]">{item.subtitle}</p>
-                    </div>
-                    <span className="rounded-full bg-[rgba(var(--c-brand-rgb),0.1)] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[var(--admin-accent)]">
-                      {item.type}
-                    </span>
-                  </button>
-                ))
-              ) : (
-                <div className="px-3 py-4">
-                  <p className="text-sm font-black text-[var(--admin-text)]">No matching admin results</p>
-                  <p className="mt-1 text-xs text-[var(--admin-muted)]">Press Enter to search bookings for this query.</p>
-                </div>
-              )}
-            </div>
-          ) : null}
-        </div>
+        )}
+        <span aria-hidden="true" className="mx-1.5 hidden h-6 w-px bg-line sm:block" />
+        <ProfileDropdown />
       </div>
 
-      {/* --- RIGHT SECTION: SYSTEM ALERTS & USER PROFILE --- */}
-      <div className="flex items-center gap-1 sm:gap-1.5">
-        <button
-          onClick={toggleTheme}
-          className="admin-soft-icon-button hidden lg:inline-flex lg:h-9 lg:w-9"
-          aria-label="Toggle dark mode"
-        >
-          {isDark ? <Sun size={16} /> : <Moon size={16} />}
-        </button>
-
-        {/* Activity Notifications */}
-        {isAdmin ? (
-          <button
-            onClick={() => navigate("/admin/notifications")}
-            className="admin-soft-icon-button group relative hidden lg:inline-flex lg:h-9 lg:w-9"
-          >
-            <Bell
-              size={16}
-              className={`group-hover:rotate-[15deg] transition-transform duration-300 ${unreadCount > 0 ? "animate-pulse" : ""}`}
-            />
-            {/* Unread Count Badge */}
-            {unreadCount > 0 && (
-              <span
-                className={`absolute -top-0.5 -right-0.5 min-w-5 h-5 px-1 rounded-full text-[10px] leading-5 font-black text-center transition-transform group-hover:scale-110 ${
-                  isDark
-                    ? "border border-slate-950 bg-[var(--admin-accent)] text-white"
-                    : "border border-white bg-[var(--admin-accent)] text-white"
-                }`}
-              >
-                {unreadCount > 99 ? "99+" : unreadCount}
-              </span>
-            )}
-          </button>
-        ) : null}
-
-        {/* Divider Line */}
-        <div className="hidden h-9 w-px bg-white/35 lg:block"></div>
-
-        {/* Profile Component (External logic for Logout/Profile) */}
-        <div className="pl-0.5">
-          <ProfileDropdown />
+      <Modal open={mobileSearchOpen} onOpenChange={setMobileSearchOpen} title="Search the admin" size="md">
+        {searchInput({ autoFocus: true })}
+        <div className="mt-2">
+          <SearchResults query={globalQuery} results={globalResults} onOpen={openResult} />
         </div>
-      </div>
+      </Modal>
     </header>
   );
 };

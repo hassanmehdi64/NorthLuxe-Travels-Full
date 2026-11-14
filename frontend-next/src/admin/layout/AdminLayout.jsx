@@ -1,113 +1,85 @@
-import React, { useState, useEffect } from "react";
+"use client";
+
+import { useEffect, useState } from "react";
 import { useLocation } from "@/lib/router";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
-import "../../styles/admin-brand.css";
+import { ConfirmProvider, TooltipProvider } from "../ui";
+import "../../styles/admin.css";
 import "../../styles/ui-consistency.css";
 
+const readPreference = (key, fallback) => {
+  try {
+    return window.localStorage.getItem(key) ?? fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+const writePreference = (key, value) => {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    /* storage unavailable (private mode) — preference just isn't remembered */
+  }
+};
+
 const AdminLayout = ({ children }) => {
-  const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem("admin-sidebar-collapsed") === "true";
-  });
-  const [isDesktopSidebar, setIsDesktopSidebar] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return window.matchMedia("(min-width: 640px)").matches;
-  });
-  const [theme, setTheme] = useState(() => {
-    if (typeof window === "undefined") return "light";
-    return localStorage.getItem("admin-theme") || "light";
-  });
+  // Server and first client render use the same defaults; stored preferences are
+  // applied after mount, so there is no hydration mismatch.
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [theme, setTheme] = useState("light");
+  const [prefsLoaded, setPrefsLoaded] = useState(false);
   const location = useLocation();
 
-  // Close sidebar automatically when route changes on mobile
   useEffect(() => {
-    setSidebarOpen(false);
-  }, [location]);
-
-  useEffect(() => {
-    localStorage.setItem("admin-theme", theme);
-    document.documentElement.classList.toggle("dark", theme === "dark");
-  }, [theme]);
-
-  useEffect(() => {
-    localStorage.setItem("admin-sidebar-collapsed", String(isSidebarCollapsed));
-  }, [isSidebarCollapsed]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return undefined;
-
-    const mediaQuery = window.matchMedia("(min-width: 640px)");
-    const syncSidebarMode = (event) => {
-      setIsDesktopSidebar(event.matches);
-      if (event.matches) {
-        setSidebarOpen(false);
-      }
-    };
-
-    setIsDesktopSidebar(mediaQuery.matches);
-
-    if (typeof mediaQuery.addEventListener === "function") {
-      mediaQuery.addEventListener("change", syncSidebarMode);
-      return () => mediaQuery.removeEventListener("change", syncSidebarMode);
-    }
-
-    mediaQuery.addListener(syncSidebarMode);
-    return () => mediaQuery.removeListener(syncSidebarMode);
+    setCollapsed(readPreference("admin-sidebar-collapsed", "false") === "true");
+    setTheme(readPreference("admin-theme", "light") === "dark" ? "dark" : "light");
+    setPrefsLoaded(true);
   }, []);
 
-  const isDark = theme === "dark";
+  useEffect(() => {
+    if (prefsLoaded) writePreference("admin-sidebar-collapsed", String(collapsed));
+  }, [collapsed, prefsLoaded]);
+
+  // Dark mode lives on <body> only while the admin is mounted (portaled dialogs and
+  // menus need it too) and is removed on leave, so it never leaks to the public site.
+  useEffect(() => {
+    if (!prefsLoaded) return undefined;
+    writePreference("admin-theme", theme);
+    document.body.classList.toggle("dark", theme === "dark");
+    document.documentElement.classList.remove("dark");
+    return () => document.body.classList.remove("dark");
+  }, [theme, prefsLoaded]);
+
+  useEffect(() => setMobileNavOpen(false), [location.pathname]);
 
   return (
-    <div
-      className={`admin-shell admin-shell-soft flex min-h-screen font-sans antialiased transition-colors duration-300 ${
-        isDark ? "dark text-slate-200" : "text-slate-900"
-      }`}
-    >
-      {/* Sidebar Component */}
-      <Sidebar
-        isSidebarOpen={isSidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-        isSidebarCollapsed={isSidebarCollapsed}
-        setSidebarCollapsed={setIsSidebarCollapsed}
-        theme={theme}
-      />
+    <TooltipProvider>
+      <ConfirmProvider>
+        <div className={`admin-shell flex min-h-dvh ${theme === "dark" ? "dark" : ""}`}>
+          <Sidebar
+            collapsed={collapsed}
+            mobileOpen={mobileNavOpen}
+            onCloseMobile={() => setMobileNavOpen(false)}
+          />
 
-      {/* Main Content Area */}
-      <div className="admin-main-stage flex-1 flex min-w-0 flex-col overflow-hidden px-2.5 pb-2.5 pt-2.5 sm:px-3 sm:pb-3 sm:pt-3 lg:px-4 lg:pb-4 lg:pt-4">
-        {/* Topbar Component */}
-        <Topbar
-          onSidebarControlClick={() => {
-            if (isDesktopSidebar) {
-              setIsSidebarCollapsed((prev) => !prev);
-              return;
-            }
-            setSidebarOpen((prev) => !prev);
-          }}
-          isSidebarCollapsed={isSidebarCollapsed}
-          isSidebarOpen={isSidebarOpen}
-          isDesktopSidebar={isDesktopSidebar}
-          theme={theme}
-          setTheme={setTheme}
-        />
-
-        {/* Dynamic Content Outlet */}
-        <main className="admin-workspace relative z-[1] flex-1 overflow-y-auto px-1.5 pb-4 pt-4 sm:px-2 sm:pb-5 sm:pt-5 lg:px-6 lg:pb-8 lg:pt-6 xl:px-8">
-          <div className="mx-auto max-w-[1520px]">
-            {children}
+          <div className="flex min-w-0 flex-1 flex-col">
+            <Topbar
+              collapsed={collapsed}
+              onToggleCollapsed={() => setCollapsed((value) => !value)}
+              onOpenMobileNav={() => setMobileNavOpen(true)}
+              theme={theme}
+              onToggleTheme={() => setTheme((value) => (value === "dark" ? "light" : "dark"))}
+            />
+            <main id="admin-main" className="flex-1 px-4 pb-10 pt-5 sm:px-6 lg:px-8 lg:pt-6">
+              <div className="mx-auto w-full max-w-[1320px]">{children}</div>
+            </main>
           </div>
-        </main>
-      </div>
-
-      {/* Mobile Overlay Component */}
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-slate-950/45 backdrop-blur-sm z-40 sm:hidden animate-in fade-in duration-300"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-    </div>
+        </div>
+      </ConfirmProvider>
+    </TooltipProvider>
   );
 };
 

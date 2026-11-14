@@ -1,114 +1,66 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "@/lib/router";
-import { ChevronDown, User, Settings, LogOut, History } from "lucide-react";
+"use client";
+
+import { DropdownMenu } from "radix-ui";
+import { ChevronDown, History, LogOut, Settings, User } from "lucide-react";
+import { useNavigate } from "@/lib/router";
 import { useAuth } from "../../context/useAuth";
 import { getUserAvatar } from "../utils/userAvatar";
 
+const MENU_ITEMS = [
+  { label: "My profile", icon: User, path: "/admin/profile/MyProfile" },
+  { label: "Account settings", icon: Settings, path: "/admin/profile/AccountSettings" },
+  { label: "Activity log", icon: History, path: "/admin/profile/ActivityLog" },
+];
+
+const itemClass =
+  "flex cursor-pointer select-none items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-navy-900 outline-none data-[highlighted]:bg-canvas";
+
+/** Account menu in the top bar. */
 const ProfileDropdown = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target))
-        setIsOpen(false);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const menuItems = [
-    { label: "My Profile", icon: User, path: "/admin/profile/MyProfile" },
-    {
-      label: "Account Settings",
-      icon: Settings,
-      path: "/admin/profile/AccountSettings",
-    },
-    { label: "Activity Log", icon: History, path: "/admin/profile/ActivityLog" },
-  ];
-
   const handleLogout = () => {
-    setIsOpen(false);
     logout();
     navigate("/admin/login");
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        aria-expanded={isOpen}
+    <DropdownMenu.Root modal={false}>
+      <DropdownMenu.Trigger
         aria-label="Account menu"
-        className="admin-profile-trigger group flex items-center gap-3 rounded-[1.35rem] border border-white/35 bg-white/70 px-3.5 py-2.5 shadow-[0_12px_28px_rgba(148,163,184,0.08)] backdrop-blur-xl transition-all focus:outline-none hover:-translate-y-0.5"
+        className="flex items-center gap-2 rounded-control py-1 pl-1 pr-1.5 transition-colors hover:bg-canvas data-[state=open]:bg-canvas"
       >
-        <div className="text-right hidden sm:block">
-          <p className="text-[11px] font-black uppercase tracking-tight text-[var(--admin-text)]">
-            {user?.name || "Admin User"}
-          </p>
-          <p className="text-[10px] font-bold text-[var(--admin-accent)]">{user?.role || "Admin"}</p>
-        </div>
-        <div className="relative shrink-0">
-          <img
-            src={getUserAvatar(user)}
-            alt={user?.name || "profile"}
-            className="h-11 w-11 rounded-[1rem] border-2 border-white/80 object-cover shadow-[0_10px_24px_rgba(148,163,184,0.18)]"
-          />
-          <span className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-[var(--admin-accent)]" />
-        </div>
-        <ChevronDown
-          size={14}
-          className={`text-[var(--admin-muted)] transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
-        />
-      </button>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={getUserAvatar(user)} alt="" className="h-8 w-8 rounded-full object-cover" />
+        <span className="hidden text-left leading-tight md:block">
+          <span className="block max-w-36 truncate text-[13px] font-semibold text-navy-900">{user?.name || "Admin"}</span>
+          <span className="block text-xs text-subtle">{user?.role || "Admin"}</span>
+        </span>
+        <ChevronDown size={15} aria-hidden="true" className="hidden text-subtle md:block" />
+      </DropdownMenu.Trigger>
 
-      {/* Dropdown Menu */}
-      {isOpen && (
-        <div className="admin-profile-menu absolute right-0 z-50 mt-3 w-60 rounded-[1.5rem] border border-white/35 bg-white/88 py-2 shadow-[0_24px_50px_rgba(148,163,184,0.18)] backdrop-blur-2xl animate-in fade-in slide-in-from-top-2">
-          {/* User Email Header */}
-          <div className="mb-1 border-b border-white/35 px-5 py-4">
-            <p className="text-[10px] font-black uppercase tracking-widest text-[var(--admin-muted)]">
-              Signed in as
-            </p>
-            <p className="truncate text-sm font-bold text-[var(--admin-text)]">
-              {user?.email || "-"}
-            </p>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content align="end" sideOffset={8} className="admin-shell z-[80] w-60 rounded-card border border-line bg-surface p-1 shadow-pop">
+          <div className="px-2.5 py-2">
+            <p className="text-xs text-subtle">Signed in as</p>
+            <p className="truncate text-sm font-semibold text-navy-900">{user?.email || "—"}</p>
           </div>
-
-          {/* Navigation Links */}
-          <div className="px-2 space-y-0.5">
-            {menuItems.map((item, index) => (
-              <Link
-                key={index}
-                to={item.path}
-                onClick={() => setIsOpen(false)}
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-bold text-[var(--admin-muted)] transition-all hover:bg-white/75 hover:text-[var(--admin-accent)]"
-              >
-                <item.icon
-                  size={16}
-                  className="text-[var(--admin-muted)] group-hover:text-[var(--admin-accent)]"
-                />
-                {item.label}
-              </Link>
-            ))}
-          </div>
-
-          <div className="mx-4 my-2 h-px bg-white/40"></div>
-
-          {/* Sign Out Button */}
-          <div className="px-2">
-            <button
-              onClick={handleLogout}
-              className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-bold text-rose-500 transition-colors hover:bg-rose-50/70"
-            >
-              <LogOut size={16} />
-              Sign Out
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+          <DropdownMenu.Separator className="my-1 h-px bg-line" />
+          {MENU_ITEMS.map(({ label, icon: Icon, path }) => (
+            <DropdownMenu.Item key={path} onSelect={() => navigate(path)} className={itemClass}>
+              <Icon size={15} aria-hidden="true" className="text-subtle" />
+              {label}
+            </DropdownMenu.Item>
+          ))}
+          <DropdownMenu.Separator className="my-1 h-px bg-line" />
+          <DropdownMenu.Item onSelect={handleLogout} className={`${itemClass} text-red-700 dark:text-red-400`}>
+            <LogOut size={15} aria-hidden="true" />
+            Sign out
+          </DropdownMenu.Item>
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
   );
 };
 

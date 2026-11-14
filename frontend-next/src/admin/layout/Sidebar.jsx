@@ -1,10 +1,13 @@
 import React, { useEffect, useRef } from "react";
-import { NavLink } from "@/lib/router";
-import { LogOut } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Dialog as RadixDialog } from "radix-ui";
+import { Link } from "@/lib/router";
+import { LogOut, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { IconButton, Tooltip } from "../ui";
 import { adminNavItems } from "./navConfig";
 import { useAuth } from "../../context/useAuth";
 import { useNotifications } from "../../hooks/useCms";
-import { getUserAvatar } from "../utils/userAvatar";
 
 const playAdminNotificationSound = async ({
   audioContextRef,
@@ -59,15 +62,106 @@ const playAdminNotificationSound = async ({
   }
 };
 
-const Sidebar = ({
-  isSidebarOpen,
-  setSidebarOpen,
-  isSidebarCollapsed,
-  setSidebarCollapsed,
-  theme,
-}) => {
+const NAV_GROUPS = [
+  ["Operations", ["overview", "bookings", "contacts", "notifications"]],
+  ["Website", ["tours", "gallery", "blogs", "testimonials", "content"]],
+  ["Workspace", ["users", "settings"]],
+];
+
+const isItemActive = (item, pathname) => {
+  if (item.path === "/admin") return pathname === "/admin";
+  return [item.path, ...(item.matches || [])].some((path) => pathname === path || pathname?.startsWith(`${path}/`));
+};
+
+const NavItems = ({ items, pathname, collapsed, badgeCounts, onNavigate }) => (
+  <nav aria-label="Admin navigation" className="admin-scroll flex-1 overflow-y-auto px-3 py-3">
+    {NAV_GROUPS.map(([group, ids]) => {
+      const groupItems = items.filter((item) => ids.includes(item.id));
+      if (!groupItems.length) return null;
+      return (
+        <div key={group} className="mb-4 last:mb-0">
+          {!collapsed && <p className="mb-1 px-2.5 text-xs font-medium text-subtle">{group}</p>}
+          <ul className="grid gap-0.5">
+            {groupItems.map((item) => {
+              const active = isItemActive(item, pathname);
+              const count = badgeCounts[item.id] || 0;
+              const link = (
+                <Link
+                  to={item.path}
+                  onClick={onNavigate}
+                  aria-current={active ? "page" : undefined}
+                  aria-label={collapsed ? `${item.label}${count ? `, ${count} new` : ""}` : undefined}
+                  className={cn(
+                    "relative flex h-9 items-center gap-2.5 rounded-control px-2.5 text-sm font-medium transition-colors",
+                    collapsed && "justify-center px-0",
+                    active ? "bg-brand-50 text-brand-700" : "text-body hover:bg-canvas hover:text-navy-900",
+                  )}
+                >
+                  <item.icon size={17} aria-hidden="true" className="shrink-0" />
+                  {!collapsed && <span className="truncate">{item.label}</span>}
+                  {count > 0 && (
+                    <span
+                      className={cn(
+                        "grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1.5 text-[11px] font-bold leading-none text-white",
+                        collapsed ? "absolute right-1 top-0.5 h-4 min-w-4 px-1 text-[10px]" : "ml-auto",
+                      )}
+                    >
+                      {count > 99 ? "99+" : count}
+                    </span>
+                  )}
+                </Link>
+              );
+              return <li key={item.id}>{collapsed ? <Tooltip content={item.label} side="right">{link}</Tooltip> : link}</li>;
+            })}
+          </ul>
+        </div>
+      );
+    })}
+  </nav>
+);
+
+const Brand = ({ collapsed }) => (
+  <Link to="/" aria-label="Open the North Luxe website" className="flex h-16 shrink-0 items-center border-b border-line px-4">
+    {/* eslint-disable-next-line @next/next/no-img-element */}
+    <img
+      src="/logo-dark-trim.png"
+      alt="North Luxe"
+      width={404}
+      height={174}
+      className={cn("h-8 w-auto dark:hidden", collapsed && "h-6")}
+    />
+    {/* eslint-disable-next-line @next/next/no-img-element */}
+    <img
+      src="/logo-white-trim.png"
+      alt=""
+      aria-hidden="true"
+      width={404}
+      height={174}
+      className={cn("hidden h-8 w-auto dark:block", collapsed && "h-6")}
+    />
+  </Link>
+);
+
+const SignOut = ({ collapsed, onLogout }) => (
+  <div className="border-t border-line p-3">
+    {collapsed ? (
+      <IconButton label="Sign out" icon={LogOut} onClick={onLogout} variant="danger" className="mx-auto flex" />
+    ) : (
+      <button
+        type="button"
+        onClick={onLogout}
+        className="flex h-9 w-full items-center gap-2.5 rounded-control px-2.5 text-sm font-medium text-body transition-colors hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/40"
+      >
+        <LogOut size={17} aria-hidden="true" />
+        Sign out
+      </button>
+    )}
+  </div>
+);
+
+const Sidebar = ({ collapsed, mobileOpen, onCloseMobile }) => {
+  const pathname = usePathname();
   const { user, logout } = useAuth();
-  const isDark = theme === "dark";
   const role = user?.role;
   const isAdmin = role === "Admin";
 
@@ -176,95 +270,46 @@ const Sidebar = ({
   }).length;
 
   const badgeCounts = {
-    overview: unreadNotifications.length,
+    overview: 0,
     bookings: unreadBookingAlerts,
     contacts: unreadContactAlerts,
+    notifications: unreadNotifications.length,
   };
-
-  const visibleNavItems = adminNavItems.filter(
-    (item) => !item.roles?.length || item.roles.includes(role),
-  );
-
-  const visibilityClass = isSidebarOpen
-    ? "translate-x-0"
-    : "-translate-x-full sm:translate-x-0";
-  const desktopWidth = isSidebarCollapsed ? "sm:w-18" : "sm:w-56";
+  const visibleNavItems = adminNavItems.filter((item) => !item.roles?.length || item.roles.includes(role));
 
   return (
-    <aside
-      className={`
-        admin-soft-sidebar fixed inset-y-0 left-0 z-50 w-72 overflow-hidden transform transition-[width,transform] duration-180 ease-out will-change-[width,transform] sm:static sm:inset-0 sm:shrink-0
-        ${desktopWidth}
-        ${isDark ? "text-white" : "text-slate-900"}
-        ${visibilityClass}
-      `}>
-      <div className="flex flex-col h-full">
-        <div className="admin-sidebar-brand">
-          <NavLink to="/" aria-label="North Luxe website" className={isSidebarCollapsed ? "admin-brand-collapsed" : ""}>
-            <img src="/logo-dark.png" alt="North Luxe" />
-          </NavLink>
-        </div>
+    <>
+      {/* Desktop: persistent, full height, collapsible to an icon rail */}
+      <aside
+        className={cn(
+          "sticky top-0 hidden h-dvh shrink-0 flex-col border-r border-line bg-surface transition-[width] duration-200 lg:flex",
+          collapsed ? "w-[72px]" : "w-60",
+        )}
+      >
+        <Brand collapsed={collapsed} />
+        <NavItems items={visibleNavItems} pathname={pathname} collapsed={collapsed} badgeCounts={badgeCounts} />
+        <SignOut collapsed={collapsed} onLogout={logout} />
+      </aside>
 
-        <div className="px-4 pt-4">
-          <div
-            className={`rounded-[1.3rem] border border-white/35 bg-white/74 px-3 py-3 shadow-[0_10px_24px_rgba(148,163,184,0.08)] backdrop-blur-xl ${isSidebarCollapsed ? "sm:px-2.5" : ""}`}>
-            <div
-              className={`flex items-center gap-3 ${isSidebarCollapsed ? "sm:flex-col sm:justify-center" : ""}`}>
-              <div className="relative shrink-0">
-                <img
-                  src={getUserAvatar(user)}
-                  alt={user?.name || "North Luxe Team"}
-                  className="h-9 w-9 rounded-lg border-2 border-white/80 object-cover shadow-[0_10px_24px_rgba(15,23,42,0.14)]"
-                />
-                <span className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-[var(--admin-accent)]" />
-              </div>
-              <div
-                className={`${isSidebarCollapsed ? "sm:hidden" : "min-w-0"}`}>
-                <p className="truncate text-[14px] font-medium text-[var(--admin-text)]">
-                  {user?.name || "North Luxe Team"}
-                </p>
-                <p className="mt-1 text-[11px] font-semibold text-[var(--admin-muted)]">
-                  {role || "Editor Access"}
-                </p>
-              </div>
+      {/* Phones/tablets: drawer with focus trap, Escape and a close button */}
+      <RadixDialog.Root open={mobileOpen} onOpenChange={(open) => { if (!open) onCloseMobile(); }}>
+        <RadixDialog.Portal>
+          <RadixDialog.Overlay className="fixed inset-0 z-[60] bg-navy-950/40 lg:hidden" />
+          <RadixDialog.Content className="admin-shell fixed inset-y-0 left-0 z-[61] flex w-72 max-w-[85vw] flex-col bg-surface shadow-pop outline-none lg:hidden">
+            <RadixDialog.Title className="sr-only">Admin navigation</RadixDialog.Title>
+            <RadixDialog.Description className="sr-only">Go to a section of the admin</RadixDialog.Description>
+            <div className="relative">
+              <Brand />
+              <RadixDialog.Close asChild>
+                <IconButton label="Close menu" icon={X} tooltip={false} className="absolute right-3 top-3.5" />
+              </RadixDialog.Close>
             </div>
-          </div>
-        </div>
-
-        <nav className="admin-sidebar-navigation flex-1 overflow-y-auto" aria-label="Admin navigation">
-          {[
-            ["Operations", ["overview", "bookings", "contacts"]],
-            ["Website", ["tours", "gallery", "blogs", "testimonials", "content"]],
-            ["Workspace", ["users", "settings"]],
-          ].map(([group, ids]) => {
-            const items = visibleNavItems.filter((item) => ids.includes(item.id));
-            if (!items.length) return null;
-            return <section className="admin-nav-group" key={group}>
-              <p className={`admin-nav-group-label ${isSidebarCollapsed ? "sm:hidden" : ""}`}>{group}</p>
-              {items.map((item) => <NavLink key={item.id} to={item.path} end={item.path === "/admin"} aria-label={item.label}>
-                {({ isActive }) => <div className={`admin-soft-nav-link admin-brand-nav-link ${isSidebarCollapsed ? "admin-nav-collapsed" : ""}`} data-active={String(isActive)} title={isSidebarCollapsed ? item.label : undefined}>
-                  <item.icon size={16} aria-hidden="true" />
-                  <span className={isSidebarCollapsed ? "sm:hidden" : "truncate"}>{item.label}</span>
-                  {badgeCounts[item.id] > 0 && !isSidebarCollapsed ? <span className="admin-nav-count">{badgeCounts[item.id] > 99 ? "99+" : badgeCounts[item.id]}</span> : null}
-                </div>}
-              </NavLink>)}
-            </section>;
-          })}
-        </nav>
-
-        <div className="border-t border-white/30 p-4">
-          <button
-            onClick={logout}
-            className={`admin-soft-button-ghost w-full text-rose-500 ${isSidebarCollapsed ? "justify-center sm:px-0" : "justify-start"}`}
-            title={isSidebarCollapsed ? "Sign Out" : undefined}>
-            <LogOut size={20} />
-            <span className={`${isSidebarCollapsed ? "sm:hidden" : ""}`}>
-              Sign Out
-            </span>
-          </button>
-        </div>
-      </div>
-    </aside>
+            <NavItems items={visibleNavItems} pathname={pathname} collapsed={false} badgeCounts={badgeCounts} onNavigate={onCloseMobile} />
+            <SignOut collapsed={false} onLogout={logout} />
+          </RadixDialog.Content>
+        </RadixDialog.Portal>
+      </RadixDialog.Root>
+    </>
   );
 };
 

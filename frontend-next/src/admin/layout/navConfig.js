@@ -10,6 +10,7 @@ import {
   MessageSquare,
   FilePenLine,
   Settings,
+  Bell,
 } from "lucide-react";
 
 export const adminNavItems = [
@@ -34,9 +35,18 @@ export const adminNavItems = [
     roles: ["Admin"],
   },
   {
+    id: "notifications",
+    label: "Notifications",
+    path: "/admin/notifications",
+    icon: Bell,
+    roles: ["Admin"],
+  },
+  {
     id: "content",
     label: "Content",
     path: "/admin/content",
+    // Content sub-pages that should highlight this item.
+    matches: ["/admin/destinations", "/admin/activities", "/admin/services", "/admin/seasons"],
     icon: FilePenLine,
     roles: ["Admin", "Editor"],
   },

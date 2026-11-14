@@ -1,5 +1,5 @@
 import { ArrowLeft, ArrowRight, Eye, EyeOff, LockKeyhole } from "lucide-react";
-import "../styles/admin-brand.css";
+import "../styles/admin.css";
 import Loader from "../components/spinner/Loader";
 import { useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "@/lib/router";
