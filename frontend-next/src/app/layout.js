@@ -22,6 +22,7 @@ const montserrat = Montserrat({
 export const metadata = {
   title: "North Luxe",
   description: "Luxury tours and travel experiences",
+  icons: { icon: "/north-luxe-logo.png" },
 };
 
 export default function RootLayout({ children }) {
