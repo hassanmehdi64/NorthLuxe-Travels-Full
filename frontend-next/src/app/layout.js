@@ -27,8 +27,11 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${jakarta.variable} ${montserrat.variable}`}>
-      <body><Providers><Suspense fallback={null}>{children}</Suspense></Providers></body>
+    // Browser extensions (e.g. QuillBot's data-qb-installed) add attributes to <html>/<body>
+    // before React hydrates. suppressHydrationWarning ignores attribute differences on these
+    // two elements only; mismatches inside the page are still reported.
+    <html lang="en" className={`${jakarta.variable} ${montserrat.variable}`} suppressHydrationWarning>
+      <body suppressHydrationWarning><Providers><Suspense fallback={null}>{children}</Suspense></Providers></body>
     </html>
   );
 }
