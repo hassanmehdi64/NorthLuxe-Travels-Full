@@ -2,6 +2,10 @@ import express from "express";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { User } from "../models/User.js";
+import { WRITABLE_FIELDS, pickWritable } from "../utils/fieldPolicy.js";
+
+const ROLES = ["Admin", "Editor"];
+const STATUSES = ["Active", "Suspended"];
 
 const router = express.Router();
 
@@ -52,8 +56,8 @@ router.post(
       name,
       email,
       passwordHash,
-      role: req.body.role || "Editor",
-      status: req.body.status || "Active",
+      role: ROLES.includes(req.body.role) ? req.body.role : "Editor",
+      status: STATUSES.includes(req.body.status) ? req.body.status : "Active",
       avatar: String(req.body.avatar || "").trim(),
     });
     res.status(201).json({ item: toUser(user) });
@@ -72,7 +76,23 @@ router.patch(
     const targetUser = await User.findById(req.params.id).select("role");
     if (!targetUser) return res.status(404).json({ message: "User not found" });
 
-    const payload = { ...req.body };
+    // Admins editing someone else may change role/status; everyone else only their profile.
+    const allowed = isAdmin && !isSelf ? WRITABLE_FIELDS.user.admin : WRITABLE_FIELDS.user.self;
+    const requestsPrivilegedChange = ["role", "status"].some(
+      (key) => req.body?.[key] !== undefined && !allowed.includes(key),
+    );
+    if (requestsPrivilegedChange) {
+      return res.status(403).json({
+        message: isSelf ? "You cannot change your own role or status" : "Only an Admin can change roles or status",
+      });
+    }
+    const payload = pickWritable(req.body, allowed);
+    if (payload.role !== undefined && !ROLES.includes(payload.role)) {
+      return res.status(400).json({ message: "Invalid role" });
+    }
+    if (payload.status !== undefined && !STATUSES.includes(payload.status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
 
     if (payload.email !== undefined) {
       payload.email = String(payload.email || "").toLowerCase().trim();

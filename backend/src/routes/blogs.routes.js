@@ -3,6 +3,7 @@ import { asyncHandler } from "../middleware/asyncHandler.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { Blog } from "../models/Blog.js";
 import { slugify } from "../utils/slugify.js";
+import { WRITABLE_FIELDS, pickWritable } from "../utils/fieldPolicy.js";
 
 const router = express.Router();
 
@@ -103,7 +104,7 @@ router.post(
 router.patch(
   "/:id",
   asyncHandler(async (req, res) => {
-    const payload = req.body;
+    const payload = pickWritable(req.body, WRITABLE_FIELDS.blog.editor);
     const update = {
       ...payload,
       coverImage: payload.image || payload.coverImage,

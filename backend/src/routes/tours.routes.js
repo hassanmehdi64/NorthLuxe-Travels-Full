@@ -3,6 +3,7 @@ import { asyncHandler } from "../middleware/asyncHandler.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { Tour } from "../models/Tour.js";
 import { slugify } from "../utils/slugify.js";
+import { WRITABLE_FIELDS, pickWritable } from "../utils/fieldPolicy.js";
 
 const router = express.Router();
 
@@ -160,15 +161,14 @@ router.post(
 router.patch(
   "/:id",
   asyncHandler(async (req, res) => {
-    const payload = req.body;
+    // Only whitelisted fields; rating/reviewsCount are derived from reviewItems below.
+    const payload = pickWritable(req.body, WRITABLE_FIELDS.tour.editor);
     const reviewItems = payload.reviewItems !== undefined ? sanitizeReviewItems(payload.reviewItems) : undefined;
     const reviewStats = reviewItems !== undefined
       ? getReviewStats(reviewItems)
       : null;
-    // Rating and count can only change through reviewItems, never be set directly.
-    const { rating: _rating, reviews: _reviews, reviewsCount: _reviewsCount, ...editable } = payload;
     const update = {
-      ...editable,
+      ...payload,
       coverImage: payload.image || payload.coverImage,
       availableOptions: payload.availableOptions,
       places: payload.places !== undefined ? sanitizeStringList(payload.places) : undefined,

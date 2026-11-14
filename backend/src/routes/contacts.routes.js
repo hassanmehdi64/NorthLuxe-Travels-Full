@@ -2,6 +2,7 @@ import express from "express";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { ContactMessage } from "../models/ContactMessage.js";
+import { WRITABLE_FIELDS, pickWritable } from "../utils/fieldPolicy.js";
 import { Notification } from "../models/Notification.js";
 
 const router = express.Router();
@@ -22,7 +23,7 @@ const toContact = (item) => ({
 router.post(
   "/public",
   asyncHandler(async (req, res) => {
-    const item = await ContactMessage.create(req.body);
+    const item = await ContactMessage.create(pickWritable(req.body, WRITABLE_FIELDS.contactMessage.public));
     await Notification.create({
       type: "System",
       title: "New Contact Message",
@@ -60,7 +61,7 @@ router.get(
 router.patch(
   "/:id",
   asyncHandler(async (req, res) => {
-    const item = await ContactMessage.findByIdAndUpdate(req.params.id, req.body, {
+    const item = await ContactMessage.findByIdAndUpdate(req.params.id, pickWritable(req.body, WRITABLE_FIELDS.contactMessage.admin), {
       new: true,
       runValidators: true,
     });

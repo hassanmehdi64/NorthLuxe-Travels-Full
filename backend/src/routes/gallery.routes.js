@@ -2,6 +2,7 @@ import express from "express";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { GalleryItem } from "../models/GalleryItem.js";
+import { WRITABLE_FIELDS, pickWritable } from "../utils/fieldPolicy.js";
 
 const router = express.Router();
 
@@ -53,7 +54,7 @@ router.post(
 router.patch(
   "/:id",
   asyncHandler(async (req, res) => {
-    const payload = req.body || {};
+    const payload = pickWritable(req.body, WRITABLE_FIELDS.galleryItem.editor);
     const update = {
       ...payload,
       sortOrder: payload.sortOrder !== undefined ? Number(payload.sortOrder || 0) : undefined,

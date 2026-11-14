@@ -19,6 +19,7 @@ import usersRoutes from "./routes/users.routes.js";
 import { getDbStatus } from "./config/db.js";
 import { errorHandler, notFound } from "./middleware/errorHandler.js";
 import { validateServerEnv } from "./config/validateEnv.js";
+import { rejectOperatorKeys } from "./middleware/rejectOperatorKeys.js";
 
 // Refuse to serve requests with a missing or weak JWT secret.
 validateServerEnv();
@@ -41,6 +42,7 @@ app.use("/api/payments/webhook", express.raw({ type: "application/json" }), paym
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
+app.use(rejectOperatorKeys);
 app.use(morgan("dev"));
 
 app.get("/api/health", (_req, res) => {

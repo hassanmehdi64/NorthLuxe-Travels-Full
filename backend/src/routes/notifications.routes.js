@@ -2,6 +2,7 @@ import express from "express";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { Notification } from "../models/Notification.js";
+import { WRITABLE_FIELDS, pickWritable } from "../utils/fieldPolicy.js";
 
 const router = express.Router();
 
@@ -28,7 +29,7 @@ router.get(
 router.patch(
   "/:id",
   asyncHandler(async (req, res) => {
-    const item = await Notification.findByIdAndUpdate(req.params.id, req.body, {
+    const item = await Notification.findByIdAndUpdate(req.params.id, pickWritable(req.body, WRITABLE_FIELDS.notification.admin), {
       new: true,
       runValidators: true,
     });

@@ -2,6 +2,7 @@ import express from "express";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { Testimonial } from "../models/Testimonial.js";
+import { WRITABLE_FIELDS, pickWritable } from "../utils/fieldPolicy.js";
 
 const router = express.Router();
 
@@ -44,10 +45,12 @@ router.post(
   "/",
   requireRole("Admin", "Editor"),
   asyncHandler(async (req, res) => {
+    const body = pickWritable(req.body, WRITABLE_FIELDS.testimonial.editor);
+    const { photo: _photo, date: _date, ...fields } = body;
     const payload = {
-      ...req.body,
-      avatar: req.body.avatar || req.body.photo || "",
-      reviewDate: req.body.date || req.body.reviewDate || Date.now(),
+      ...fields,
+      avatar: body.avatar || body.photo || "",
+      reviewDate: body.date || body.reviewDate || Date.now(),
     };
     const item = await Testimonial.create(payload);
     res.status(201).json({ item: toResponse(item) });
@@ -58,10 +61,12 @@ router.patch(
   "/:id",
   requireRole("Admin", "Editor"),
   asyncHandler(async (req, res) => {
+    const body = pickWritable(req.body, WRITABLE_FIELDS.testimonial.editor);
+    const { photo: _photo, date: _date, ...fields } = body;
     const payload = {
-      ...req.body,
-      avatar: req.body.avatar || req.body.photo || "",
-      reviewDate: req.body.date || req.body.reviewDate || undefined,
+      ...fields,
+      avatar: body.avatar || body.photo || "",
+      reviewDate: body.date || body.reviewDate || undefined,
     };
     if (!payload.reviewDate) delete payload.reviewDate;
     const item = await Testimonial.findByIdAndUpdate(req.params.id, payload, {
