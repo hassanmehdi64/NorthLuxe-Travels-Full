@@ -4,6 +4,7 @@ import { useCreatePublicBooking } from "../../hooks/useCms";
 import { useToast } from "../../context/ToastContext";
 import BookingDropdown from "../../components/booking/BookingDropdown";
 import MultiSelectMenu from "../../components/forms/MultiSelectMenu";
+import GuestStepper from "../../components/forms/GuestStepper";
 import BookingDateField from "../../components/booking/BookingDateField";
 
 const DESTINATION_OPTIONS = [
@@ -370,26 +371,14 @@ const CustomPlanRequest = () => {
                 ) : null}
               </div>
             </div>
-            <label>
+            <div>
               <span className="ql-label">Persons</span>
-              <input
-                type="number"
-                min={1}
-                className="ql-input"
-                value={form.persons}
-                onChange={(e) => setForm((prev) => ({ ...prev, persons: Number(e.target.value || 1) }))}
-              />
-            </label>
-            <label>
+              <GuestStepper boxed label="Persons" min={1} max={50} value={form.persons} onChange={(value) => setForm((prev) => ({ ...prev, persons: value }))} />
+            </div>
+            <div>
               <span className="ql-label">Children below 3 years</span>
-              <input
-                className="ql-input"
-                type="number"
-                min={0}
-                value={form.childrenBelowThree}
-                onChange={(e) => setForm((prev) => ({ ...prev, childrenBelowThree: Number(e.target.value || 0) }))}
-              />
-            </label>
+              <GuestStepper boxed label="Children below 3 years" min={0} max={20} value={form.childrenBelowThree} onChange={(value) => setForm((prev) => ({ ...prev, childrenBelowThree: value }))} />
+            </div>
           </div>
           <div className="form-section-heading md:col-span-2"><p>Preferences</p></div>
           <label>

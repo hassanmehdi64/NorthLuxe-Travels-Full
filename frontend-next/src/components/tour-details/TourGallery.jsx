@@ -10,7 +10,11 @@ import SafeImage from "../common/SafeImage";
  * Adapts to 1–5+ photos; renders nothing when there are none.
  */
 export default function TourGallery({ images = [], title }) {
-  const photos = [...new Set(images.filter(Boolean))];
+  // Photos that fail to load (dead links) drop out of the mosaic instead of leaving a blank tile.
+  const [failed, setFailed] = useState(() => new Set());
+  const all = [...new Set(images.filter(Boolean))];
+  const photos = all.filter((src) => !failed.has(src));
+  const markFailed = (src) => setFailed((prev) => (prev.has(src) ? prev : new Set(prev).add(src)));
   const [index, setIndex] = useState(null);
   const open = index !== null;
 
@@ -24,7 +28,14 @@ export default function TourGallery({ images = [], title }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [open, photos.length]);
 
-  if (!photos.length) return null;
+  if (!all.length) return null;
+  if (!photos.length) {
+    return (
+      <div className="media relative aspect-[16/7] overflow-hidden rounded-panel">
+        <SafeImage src="" alt="" label={title} />
+      </div>
+    );
+  }
 
   const shown = photos.slice(0, 5);
   const layout =
@@ -53,7 +64,7 @@ export default function TourGallery({ images = [], title }) {
             aria-label={`Open photo ${i + 1} of ${photos.length}`}
             className={`group media media-zoom relative min-h-0 ${tileClass(i)}`}
           >
-            <SafeImage src={src} alt="" loading={i === 0 ? "eager" : "lazy"} decoding="async" />
+            <SafeImage src={src} alt="" label={title} loading={i === 0 ? "eager" : "lazy"} decoding="async" onError={() => markFailed(src)} />
             <span className="absolute inset-0 bg-navy-950/0 transition-colors group-hover:bg-navy-950/10" />
           </button>
         ))}

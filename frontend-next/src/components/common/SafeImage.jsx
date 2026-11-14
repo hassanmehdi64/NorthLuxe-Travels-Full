@@ -16,7 +16,11 @@ export default function SafeImage({ src, alt = "", label, className = "", onErro
   // Errors that happen before hydration never reach React's onError.
   useEffect(() => {
     const img = imgRef.current;
-    if (img && img.complete && img.naturalWidth === 0 && src) setFailedSrc(src);
+    if (img && img.complete && img.naturalWidth === 0 && src) {
+      setFailedSrc(src);
+      onError?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [src]);
 
   if (failed) {
