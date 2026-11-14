@@ -568,10 +568,10 @@
 .brand-calendar-heading-icon { display: grid; place-items: center; width: 30px; height: 30px; flex-shrink: 0; border-radius: 8px; background: var(--color-brand-50); color: var(--color-brand-700); }
 .brand-calendar-heading strong { font-size: 0.8125rem; font-weight: 600; }
 .brand-calendar-heading p { margin-top: 1px; color: var(--color-subtle); font-size: 0.6875rem; }
-.brand-calendar-navigation { display: grid; grid-template-columns: 30px minmax(0, 1fr) 80px 30px; align-items: center; gap: 6px; padding: 12px 12px 6px; }
-.brand-calendar-navigation > button { display: grid; place-items: center; height: 32px; border-radius: 6px; color: var(--color-navy-900); background: var(--color-canvas); }
-.brand-calendar-navigation > button:hover { background: var(--color-brand-50); color: var(--color-brand-700); }
-.brand-calendar-navigation > button:disabled { opacity: .35; cursor: not-allowed; }
+.brand-calendar-navigation { display: grid; grid-template-columns: 30px minmax(0, 1fr) 84px 30px; align-items: center; gap: 6px; padding: 12px 12px 6px; }
+.brand-calendar-navigation > button:not(.select-trigger) { display: grid; place-items: center; height: 32px; border-radius: 6px; color: var(--color-navy-900); background: var(--color-canvas); }
+.brand-calendar-navigation > button:not(.select-trigger):hover { background: var(--color-brand-50); color: var(--color-brand-700); }
+.brand-calendar-navigation > button:not(.select-trigger):disabled { opacity: .35; cursor: not-allowed; }
 .brand-calendar-navigation .brand-search-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .brand-calendar-navigation :is(.brand-search-control, .select-trigger) { height: 32px; padding-inline: 8px; font-size: 0.75rem; font-weight: 600; }
 .brand-search-calendar .rdp-root {
