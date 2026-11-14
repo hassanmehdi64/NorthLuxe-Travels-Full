@@ -4,6 +4,7 @@ import { requireAuth, requireRole } from "../middleware/auth.js";
 import { Tour } from "../models/Tour.js";
 import { slugify } from "../utils/slugify.js";
 import { WRITABLE_FIELDS, pickWritable } from "../utils/fieldPolicy.js";
+import { expireStaleHolds, getAvailability, toSeatDate } from "../utils/bookingLifecycle.js";
 
 const router = express.Router();
 
@@ -95,6 +96,20 @@ router.get(
     });
     if (!tour) return res.status(404).json({ message: "Tour not found" });
     res.json({ item: toTourResponse(tour) });
+  }),
+);
+
+// Seats left on a travel date (Pending holds + Confirmed bookings count as taken).
+router.get(
+  "/:slug/availability",
+  asyncHandler(async (req, res) => {
+    const key = String(req.params.slug || "");
+    const tour = await Tour.findOne(/^[a-f0-9]{24}$/i.test(key) ? { _id: key, status: "published" } : { slug: key, status: "published" });
+    if (!tour) return res.status(404).json({ message: "Tour not found" });
+    const seatDate = toSeatDate(req.query.date);
+    if (!seatDate) return res.status(400).json({ message: "A valid date (YYYY-MM-DD) is required" });
+    await expireStaleHolds();
+    res.json(await getAvailability(tour, seatDate));
   }),
 );
 

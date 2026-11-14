@@ -1,6 +1,8 @@
 import { Booking } from "../models/Booking.js";
 import { Notification } from "../models/Notification.js";
 import { getStripe } from "./stripeClient.js";
+import { Tour } from "../models/Tour.js";
+import { addHistory, markSeatsReserved, reserveSeats } from "./bookingLifecycle.js";
 
 /**
  * Single source of truth for recording money received on a booking.
@@ -77,7 +79,39 @@ export const recordPayment = async ({
   booking.paymentStatus = derivePaymentStatus(booking.paidAmount, booking.totalAmount);
   booking.paymentVerified = booking.paidAmount > 0;
   booking.transactionReference = cleanReference || booking.transactionReference;
-  if (booking.status === "pending") booking.status = "confirmed";
+  // Any money received keeps the seats (a paid booking never expires).
+  markSeatsReserved(booking);
+  addHistory(booking, {
+    action: "payment",
+    note: `${booking.currency || "PKR"} ${normalizedAmount} via ${provider}${cleanReference ? ` (ref ${cleanReference})` : ""}`,
+    actor: recordedBy || { label: provider === "manual" ? "" : provider },
+  });
+  if (booking.status === "pending") {
+    addHistory(booking, { action: "confirmed", from: "pending", to: "confirmed", note: "Confirmed by payment", actor: recordedBy || "system" });
+    booking.status = "confirmed";
+  } else if (booking.status === "expired") {
+    // Money arrived after the 48h hold lapsed: take the seats back if they are still free.
+    try {
+      const tour = await Tour.findById(booking.tour?._id || booking.tour);
+      if (tour && booking.seatDate) {
+        await reserveSeats({ tour, seatDate: booking.seatDate, seats: booking.seatsHeld || booking.groupSize });
+        booking.seatState = "reserved";
+      }
+      addHistory(booking, { action: "confirmed", from: "expired", to: "confirmed", note: "Late payment; seats re-reserved", actor: recordedBy || "system" });
+      booking.status = "confirmed";
+    } catch (error) {
+      addHistory(booking, {
+        action: "note",
+        note: `Payment received after the hold expired, but seats are no longer available (${error.message}). Reschedule or refund.`,
+        actor: "system",
+      });
+      await Notification.create({
+        type: "Bookings",
+        title: "Payment needs action",
+        message: `${booking.bookingCode} paid after its hold expired and the date is now full. Reschedule or refund.`,
+      });
+    }
+  }
 
   await booking.save();
 

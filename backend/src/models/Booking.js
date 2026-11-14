@@ -126,6 +126,20 @@ const paymentHistorySchema = new mongoose.Schema(
   { _id: false },
 );
 
+// Audit log: every status change, payment and seat event on a booking.
+const historyEntrySchema = new mongoose.Schema(
+  {
+    at: { type: Date, default: Date.now },
+    action: { type: String, required: true }, // created | confirmed | cancelled | completed | reopened | expired | payment | note
+    from: { type: String, default: "" },
+    to: { type: String, default: "" },
+    note: { type: String, default: "" },
+    by: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    byName: { type: String, default: "" }, // "System" for automatic events, customer name for website actions
+  },
+  { _id: false },
+);
+
 const pricingBreakdownSchema = new mongoose.Schema(
   {
     days: { type: Number, default: 1 },
@@ -200,9 +214,16 @@ const bookingSchema = new mongoose.Schema(
     designedTour: { type: mongoose.Schema.Types.ObjectId, ref: "Tour", default: null },
     status: {
       type: String,
-      enum: ["pending", "confirmed", "completed", "cancelled"],
+      // pending: awaiting staff, seats held for 48h · expired: hold lapsed unpaid, seats released
+      enum: ["pending", "confirmed", "completed", "cancelled", "expired"],
       default: "pending",
     },
+    // Seat accounting (standard bookings with a travel date).
+    seatDate: { type: String, default: "" }, // YYYY-MM-DD
+    seatsHeld: { type: Number, default: 0, min: 0 },
+    seatState: { type: String, enum: ["none", "held", "reserved", "released"], default: "none" },
+    holdExpiresAt: { type: Date, default: null },
+    history: { type: [historyEntrySchema], default: [] },
     adminNote: { type: String, default: "" },
     source: { type: String, enum: ["website", "admin"], default: "website" },
   },
@@ -210,6 +231,7 @@ const bookingSchema = new mongoose.Schema(
 );
 
 bookingSchema.index({ bookingCode: 1, email: 1, status: 1 });
+bookingSchema.index({ status: 1, holdExpiresAt: 1 });
 
 export const Booking = mongoose.model("Booking", bookingSchema);
 

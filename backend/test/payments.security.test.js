@@ -1,7 +1,7 @@
 import { after, before, beforeEach, describe, test } from "node:test";
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
-import { createTour, startTestApp, TEST_JAZZCASH_SALT } from "./helpers/testApp.js";
+import { createTour, futureDate, startTestApp, TEST_JAZZCASH_SALT } from "./helpers/testApp.js";
 
 let app;
 let Booking;
@@ -22,6 +22,7 @@ const publicBooking = async (tour, extra = {}) =>
       customerName: "Test Customer",
       email: "customer@test.local",
       adults: 2,
+      travelDate: futureDate(),
       paymentMethod: "pay_on_arrival",
       ...extra,
     },

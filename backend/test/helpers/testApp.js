@@ -91,6 +91,9 @@ export const startTestApp = async () => {
   return { baseUrl, request, createUser, stop };
 };
 
+/** A travel date N days from today (YYYY-MM-DD). */
+export const futureDate = (days = 30) => new Date(Date.now() + days * 86400000).toISOString().slice(0, 10);
+
 /** A minimal published tour (price is a per-day rate). */
 export const createTour = async (overrides = {}) => {
   const { Tour } = await import("../../src/models/Tour.js");

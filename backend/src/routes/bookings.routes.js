@@ -9,6 +9,15 @@ import { generateBookingCode } from "../utils/bookingCode.js";
 import { calculateBookingQuote } from "../utils/pricing.js";
 import { WRITABLE_FIELDS, pickWritable } from "../utils/fieldPolicy.js";
 import { recordPayment, verifyStripeIntentForBooking } from "../utils/payments.js";
+import {
+  addHistory,
+  allowedActions,
+  applyTransition,
+  describePayment,
+  expireStaleHolds,
+  holdSeatsForNewBooking,
+  releaseSeats,
+} from "../utils/bookingLifecycle.js";
 
 // Payment slips must be an uploaded image (data URL) or an https link; anything else
 // (e.g. javascript: URLs) is dropped. ~7 MB cap on the encoded string.
@@ -136,6 +145,13 @@ const toBookingResponse = (booking) => ({
     slipName: booking.manualPayment?.slipName || "",
   },
   paymentHistory: booking.paymentHistory || [],
+  paymentLabel: describePayment(booking),
+  seatState: booking.seatState || "none",
+  seatDate: booking.seatDate || "",
+  seatsHeld: booking.seatsHeld || 0,
+  holdExpiresAt: booking.holdExpiresAt || null,
+  history: booking.history || [],
+  allowedActions: allowedActions(booking.status),
   pricingBreakdown: booking.pricingBreakdown || {},
   bookingType: booking.bookingType || "standard",
   identity: booking.identity || {},
@@ -195,6 +211,18 @@ router.post(
     if (!payload.customerName?.trim() || !payload.email?.trim()) {
       return res.status(400).json({ message: "Customer name and email are required" });
     }
+    if (bookingType === "standard") {
+      const travel = payload.travelDate ? new Date(payload.travelDate) : null;
+      const today = new Date();
+      today.setUTCHours(0, 0, 0, 0);
+      if (!travel || Number.isNaN(travel.getTime())) {
+        return res.status(400).json({ message: "Please choose a travel date." });
+      }
+      if (travel < today) {
+        return res.status(400).json({ message: "The travel date can't be in the past." });
+      }
+    }
+    await expireStaleHolds();
 
     let bookingCode = generateBookingCode();
     while (await Booking.exists({ bookingCode })) {
@@ -287,7 +315,7 @@ router.post(
         }, tour?.title || "")
       : {};
 
-    const booking = await Booking.create({
+    const booking = new Booking({
       bookingCode,
       tour: tour?._id || null,
       customerName: payload.customerName,
@@ -330,6 +358,18 @@ router.post(
       status: "pending",
       paymentStatus,
     });
+
+    // Hold seats for 48h (atomic; 409 if the date is full), then save.
+    await holdSeatsForNewBooking({ booking, tour });
+    addHistory(booking, { action: "created", to: "pending", note: "Booked on the website", actor: { label: booking.customerName } });
+    try {
+      await booking.save();
+    } catch (error) {
+      if (booking.seatState === "held") {
+        await releaseSeats({ tourId: tour?._id, seatDate: booking.seatDate, seats: booking.seatsHeld });
+      }
+      throw error;
+    }
 
     await Notification.create({
       type: "Bookings",
@@ -391,6 +431,7 @@ router.use(requireAuth, requireRole("Admin"));
 router.get(
   "/",
   asyncHandler(async (req, res) => {
+    await expireStaleHolds();
     const { status, q } = req.query;
     const query = {};
     if (status && status !== "all") query.status = status;
@@ -409,9 +450,28 @@ router.get(
 router.get(
   "/:id",
   asyncHandler(async (req, res) => {
+    await expireStaleHolds();
     const item = await Booking.findById(req.params.id).populate(["tour", "designedTour"]);
     if (!item) return res.status(404).json({ message: "Booking not found" });
     res.json({ item: toBookingResponse(item) });
+  }),
+);
+
+// Status changes go through here only: validated transitions, seat moves and history.
+router.post(
+  "/:id/transition",
+  asyncHandler(async (req, res) => {
+    const action = String(req.body?.action || "");
+    const note = String(req.body?.note || "").trim();
+    const booking = await Booking.findById(req.params.id).populate(["tour", "designedTour"]);
+    if (!booking) return res.status(404).json({ message: "Booking not found" });
+    await applyTransition({ booking, action, actor: req.user, note });
+    await Notification.create({
+      type: "Bookings",
+      title: "Booking Updated",
+      message: `${booking.bookingCode} is now ${booking.status} (by ${req.user.name}).`,
+    });
+    res.json({ item: toBookingResponse(booking) });
   }),
 );
 
@@ -471,6 +531,9 @@ router.delete(
   asyncHandler(async (req, res) => {
     const deleted = await Booking.findByIdAndDelete(req.params.id);
     if (!deleted) return res.status(404).json({ message: "Booking not found" });
+    if (["held", "reserved"].includes(deleted.seatState)) {
+      await releaseSeats({ tourId: deleted.tour, seatDate: deleted.seatDate, seats: deleted.seatsHeld });
+    }
     res.status(204).send();
   }),
 );

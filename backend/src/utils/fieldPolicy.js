@@ -18,8 +18,8 @@ export const WRITABLE_FIELDS = Object.freeze({
   booking: {
     // Admin edits through PATCH /bookings/:id. Payment fields are deliberately absent:
     // payments are recorded only via POST /payments/confirm (audited) or verified providers.
+    // status is NOT here: use POST /bookings/:id/transition (validated + logged + seats).
     admin: [
-      "status",
       "adminNote",
       "notes",
       "customItinerary",

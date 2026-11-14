@@ -1,6 +1,6 @@
 import { after, before, describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { createTour, startTestApp } from "./helpers/testApp.js";
+import { createTour, futureDate, startTestApp } from "./helpers/testApp.js";
 
 let app;
 let User;
@@ -76,7 +76,7 @@ describe("Other update endpoints use field whitelists", () => {
   test("PATCH /api/bookings/:id ignores payment fields", async () => {
     const tour = await createTour();
     const created = await app.request("POST", "/api/bookings/public", {
-      body: { tourId: tour._id.toString(), customerName: "C", email: "c@test.local", adults: 1 },
+      body: { tourId: tour._id.toString(), customerName: "C", email: "c@test.local", adults: 1, travelDate: futureDate() },
     });
     const { token } = await app.createUser({ role: "Admin" });
     const res = await app.request("PATCH", `/api/bookings/${created.json.item.id}`, {
