@@ -31,22 +31,30 @@ const persistStoredUser = (user) => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(() =>
-    typeof window === "undefined" ? null : localStorage.getItem(TOKEN_KEY),
-  );
-  const [user, setUser] = useState(() => {
-    if (typeof window === "undefined") return null;
-    const raw = localStorage.getItem(USER_KEY);
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return null;
-    }
-  });
-  const [loading, setLoading] = useState(Boolean(token));
+  // Server and first client render must match: start "checking" with no session,
+  // then read storage after mount (avoids hydration error #418 on every admin page).
+  const [token, setToken] = useState(null);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [storageRead, setStorageRead] = useState(false);
 
   useEffect(() => {
+    let storedToken = null;
+    let storedUser = null;
+    try {
+      storedToken = localStorage.getItem(TOKEN_KEY);
+      const raw = localStorage.getItem(USER_KEY);
+      storedUser = raw ? JSON.parse(raw) : null;
+    } catch {
+      storedUser = null;
+    }
+    setToken(storedToken);
+    setUser(storedUser);
+    setStorageRead(true);
+  }, []);
+
+  useEffect(() => {
+    if (!storageRead) return;
     const bootstrap = async () => {
       if (!token) {
         setLoading(false);
@@ -69,7 +77,7 @@ export const AuthProvider = ({ children }) => {
       }
     };
     bootstrap();
-  }, [token]);
+  }, [token, storageRead]);
 
   const login = async (email, password) => {
     const data = await apiClient.post("/auth/login", { email, password }).then(unwrap);

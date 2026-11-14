@@ -99,16 +99,14 @@ const NavItems = ({ items, pathname, collapsed, badgeCounts, onNavigate }) => (
                 >
                   <item.icon size={17} aria-hidden="true" className="shrink-0" />
                   {!collapsed && <span className="truncate">{item.label}</span>}
-                  {count > 0 && (
-                    <span
-                      className={cn(
-                        "grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1.5 text-[11px] font-bold leading-none text-white",
-                        collapsed ? "absolute right-1 top-0.5 h-4 min-w-4 px-1 text-[10px]" : "ml-auto",
-                      )}
-                    >
-                      {count > 99 ? "99+" : count}
-                    </span>
-                  )}
+                  {count > 0 &&
+                    (collapsed ? (
+                      <span aria-hidden="true" className="absolute right-2 top-1.5 h-2 w-2 rounded-full bg-brand ring-2 ring-surface" />
+                    ) : (
+                      <span className="ml-auto grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1.5 text-xs font-bold leading-none text-white">
+                        {count > 99 ? "99+" : count}
+                      </span>
+                    ))}
                 </Link>
               );
               return <li key={item.id}>{collapsed ? <Tooltip content={item.label} side="right">{link}</Tooltip> : link}</li>;
@@ -282,13 +280,15 @@ const Sidebar = ({ collapsed, mobileOpen, onCloseMobile }) => {
       {/* Desktop: persistent, full height, collapsible to an icon rail */}
       <aside
         className={cn(
-          "sticky top-0 hidden h-dvh shrink-0 flex-col border-r border-line bg-surface transition-[width] duration-200 lg:flex",
+          "hidden shrink-0 self-stretch border-r border-line bg-surface transition-[width] duration-200 lg:block",
           collapsed ? "w-[72px]" : "w-60",
         )}
       >
-        <Brand collapsed={collapsed} />
-        <NavItems items={visibleNavItems} pathname={pathname} collapsed={collapsed} badgeCounts={badgeCounts} />
-        <SignOut collapsed={collapsed} onLogout={logout} />
+        <div className="sticky top-0 flex h-dvh flex-col">
+          <Brand collapsed={collapsed} />
+          <NavItems items={visibleNavItems} pathname={pathname} collapsed={collapsed} badgeCounts={badgeCounts} />
+          <SignOut collapsed={collapsed} onLogout={logout} />
+        </div>
       </aside>
 
       {/* Phones/tablets: drawer with focus trap, Escape and a close button */}

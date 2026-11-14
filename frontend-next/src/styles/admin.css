@@ -48,7 +48,8 @@
 /* ---------- 2. Structural pieces ---------- */
 @layer components {
   /* Tables: hairline row separators only, readable 12px headers, row hover. */
-  .admin-table-wrap { width: 100%; overflow-x: auto; }
+  /* relative: absolutely positioned descendants (e.g. sr-only inputs) must be clipped too */
+  .admin-table-wrap { position: relative; width: 100%; overflow-x: auto; }
   .admin-table { width: 100%; min-width: 640px; border-collapse: separate; border-spacing: 0; font-size: 0.875rem; }
   .admin-table th {
     padding: 10px 16px;

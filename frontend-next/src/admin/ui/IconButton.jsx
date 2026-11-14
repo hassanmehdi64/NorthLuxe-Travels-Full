@@ -34,7 +34,7 @@ export const IconButton = forwardRef(function IconButton(
     <>
       <Icon size={iconSize} aria-hidden="true" />
       {badge ? (
-        <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-brand px-1 text-[10px] font-bold leading-none text-white">
+        <span className="absolute -right-1.5 -top-1.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-brand px-1 text-xs font-bold leading-none text-white ring-2 ring-surface">
           {badge > 99 ? "99+" : badge}
         </span>
       ) : null}
