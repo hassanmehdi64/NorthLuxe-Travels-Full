@@ -1,17 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "@/lib/router";
-import {
-  Mail,
-  MessageSquare,
-  Search,
-  Trash2,
-  CheckCircle2,
-  Clock,
-  Filter,
-  User,
-  Archive,
-  Inbox,
-} from "lucide-react";
+import { Eye, Inbox, Search, Trash2 } from "lucide-react";
 import MessageDetail from "./MessageDetail";
 import {
   useContacts,
@@ -22,6 +11,20 @@ import {
   useUpdateNotification,
 } from "../../hooks/useCms";
 import { useToast } from "../../context/ToastContext";
+import { getApiErrorMessage } from "../../lib/apiError";
+import {
+  Badge,
+  Card,
+  EmptyState,
+  ErrorState,
+  Input,
+  PageHeader,
+  RowActions,
+  Select,
+  SkeletonRows,
+  StatusBadge,
+  useConfirm,
+} from "../ui";
 
 const isRecentlyReceived = (value) => {
   if (!value) return false;
@@ -31,9 +34,20 @@ const isRecentlyReceived = (value) => {
   return Date.now() - at <= threeDaysMs;
 };
 
+const receivedAt = (msg) => msg?.date || msg?.createdAt;
+
+const formatDate = (value) => {
+  if (!value) return "—";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "—" : date.toLocaleDateString();
+};
+
+const statusOf = (msg) => msg?.status || "Unread";
+
 const ContactMessages = () => {
   const toast = useToast();
-  const { data: messages = [] } = useContacts();
+  const confirm = useConfirm();
+  const { data: messages = [], isLoading, isError, refetch } = useContacts();
   const { data: notifications = [] } = useNotifications();
   const deleteContact = useDeleteContact();
   const updateContact = useUpdateContact();
@@ -42,7 +56,9 @@ const ContactMessages = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [searchTerm, setSearchTerm] = useState(() => searchParams.get("search") || "");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [selectedMessage, setSelectedMessage] = useState(null);
+  const [replyError, setReplyError] = useState("");
 
   useEffect(() => {
     const next = searchParams.get("search") || "";
@@ -59,22 +75,20 @@ const ContactMessages = () => {
   }, [searchParams, searchTerm, setSearchParams]);
 
   // --- HANDLERS ---
-  const deleteMessage = (id) => {
-    toast.confirm(
-      "Delete Message?",
-      "This will permanently remove this inquiry.",
-      () =>
-        deleteContact.mutate(id, {
-          onSuccess: () => {
-            toast.success("Deleted", "Inquiry removed successfully.");
-            if (selectedMessage?.id === id) setSelectedMessage(null);
-          },
-        }),
-      {
-        confirmLabel: "Delete",
-        tone: "danger",
+  const deleteMessage = async (id) => {
+    const ok = await confirm({
+      title: "Delete inquiry?",
+      description: "This will permanently remove this inquiry.",
+      confirmLabel: "Delete inquiry",
+      cancelLabel: "Keep inquiry",
+    });
+    if (!ok) return;
+    deleteContact.mutate(id, {
+      onSuccess: () => {
+        toast.success("Deleted", "Inquiry removed successfully.");
+        if (selectedMessage?.id === id) setSelectedMessage(null);
       },
-    );
+    });
   };
 
   const markAsStatus = (id, newStatus) => {
@@ -84,7 +98,23 @@ const ContactMessages = () => {
     }
   };
 
-  const filteredMessages = messages
+  const sendReply = (id, reply, { onSuccess } = {}) => {
+    setReplyError("");
+    replyContact.mutate(
+      { id, message: reply },
+      {
+        onSuccess: (item) => {
+          if (item) setSelectedMessage((prev) => (prev?.id === id ? { ...prev, ...item } : prev));
+          onSuccess?.();
+        },
+        onError: (error) => {
+          setReplyError(getApiErrorMessage(error, "The reply could not be saved. Please try again."));
+        },
+      },
+    );
+  };
+
+  const searchedMessages = messages
     .filter((m) => {
       const subject = String(m.subject || "").toLowerCase();
       const isCustomPlan = subject.includes("custom tour plan request") || subject.includes("custom plan");
@@ -103,7 +133,16 @@ const ContactMessages = () => {
       return bTime - aTime;
     });
 
+  const statusOptions = useMemo(
+    () => Array.from(new Set(messages.map(statusOf))).sort(),
+    [messages],
+  );
+
+  const filteredMessages =
+    statusFilter === "all" ? searchedMessages : searchedMessages.filter((m) => statusOf(m) === statusFilter);
+
   const openMessage = (msg) => {
+    setReplyError("");
     setSelectedMessage(msg);
     const status = String(msg?.status || "").toLowerCase();
     if (status === "unread" || status === "new" || !status) {
@@ -125,23 +164,148 @@ const ContactMessages = () => {
     });
   }, [notifications, updateNotification]);
 
+  const rowActions = (msg) => [
+    { label: "Open inquiry", icon: Eye, onClick: () => openMessage(msg) },
+    { label: "Delete inquiry", icon: Trash2, danger: true, onClick: () => deleteMessage(msg.id) },
+  ];
+
+  const isFiltered = Boolean(searchTerm.trim()) || statusFilter !== "all";
+
+  const renderBody = () => {
+    if (isLoading) return <SkeletonRows rows={6} />;
+    if (isError) return <ErrorState description="Inquiries could not be loaded." onRetry={() => refetch()} />;
+    if (!filteredMessages.length) {
+      return (
+        <EmptyState
+          icon={Inbox}
+          title={isFiltered ? "No inquiries match your filters" : "No inquiries yet"}
+          description={isFiltered ? "Try a different search or status." : "Messages sent from the contact form will appear here."}
+        />
+      );
+    }
+
+    return (
+      <>
+        {/* Phones: stacked list */}
+        <ul className="divide-y divide-line md:hidden">
+          {filteredMessages.map((msg) => (
+            <li key={msg.id} className="flex items-start gap-2 px-4 py-3">
+              <button
+                type="button"
+                onClick={() => openMessage(msg)}
+                className="min-w-0 flex-1 rounded-control text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <span className="truncate text-sm font-semibold text-navy-900">{msg.sender || "Guest"}</span>
+                  <span className="ml-auto shrink-0 text-xs text-subtle">{formatDate(receivedAt(msg))}</span>
+                </span>
+                <span className="mt-0.5 block truncate text-[13px] text-body">{msg.subject || "No subject"}</span>
+                <span className="mt-2 flex flex-wrap gap-1.5">
+                  <StatusBadge status={statusOf(msg)} />
+                  {isRecentlyReceived(receivedAt(msg)) && <Badge tone="brand">New</Badge>}
+                </span>
+              </button>
+              <RowActions actions={rowActions(msg)} />
+            </li>
+          ))}
+        </ul>
+
+        {/* Desktop: table */}
+        <div className="admin-table-wrap hidden md:block">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Subject</th>
+                <th scope="col">Received</th>
+                <th scope="col">Status</th>
+                <th scope="col" className="w-24"><span className="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredMessages.map((msg) => (
+                <tr
+                  key={msg.id}
+                  onClick={() => openMessage(msg)}
+                  className={selectedMessage?.id === msg.id ? "cursor-pointer bg-canvas" : "cursor-pointer"}
+                >
+                  <td className="max-w-56">
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        openMessage(msg);
+                      }}
+                      className="cell-primary block max-w-full truncate rounded-control text-left hover:text-brand-700"
+                    >
+                      {msg.sender || "Guest"}
+                    </button>
+                    {msg.email && <span className="block truncate text-xs text-subtle">{msg.email}</span>}
+                  </td>
+                  <td className="max-w-80">
+                    <span className="block truncate">{msg.subject || "No subject"}</span>
+                  </td>
+                  <td className="whitespace-nowrap">{formatDate(receivedAt(msg))}</td>
+                  <td>
+                    <span className="flex flex-wrap gap-1.5">
+                      <StatusBadge status={statusOf(msg)} />
+                      {isRecentlyReceived(receivedAt(msg)) && <Badge tone="brand">New</Badge>}
+                    </span>
+                  </td>
+                  <td onClick={(event) => event.stopPropagation()}>
+                    <RowActions actions={rowActions(msg)} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </>
+    );
+  };
+
   return (
-    <div className="admin-inbox">
-      <div className={`inbox-list ${selectedMessage ? "is-selected" : ""}`}>
-        <div className="inbox-heading"><Inbox size={18} /><h1 className="admin-page-title">Inbox</h1></div>
-        <input type="search" aria-label="Search inquiries" placeholder="Search inquiries" className="inbox-search" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} />
-        {filteredMessages.map((msg) => <button type="button" key={msg.id} onClick={() => openMessage(msg)} className="brand-card inbox-message-card" data-selected={selectedMessage?.id === msg.id}>
-          <div className="inbox-message-heading"><span>{msg.sender || "Guest"}</span><time>{new Date(msg.date || msg.createdAt).toLocaleDateString()}</time></div>
-          <h3 className="truncate">{msg.subject}</h3>
-          <p className="line-clamp-2">{msg.message}</p>
-          <span className="admin-soft-badge admin-soft-badge-muted mt-2">{msg.status || "Unread"}</span>
-          {isRecentlyReceived(msg.date || msg.createdAt) && <span className="admin-soft-badge admin-soft-badge-primary ml-2">New</span>}
-        </button>)}
-        {!filteredMessages.length && <div className="brand-card inbox-empty">No inquiries match your search.</div>}
-      </div>
-      <div className={`inbox-detail ${!selectedMessage ? "is-empty" : ""}`}>
-        {selectedMessage ? <MessageDetail message={selectedMessage} onClose={() => setSelectedMessage(null)} onDelete={deleteMessage} onMarkReplied={(id, reply) => replyContact.mutate({ id, message: reply })} /> : <div className="brand-card inbox-empty"><Mail size={24} /><p>Select an inquiry to read or reply.</p></div>}
-      </div>
+    <div>
+      <PageHeader title="Inquiries" description="Messages sent through the website contact form." />
+
+      <Card flush>
+        <div className="flex flex-col gap-2 border-b border-line p-3 sm:flex-row sm:items-center">
+          <div className="relative min-w-0 flex-1">
+            <Search size={15} aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-subtle" />
+            <Input
+              type="search"
+              aria-label="Search inquiries"
+              placeholder="Search by name, email or subject"
+              className="w-full pl-9"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
+          </div>
+          <Select
+            aria-label="Filter by status"
+            className="sm:w-44"
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+          >
+            <option value="all">All statuses</option>
+            {statusOptions.map((status) => (
+              <option key={status} value={status}>{status}</option>
+            ))}
+          </Select>
+        </div>
+        {renderBody()}
+      </Card>
+
+      <MessageDetail
+        message={selectedMessage}
+        onClose={() => setSelectedMessage(null)}
+        onDelete={deleteMessage}
+        onStatusChange={markAsStatus}
+        onReply={sendReply}
+        isReplying={replyContact.isPending}
+        replyError={replyError}
+        onReplyErrorClear={() => setReplyError("")}
+      />
     </div>
   );
 };

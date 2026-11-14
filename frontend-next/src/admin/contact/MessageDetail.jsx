@@ -1,50 +1,114 @@
 import React, { useState } from "react";
-import {
-  ArrowLeft,
-  Trash2,
-  Send,
-  Phone,
-  Mail,
-  Calendar,
-  CheckCircle2,
-  RotateCcw,
-} from "lucide-react";
+import { Send, Trash2 } from "lucide-react";
+import { Badge, Button, DetailList, Drawer, Field, Select, StatusBadge, Textarea } from "../ui";
 
-const MessageDetail = ({ message, onClose, onDelete, onMarkReplied }) => {
+// Statuses the inquiry model accepts; the current value is always kept as an option.
+const STATUS_OPTIONS = ["Unread", "Replied"];
+
+const formatDateTime = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toLocaleString();
+};
+
+const ReplyForm = ({ message, onReply, replyError, onReplyErrorClear }) => {
   const [reply, setReply] = useState("");
-  const [isReplyOpen, setIsReplyOpen] = useState(false);
+  const [localError, setLocalError] = useState("");
 
   const handleSend = (e) => {
     e.preventDefault();
-    if (!reply.trim()) return;
-    onMarkReplied(message.id, reply);
-    setReply("");
-    setIsReplyOpen(false);
+    if (!reply.trim()) {
+      setLocalError("Write a reply before sending.");
+      return;
+    }
+    onReply(message.id, reply, { onSuccess: () => setReply("") });
   };
 
   return (
-    <section className="brand-card inbox-message-detail" aria-label="Inquiry details">
-      <div className="inbox-detail-toolbar">
-        <button type="button" onClick={onClose} className="admin-soft-button-ghost"><ArrowLeft size={14} />Inbox</button>
-        <button type="button" onClick={() => onDelete(message.id)} className="admin-soft-icon-button" data-tone="danger" aria-label="Delete inquiry"><Trash2 size={15} /></button>
-      </div>
-      <div className="inbox-detail-body">
-        <h2>{message.sender || "Guest"}</h2>
-        <div className="inbox-contact-meta">
-          {message.email && <span><Mail size={12} />{message.email}</span>}
-          {message.phone && <span><Phone size={12} />{message.phone}</span>}
-          {(message.date || message.createdAt) && <span><Calendar size={12} />{new Date(message.date || message.createdAt).toLocaleDateString()}</span>}
+    <form id="inquiry-reply-form" onSubmit={handleSend} className="border-t border-line pt-5">
+      <Field
+        label="Reply"
+        error={localError || replyError}
+        hint="Replies are saved to this inquiry; email delivery is coming soon."
+      >
+        <Textarea
+          rows={6}
+          placeholder={`Write a reply to ${message.sender || "the guest"}`}
+          value={reply}
+          onChange={(event) => {
+            setReply(event.target.value);
+            if (localError) setLocalError("");
+            if (replyError) onReplyErrorClear?.();
+          }}
+        />
+      </Field>
+    </form>
+  );
+};
+
+const MessageDetail = ({ message, onClose, onDelete, onStatusChange, onReply, isReplying, replyError, onReplyErrorClear }) => {
+  const status = message?.status || "Unread";
+  const statusOptions = STATUS_OPTIONS.includes(status) ? STATUS_OPTIONS : [status, ...STATUS_OPTIONS];
+
+  return (
+    <Drawer
+      open={Boolean(message)}
+      onOpenChange={(open) => { if (!open) onClose(); }}
+      size="lg"
+      title={message?.subject || "Inquiry"}
+      description={message ? `From ${message.sender || "Guest"}` : undefined}
+      footer={message && (
+        <>
+          <Button variant="danger" icon={Trash2} className="mr-auto" onClick={() => onDelete(message.id)}>
+            Delete
+          </Button>
+          <Button variant="secondary" onClick={onClose}>Close</Button>
+          <Button variant="primary" type="submit" form="inquiry-reply-form" icon={Send} loading={isReplying}>
+            Send reply
+          </Button>
+        </>
+      )}
+    >
+      {message && (
+        <div className="space-y-5">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <StatusBadge status={status} />
+              {message.urgency && <Badge>{message.urgency} priority</Badge>}
+            </div>
+            <Field label="Status" className="w-40">
+              <Select value={status} onChange={(event) => onStatusChange(message.id, event.target.value)}>
+                {statusOptions.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </Select>
+            </Field>
+          </div>
+
+          <DetailList
+            items={[
+              ["Name", message.sender || "Guest"],
+              ["Email", message.email ? <a href={`mailto:${message.email}`} className="text-brand-700 hover:underline">{message.email}</a> : ""],
+              ["Phone", message.phone ? <a href={`tel:${message.phone}`} className="text-brand-700 hover:underline">{message.phone}</a> : ""],
+              ["Received", formatDateTime(message.date || message.createdAt)],
+            ]}
+          />
+
+          <div>
+            <h3 className="text-[13px] font-semibold text-navy-900">Message</h3>
+            <p className="mt-1.5 whitespace-pre-line break-words text-sm leading-relaxed text-body">{message.message}</p>
+          </div>
+
+          <ReplyForm
+            key={message.id}
+            message={message}
+            onReply={onReply}
+            replyError={replyError}
+            onReplyErrorClear={onReplyErrorClear}
+          />
         </div>
-        <div className="inbox-message-content"><h3>{message.subject}</h3><p>{message.message}</p></div>
-        <div className="mt-4 flex flex-wrap gap-2"><span className="admin-soft-badge admin-soft-badge-muted">{message.status || "Unread"}</span>{message.urgency && <span className="admin-soft-badge admin-soft-badge-muted">{message.urgency} priority</span>}</div>
-      </div>
-      <div className="inbox-reply">
-        {!isReplyOpen ? <button type="button" onClick={() => setIsReplyOpen(true)} className="admin-soft-button"><Send size={14} />Write reply</button> : <form onSubmit={handleSend}>
-          <textarea aria-label="Reply message" placeholder="Type your reply" value={reply} onChange={(event) => setReply(event.target.value)} />
-          <div className="inbox-reply-actions"><button type="button" onClick={() => { setReply(""); setIsReplyOpen(false); }} className="admin-soft-button-ghost">Cancel</button><button type="submit" disabled={!reply.trim()} className="admin-soft-button"><Send size={14} />Send reply</button></div>
-        </form>}
-      </div>
-    </section>
+      )}
+    </Drawer>
   );
 };
 

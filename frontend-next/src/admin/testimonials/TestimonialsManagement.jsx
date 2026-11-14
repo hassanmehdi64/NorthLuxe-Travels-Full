@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Edit2, Plus, Star, Trash2 } from "lucide-react";
+import { Edit2, MessageSquareQuote, Plus, Star, Trash2 } from "lucide-react";
 import {
   useAdminTestimonials,
   useCreateTestimonial,
@@ -8,6 +8,22 @@ import {
 } from "../../hooks/useCms";
 import { useToast } from "../../context/ToastContext";
 import { getApiErrorMessage } from "../../lib/apiError";
+import {
+  Button,
+  Card,
+  Drawer,
+  EmptyState,
+  ErrorState,
+  Field,
+  Input,
+  PageHeader,
+  RowActions,
+  Select,
+  SkeletonRows,
+  StatusBadge,
+  Textarea,
+  useConfirm,
+} from "../ui";
 
 const initialForm = {
   name: "",
@@ -21,33 +37,82 @@ const initialForm = {
   status: "draft",
 };
 
+const FORM_ID = "testimonial-form";
+
+const formatDate = (value) => {
+  if (!value) return "—";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "—" : date.toLocaleDateString();
+};
+
+const initials = (name = "") =>
+  String(name).trim().split(/\s+/).slice(0, 2).map((part) => part.charAt(0).toUpperCase()).join("") || "NL";
+
+const GuestAvatar = ({ item }) => {
+  const src = item.photo || item.avatar;
+  if (!src) {
+    return (
+      <span aria-hidden="true" className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-50 text-xs font-semibold text-brand-700">
+        {initials(item.name)}
+      </span>
+    );
+  }
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={src} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />;
+};
+
+const Rating = ({ value }) => (
+  <span className="inline-flex items-center gap-1 text-sm font-semibold text-navy-900">
+    <Star size={14} fill="currentColor" aria-hidden="true" className="text-sand" />
+    <span>{value}</span>
+    <span className="sr-only">out of 5</span>
+  </span>
+);
+
 const TestimonialsManagement = () => {
   const toast = useToast();
-  const { data: testimonials = [] } = useAdminTestimonials();
+  const confirm = useConfirm();
+  const { data: testimonials = [], isLoading, isError, refetch } = useAdminTestimonials();
   const createTestimonial = useCreateTestimonial();
   const updateTestimonial = useUpdateTestimonial();
   const deleteTestimonial = useDeleteTestimonial();
 
   const [editingId, setEditingId] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [pendingDeleteId, setPendingDeleteId] = useState("");
   const [form, setForm] = useState(initialForm);
+  const [errors, setErrors] = useState({});
 
   const sortedItems = useMemo(
     () => [...testimonials].sort((a, b) => new Date(b.date) - new Date(a.date)),
     [testimonials],
   );
 
+  const setField = (key, value) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+    if (errors[key]) setErrors((prev) => ({ ...prev, [key]: undefined }));
+  };
+
   const resetForm = () => {
     setEditingId("");
     setForm(initialForm);
+    setErrors({});
     setIsFormOpen(false);
+  };
+
+  const openCreate = () => {
+    setEditingId("");
+    setForm(initialForm);
+    setErrors({});
+    setIsFormOpen(true);
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!form.name.trim() || !form.message.trim()) {
-      toast.error("Validation error", "Name and review text are required.");
+    const nextErrors = {};
+    if (!form.name.trim()) nextErrors.name = "Name is required.";
+    if (!form.message.trim()) nextErrors.message = "Review text is required.";
+    if (Object.keys(nextErrors).length) {
+      setErrors(nextErrors);
       return;
     }
 
@@ -68,6 +133,7 @@ const TestimonialsManagement = () => {
   const startEdit = (item) => {
     setIsFormOpen(true);
     setEditingId(item.id);
+    setErrors({});
     setForm({
       name: item.name || "",
       role: item.role || "Guest",
@@ -81,236 +147,163 @@ const TestimonialsManagement = () => {
     });
   };
 
-  const handleDelete = async (id) => {
-    if (pendingDeleteId !== id) {
-      setPendingDeleteId(id);
-      toast.info("Confirm delete", "Click delete again to remove this testimonial.");
-      return;
-    }
+  const handleDelete = async (item) => {
+    const ok = await confirm({
+      title: "Delete testimonial?",
+      description: `The review from ${item.name || "this guest"} will be removed from the website.`,
+      confirmLabel: "Delete testimonial",
+      cancelLabel: "Keep testimonial",
+    });
+    if (!ok) return;
     try {
-      await deleteTestimonial.mutateAsync(id);
+      await deleteTestimonial.mutateAsync(item.id);
       toast.success("Deleted", "Testimonial removed.");
-      if (editingId === id) resetForm();
-      setPendingDeleteId("");
+      if (editingId === item.id) resetForm();
     } catch (error) {
       toast.error("Delete failed", getApiErrorMessage(error, "Please try again."));
     }
   };
 
-  return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="admin-page-title">
-          Testimonials
-        </h1>
-        <p className="text-sm font-medium text-slate-500">
-          Manage guest reviews shown in &ldquo;What Our Guests Say&rdquo;.
-        </p>
-      </div>
+  const actionsFor = (item) => [
+    { label: "Edit testimonial", icon: Edit2, onClick: () => startEdit(item) },
+    { label: "Delete testimonial", icon: Trash2, danger: true, onClick: () => handleDelete(item) },
+  ];
 
-      <div className="flex justify-end">
-        <button
-          type="button"
-          onClick={() => {
-            setEditingId("");
-            setForm(initialForm);
-            setIsFormOpen((value) => !value);
-          }}
-          className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-slate-900 text-white text-sm font-bold"
-        >
-          <Plus size={16} />
-          {isFormOpen ? "Close Form" : "Add Testimonial"}
-        </button>
-      </div>
+  const place = (item) => [item.city, item.country].filter(Boolean).join(", ") || item.role;
+  const isSaving = createTestimonial.isPending || updateTestimonial.isPending;
 
-      {isFormOpen ? (
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white border border-slate-100 rounded-[2rem] p-6 grid md:grid-cols-2 gap-4"
-      >
-        <label>
-          <span className="ql-label">Name</span>
-          <input
-            className="ql-input"
-            value={form.name}
-            onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-          />
-        </label>
-        <label>
-          <span className="ql-label">Role</span>
-          <input
-            className="ql-input"
-            value={form.role}
-            onChange={(e) => setForm((prev) => ({ ...prev, role: e.target.value }))}
-          />
-        </label>
-        <label>
-          <span className="ql-label">City</span>
-          <input
-            className="ql-input"
-            value={form.city}
-            onChange={(e) => setForm((prev) => ({ ...prev, city: e.target.value }))}
-          />
-        </label>
-        <label>
-          <span className="ql-label">Country</span>
-          <input
-            className="ql-input"
-            value={form.country}
-            onChange={(e) => setForm((prev) => ({ ...prev, country: e.target.value }))}
-          />
-        </label>
-        <label>
-          <span className="ql-label">Rating (1-5)</span>
-          <input
-            type="number"
-            min={1}
-            max={5}
-            className="ql-input"
-            value={form.rating}
-            onChange={(e) => setForm((prev) => ({ ...prev, rating: Number(e.target.value) }))}
-          />
-        </label>
-        <label>
-          <span className="ql-label">Review Date</span>
-          <input
-            type="date"
-            className="ql-input"
-            value={form.date}
-            onChange={(e) => setForm((prev) => ({ ...prev, date: e.target.value }))}
-          />
-        </label>
-        <label className="md:col-span-2">
-          <span className="ql-label">Photo URL (optional)</span>
-          <input
-            className="ql-input"
-            value={form.photo}
-            onChange={(e) => setForm((prev) => ({ ...prev, photo: e.target.value }))}
-          />
-        </label>
-        <label className="md:col-span-2">
-          <span className="ql-label">Review Text</span>
-          <textarea
-            rows={4}
-            className="ql-textarea"
-            value={form.message}
-            onChange={(e) => setForm((prev) => ({ ...prev, message: e.target.value }))}
-          />
-        </label>
-        <label>
-          <span className="ql-label">Status</span>
-          <select
-            className="ql-select"
-            value={form.status}
-            onChange={(e) => setForm((prev) => ({ ...prev, status: e.target.value }))}
-          >
-            <option value="published">Publish</option>
-            <option value="draft">Draft</option>
-          </select>
-        </label>
+  const renderBody = () => {
+    if (isLoading) return <SkeletonRows rows={5} />;
+    if (isError) return <ErrorState description="Testimonials could not be loaded." onRetry={() => refetch()} />;
+    if (!sortedItems.length) {
+      return (
+        <EmptyState
+          icon={MessageSquareQuote}
+          title="No testimonials yet"
+          description="Add a guest review to show it on the website."
+          action={<Button variant="primary" icon={Plus} onClick={openCreate}>Add testimonial</Button>}
+        />
+      );
+    }
 
-        <div className="md:col-span-2 flex items-center gap-3">
-          <button type="submit" className="ql-btn-primary">
-            <Plus size={16} />
-            {editingId ? "Update Testimonial" : "Create Testimonial"}
-          </button>
-          {editingId ? (
-            <button type="button" onClick={resetForm} className="ql-btn-secondary">
-              Cancel
-            </button>
-          ) : null}
-        </div>
-      </form>
-      ) : null}
+    return (
+      <>
+        <ul className="divide-y divide-line md:hidden">
+          {sortedItems.map((item) => (
+            <li key={item.id} className="flex items-start gap-3 px-4 py-3">
+              <GuestAvatar item={item} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-navy-900">{item.name}</p>
+                {place(item) && <p className="truncate text-xs text-subtle">{place(item)}</p>}
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <Rating value={item.rating} />
+                  <StatusBadge status={item.status} />
+                  <span className="text-xs text-subtle">{formatDate(item.date || item.createdAt)}</span>
+                </div>
+              </div>
+              <RowActions actions={actionsFor(item)} />
+            </li>
+          ))}
+        </ul>
 
-      <div className="bg-white border border-slate-100 rounded-[2rem] overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-slate-50 border-b border-slate-100">
+        <div className="admin-table-wrap hidden md:block">
+          <table className="admin-table">
+            <thead>
               <tr>
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                  Guest
-                </th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                  Rating
-                </th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                  Date
-                </th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">
-                  Actions
-                </th>
+                <th scope="col">Guest</th>
+                <th scope="col">Rating</th>
+                <th scope="col">Date</th>
+                <th scope="col">Status</th>
+                <th scope="col" className="w-24"><span className="sr-only">Actions</span></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody>
               {sortedItems.map((item) => (
                 <tr key={item.id}>
-                  <td className="px-6 py-5">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={item.photo || item.avatar || "https://via.placeholder.com/40x40?text=NL"}
-                        alt={item.name}
-                        className="w-10 h-10 rounded-xl object-cover"
-                      />
-                      <div>
-                        <p className="font-bold text-slate-900">{item.name}</p>
-                        <p className="text-xs text-slate-500">
-                          {[item.city, item.country].filter(Boolean).join(", ") || item.role}
-                        </p>
+                  <td>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <GuestAvatar item={item} />
+                      <div className="min-w-0">
+                        <p className="cell-primary truncate">{item.name}</p>
+                        {place(item) && <p className="truncate text-xs text-subtle">{place(item)}</p>}
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-5">
-                    <div className="inline-flex items-center gap-1 text-amber-500">
-                      <Star size={14} fill="currentColor" />
-                      <span className="text-sm font-bold text-slate-700">{item.rating}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-5 text-sm font-medium text-slate-600">
-                    {new Date(item.date || item.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-5">
-                    <span
-                      className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${
-                        item.status === "published"
-                          ? "bg-emerald-50 text-emerald-600"
-                          : "bg-slate-100 text-slate-500"
-                      }`}
-                    >
-                      {item.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-5">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={() => startEdit(item)}
-                        className="p-2 text-slate-500 hover:text-blue-600"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(item.id)}
-                        className={`p-2 ${
-                          pendingDeleteId === item.id
-                            ? "text-rose-600"
-                            : "text-slate-500 hover:text-rose-600"
-                        }`}
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
+                  <td><Rating value={item.rating} /></td>
+                  <td className="whitespace-nowrap">{formatDate(item.date || item.createdAt)}</td>
+                  <td><StatusBadge status={item.status} /></td>
+                  <td><RowActions actions={actionsFor(item)} /></td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </div>
+      </>
+    );
+  };
+
+  return (
+    <div>
+      <PageHeader
+        title="Testimonials"
+        description="Guest reviews shown in “What our guests say” on the website."
+        actions={<Button variant="primary" icon={Plus} onClick={openCreate}>Add testimonial</Button>}
+      />
+
+      <Card flush>{renderBody()}</Card>
+
+      <Drawer
+        open={isFormOpen}
+        onOpenChange={(open) => { if (!open) resetForm(); }}
+        title={editingId ? "Edit testimonial" : "Add testimonial"}
+        footer={
+          <>
+            <Button variant="secondary" onClick={resetForm}>Cancel</Button>
+            <Button variant="primary" type="submit" form={FORM_ID} loading={isSaving}>
+              {editingId ? "Save changes" : "Create testimonial"}
+            </Button>
+          </>
+        }
+      >
+        <form id={FORM_ID} onSubmit={handleSubmit} noValidate className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Name" required error={errors.name}>
+            <Input value={form.name} onChange={(e) => setField("name", e.target.value)} />
+          </Field>
+          <Field label="Role">
+            <Input value={form.role} onChange={(e) => setField("role", e.target.value)} />
+          </Field>
+          <Field label="City">
+            <Input value={form.city} onChange={(e) => setField("city", e.target.value)} />
+          </Field>
+          <Field label="Country">
+            <Input value={form.country} onChange={(e) => setField("country", e.target.value)} />
+          </Field>
+          <Field label="Rating" hint="From 1 to 5.">
+            <Input
+              type="number"
+              min={1}
+              max={5}
+              value={form.rating}
+              onChange={(e) => setField("rating", Number(e.target.value))}
+            />
+          </Field>
+          <Field label="Review date">
+            <Input type="date" value={form.date} onChange={(e) => setField("date", e.target.value)} />
+          </Field>
+          <Field label="Photo URL" hint="Optional." className="sm:col-span-2">
+            <Input type="url" value={form.photo} onChange={(e) => setField("photo", e.target.value)} />
+          </Field>
+          <Field label="Review text" required error={errors.message} className="sm:col-span-2">
+            <Textarea rows={5} value={form.message} onChange={(e) => setField("message", e.target.value)} />
+          </Field>
+          <Field label="Status">
+            <Select value={form.status} onChange={(e) => setField("status", e.target.value)}>
+              <option value="published">Published</option>
+              <option value="draft">Draft</option>
+            </Select>
+          </Field>
+        </form>
+      </Drawer>
     </div>
   );
 };
