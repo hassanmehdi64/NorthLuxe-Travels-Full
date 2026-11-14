@@ -1,8 +1,10 @@
 import { connectDb } from "../config/db.js";
+import { assertSafeSeedTarget } from "../config/validateEnv.js";
 import { Tour } from "../models/Tour.js";
 import { tourPackageSeedData } from "./data/tourPackageSeedData.js";
 
 const seedTourPackages = async () => {
+  assertSafeSeedTarget("seed-tour-packages");
   await connectDb();
 
   await Promise.all(

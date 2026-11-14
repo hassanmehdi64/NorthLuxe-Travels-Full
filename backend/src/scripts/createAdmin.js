@@ -1,20 +1,13 @@
 import { connectDb } from "../config/db.js";
-import { env } from "../config/env.js";
+import { assertSafeSeedTarget, requireAdminSeedCredentials } from "../config/validateEnv.js";
 import { User } from "../models/User.js";
 
 const createAdmin = async () => {
+  assertSafeSeedTarget("create-admin");
+  const adminCredentials = requireAdminSeedCredentials();
   await connectDb();
 
-  const email = String(env.adminEmail || "").toLowerCase().trim();
-  const password = String(env.adminPassword || "").trim();
-
-  if (!email) {
-    throw new Error("ADMIN_EMAIL is required");
-  }
-
-  if (!password || password.length < 8) {
-    throw new Error("ADMIN_PASSWORD must be at least 8 characters");
-  }
+  const { email, password } = adminCredentials;
 
   const existing = await User.findOne({ email });
   if (existing) {

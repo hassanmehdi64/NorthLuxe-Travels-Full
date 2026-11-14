@@ -1,5 +1,5 @@
 import { connectDb } from "../config/db.js";
-import { env } from "../config/env.js";
+import { assertSafeSeedTarget, requireAdminSeedCredentials } from "../config/validateEnv.js";
 import { Blog } from "../models/Blog.js";
 import { Booking } from "../models/Booking.js";
 import { ContactMessage } from "../models/ContactMessage.js";
@@ -15,6 +15,8 @@ import { activitySeedData } from "./data/activitySeedData.js";
 import { serviceSeedData } from "./data/serviceSeedData.js";
 
 const seed = async () => {
+  assertSafeSeedTarget("seed");
+  const adminCredentials = requireAdminSeedCredentials();
   await connectDb();
 
   await Promise.all([
@@ -32,8 +34,8 @@ const seed = async () => {
 
   const admin = await User.create({
     name: "Admin User",
-    email: env.adminEmail,
-    passwordHash: await User.hashPassword(env.adminPassword),
+    email: adminCredentials.email,
+    passwordHash: await User.hashPassword(adminCredentials.password),
     role: "Admin",
     status: "Active",
     avatar: "https://ui-avatars.com/api/?name=Admin+User&background=0D8ABC&color=fff",

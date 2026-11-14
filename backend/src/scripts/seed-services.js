@@ -1,8 +1,10 @@
 import { connectDb } from "../config/db.js";
+import { assertSafeSeedTarget } from "../config/validateEnv.js";
 import { ContentEntry } from "../models/ContentEntry.js";
 import { serviceSeedData } from "./data/serviceSeedData.js";
 
 const seedServices = async () => {
+  assertSafeSeedTarget("seed-services");
   await connectDb();
 
   const activeSlugs = serviceSeedData.map((item) => item.slug);
