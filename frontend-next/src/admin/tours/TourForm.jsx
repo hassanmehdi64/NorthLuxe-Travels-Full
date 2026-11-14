@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Plus, Trash2, Upload, X } from "lucide-react";
 import { Button, Checkbox, Field, IconButton, Input, Select, Switch, Textarea } from "../ui";
 import { CURRENCY_OPTIONS } from "../../utils/currency";
+import { parseMediaList } from "../../lib/mediaList.mjs";
 
 export const normalizeKeyList = (value) => {
   if (Array.isArray(value)) return value.map((item) => String(item || "").trim()).filter(Boolean);
@@ -13,11 +14,7 @@ export const normalizeKeyList = (value) => {
 
 export const mergeUniqueKeys = (...lists) => Array.from(new Set(lists.flatMap((list) => normalizeKeyList(list))));
 
-export const parseGalleryText = (value) =>
-  String(value || "")
-    .split(/\r?\n|,/)
-    .map((item) => item.trim())
-    .filter(Boolean);
+export const parseGalleryText = (value) => parseMediaList(value);
 
 /** Section inside the tour drawer: small heading, optional description, then fields. */
 const Section = ({ title, description, actions, children }) => (

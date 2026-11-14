@@ -1,6 +1,7 @@
 import React from "react";
 import { Upload, X } from "lucide-react";
 import { Button, Card, Field, IconButton, Input, Textarea } from "../ui";
+import { parseMediaList } from "../../lib/mediaList.mjs";
 
 const setField = (settings, setSettings, key, value) => {
   setSettings({ ...settings, [key]: value });
@@ -24,11 +25,7 @@ const readFileAsDataUrl = (file) =>
     reader.readAsDataURL(file);
   });
 
-const splitLines = (value) =>
-  String(value || "")
-    .split(/[\n,]+/)
-    .map((item) => item.trim())
-    .filter(Boolean);
+const splitLines = (value) => parseMediaList(value);
 
 const appendUnique = (items, nextItems) => Array.from(new Set([...items, ...nextItems].filter(Boolean)));
 

@@ -9,6 +9,7 @@ import {
 } from "../../hooks/useCms";
 import { useToast } from "../../context/ToastContext";
 import { getApiErrorMessage } from "../../lib/apiError";
+import { parseMediaList } from "../../lib/mediaList.mjs";
 import {
   Badge,
   Button,
@@ -73,11 +74,8 @@ const initialForm = {
   sortOrder: 0,
 };
 
-const parseCommaList = (value) =>
-  String(value || "")
-    .split(/[\n,]+/)
-    .map((item) => item.trim())
-    .filter(Boolean);
+// Also used for image lists: keeps embedded uploads ("data:...;base64,...") whole.
+const parseCommaList = (value) => parseMediaList(value);
 
 const toCommaList = (arr) => (Array.isArray(arr) ? arr.join(", ") : "");
 const toLineList = (arr) => (Array.isArray(arr) ? arr.filter(Boolean).join("\n") : "");
