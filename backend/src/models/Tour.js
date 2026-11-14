@@ -53,6 +53,9 @@ const tourSchema = new mongoose.Schema(
     itinerary: { type: [itineraryItemSchema], default: [] },
     // Named stops shown as "Places covered" chips. Entered by the admin; never derived.
     places: { type: [String], default: [] },
+    // What the price covers / doesn't — entered by staff, shown on the tour page (hidden when empty).
+    inclusions: { type: [String], default: [] },
+    exclusions: { type: [String], default: [] },
     availableOptions: { type: availableOptionsSchema, default: () => ({}) },
   },
   { timestamps: true },

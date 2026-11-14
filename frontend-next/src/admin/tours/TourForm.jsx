@@ -248,6 +248,17 @@ const TourForm = ({
         </Field>
       </Section>
 
+      <Section title="What's included" description="Shown on the tour page. Leave empty to hide the section.">
+        <div className="grid gap-4 md:grid-cols-2">
+          <Field label="Included" hint="One item per line.">
+            <Textarea rows={5} value={form.inclusionsText} onChange={set("inclusionsText")} placeholder={"Private vehicle with driver\nFuel and tolls"} />
+          </Field>
+          <Field label="Not included" hint="One item per line.">
+            <Textarea rows={5} value={form.exclusionsText} onChange={set("exclusionsText")} placeholder={"Hotels and meals\nEntry tickets"} />
+          </Field>
+        </div>
+      </Section>
+
       <Section title="Booking options" description="Which hotel categories and vehicles customers can choose for this tour.">
         <div className="space-y-4">
           <Field label="Hotel category keys" hint="Comma separated, e.g. 3_star, 4_star">

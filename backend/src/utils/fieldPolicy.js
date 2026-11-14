@@ -60,6 +60,8 @@ export const WRITABLE_FIELDS = Object.freeze({
       "tags",
       "itinerary",
       "places",
+      "inclusions",
+      "exclusions",
       "availableOptions",
     ],
   },

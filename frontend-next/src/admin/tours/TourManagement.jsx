@@ -31,6 +31,8 @@ const initialForm = {
   image: "",
   galleryText: "",
   placesText: "",
+  inclusionsText: "",
+  exclusionsText: "",
   shortDescription: "",
   description: "",
   status: "draft",
@@ -137,6 +139,8 @@ const TourManagement = () => {
       currency: displayCurrency(prefill.currency || settings?.currency || "PKR"),
       galleryText: normalizeGalleryText(prefill.gallery),
       placesText: (prefill.places || []).join("\n"),
+      inclusionsText: (prefill.inclusions || []).join("\n"),
+      exclusionsText: (prefill.exclusions || []).join("\n"),
       hotelCategoryKeys: prefill.hotelCategoryKeys || "",
       vehicleTypeKeys: normalizeKeyList(prefill.vehicleTypeKeys),
       itinerary: Array.isArray(prefill.itinerary) && prefill.itinerary.length
@@ -294,6 +298,8 @@ const TourManagement = () => {
       availableSeats: syncedSeats,
       gallery: parseGalleryText(form.galleryText),
       places: form.placesText.split("\n").map((item) => item.trim()).filter(Boolean),
+      inclusions: form.inclusionsText.split("\n").map((item) => item.trim()).filter(Boolean),
+      exclusions: form.exclusionsText.split("\n").map((item) => item.trim()).filter(Boolean),
       itinerary: form.itinerary
         .map((item, index) => ({
           day: index + 1,
@@ -385,6 +391,8 @@ const TourManagement = () => {
       image: tour.image,
       galleryText: normalizeGalleryText(tour.gallery),
       placesText: (tour.places || []).join("\n"),
+      inclusionsText: (tour.inclusions || []).join("\n"),
+      exclusionsText: (tour.exclusions || []).join("\n"),
       hotelCategoryKeys: tour.availableOptions?.hotelCategories?.join(", ") || "",
       vehicleTypeKeys: normalizeKeyList(tour.availableOptions?.vehicleTypes),
       itinerary: Array.isArray(tour.itinerary) && tour.itinerary.length

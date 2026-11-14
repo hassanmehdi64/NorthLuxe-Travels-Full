@@ -67,6 +67,8 @@ const toTourResponse = (tour) => ({
   tags: tour.tags,
   itinerary: tour.itinerary,
   places: tour.places || [],
+  inclusions: tour.inclusions || [],
+  exclusions: tour.exclusions || [],
   availableOptions: tour.availableOptions || {
     hotelCategories: [],
     vehicleTypes: [],
@@ -166,6 +168,8 @@ router.post(
       tags: payload.tags || [],
       itinerary: payload.itinerary || [],
       places: sanitizeStringList(payload.places),
+      inclusions: sanitizeStringList(payload.inclusions),
+      exclusions: sanitizeStringList(payload.exclusions),
       availableOptions: payload.availableOptions || {},
     });
 
@@ -187,6 +191,8 @@ router.patch(
       coverImage: payload.image || payload.coverImage,
       availableOptions: payload.availableOptions,
       places: payload.places !== undefined ? sanitizeStringList(payload.places) : undefined,
+      inclusions: payload.inclusions !== undefined ? sanitizeStringList(payload.inclusions) : undefined,
+      exclusions: payload.exclusions !== undefined ? sanitizeStringList(payload.exclusions) : undefined,
       gallery: payload.gallery !== undefined ? sanitizeStringList(payload.gallery) : undefined,
       currency: payload.currency !== undefined ? String(payload.currency || "PKR").trim() || "PKR" : undefined,
       durationLabel:
@@ -211,6 +217,8 @@ router.patch(
 
     delete update.image;
     if (update.places === undefined) delete update.places;
+    if (update.inclusions === undefined) delete update.inclusions;
+    if (update.exclusions === undefined) delete update.exclusions;
     if (update.availableOptions === undefined) delete update.availableOptions;
     if (update.gallery === undefined) delete update.gallery;
     if (update.currency === undefined) delete update.currency;
