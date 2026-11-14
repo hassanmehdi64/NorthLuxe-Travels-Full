@@ -30,10 +30,24 @@ const normalizeOptionKey = (value) =>
     .toLowerCase()
     .replace(/\s+/g, "_");
 
-const pickAllowedOptionKeys = ({ preferred = [], fallback = [] }) => {
-  const list = Array.isArray(preferred) && preferred.length ? preferred : fallback;
-  return new Set(list.map(normalizeOptionKey));
+/**
+ * Map a tour's option values onto settings entries. Tours historically stored labels
+ * ("Comfort", "Coaster") instead of settings keys ("3_star", "prado_old"), so match by
+ * key OR label. Values that match nothing are ignored (and reported by the
+ * normalize-tour-options migration). If none match, every active option is allowed.
+ */
+export const resolveAllowedOptionKeys = ({ preferred = [], options = [] }) => {
+  const list = Array.isArray(preferred) ? preferred : [];
+  const matched = new Set();
+  for (const value of list) {
+    const needle = normalizeOptionKey(value);
+    const hit = options.find((option) => normalizeOptionKey(option.key) === needle || normalizeOptionKey(option.label) === needle);
+    if (hit) matched.add(normalizeOptionKey(hit.key));
+  }
+  return matched.size ? matched : new Set(options.map((option) => normalizeOptionKey(option.key)));
 };
+
+const httpError = (status, message) => Object.assign(new Error(message), { status });
 
 export const calculateBookingQuote = ({
   tour,
@@ -45,15 +59,9 @@ export const calculateBookingQuote = ({
   const hotelOptions = normalizePricedOptions(pricing.hotelCategories);
   const vehicleOptions = normalizePricedOptions(pricing.vehicleTypes);
 
-  const allowedHotels = pickAllowedOptionKeys({
-    preferred: tour?.availableOptions?.hotelCategories,
-    fallback: hotelOptions.map((x) => x.key),
-  });
+  const allowedHotels = resolveAllowedOptionKeys({ preferred: tour?.availableOptions?.hotelCategories, options: hotelOptions });
   allowedHotels.add("no_hotel");
-  const allowedVehicles = pickAllowedOptionKeys({
-    preferred: tour?.availableOptions?.vehicleTypes,
-    fallback: vehicleOptions.map((x) => x.key),
-  });
+  const allowedVehicles = resolveAllowedOptionKeys({ preferred: tour?.availableOptions?.vehicleTypes, options: vehicleOptions });
 
   const adults = Math.max(1, toNumber(payload.adults, 1));
   const children = Math.max(0, toNumber(payload.children, 0));
@@ -65,8 +73,9 @@ export const calculateBookingQuote = ({
   });
 
   const selectedHotelKey = payload?.facilities?.hotelType || payload.hotelType || "no_hotel";
+  const defaultVehicle = vehicleOptions.find((x) => allowedVehicles.has(normalizeOptionKey(x.key)));
   const selectedVehicleKey =
-    payload?.facilities?.vehicleType || payload.vehicleType || vehicleOptions[0]?.key || "";
+    payload?.facilities?.vehicleType || payload.vehicleType || defaultVehicle?.key || "";
   const normalizedSelectedHotelKey = normalizeOptionKey(selectedHotelKey);
   const normalizedSelectedVehicleKey = normalizeOptionKey(selectedVehicleKey);
   const mealsSelection = payload?.facilities?.meals ?? payload.meals ?? "no";
@@ -77,15 +86,23 @@ export const calculateBookingQuote = ({
       : [];
 
   if (enforceAllowedOptions && selectedHotelKey && !allowedHotels.has(normalizedSelectedHotelKey)) {
-    throw new Error("Selected hotel category is not available for this tour.");
+    throw httpError(400, "Selected hotel category is not available for this tour.");
   }
 
   if (enforceAllowedOptions && selectedVehicleKey && !allowedVehicles.has(normalizedSelectedVehicleKey)) {
-    throw new Error("Selected vehicle type is not available for this tour.");
+    throw httpError(400, "Selected vehicle type is not available for this tour.");
   }
 
   const selectedHotel = hotelOptions.find((x) => normalizeOptionKey(x.key) === normalizedSelectedHotelKey);
   const selectedVehicle = vehicleOptions.find((x) => normalizeOptionKey(x.key) === normalizedSelectedVehicleKey);
+
+  // Never quote PKR 0 for an option that exists but has no price configured.
+  if (normalizedSelectedHotelKey && normalizedSelectedHotelKey !== "no_hotel" && !selectedHotel) {
+    throw httpError(400, "This hotel option isn't priced yet. Please choose another or contact us.");
+  }
+  if (normalizedSelectedVehicleKey && !selectedVehicle) {
+    throw httpError(400, "This vehicle option isn't priced yet. Please choose another or contact us.");
+  }
 
   // `tour.price` is a per-day rate. The tour's discount applies to that rate only
   // (not to vehicle, hotel or per-guest fees), matching what tour cards advertise.
