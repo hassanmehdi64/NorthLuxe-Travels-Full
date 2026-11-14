@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useAdminTours, useBooking, useConfirmBookingPayment, useUpdateBooking } from "../../hooks/useCms";
 import { useToast } from "../../context/ToastContext";
+import { html } from "../../lib/html.mjs";
 
 const statusStyles = {
   pending: "bg-amber-50 text-amber-700 border-amber-200",
@@ -474,7 +475,7 @@ const BookingDetails = () => {
     const win = window.open("", "_blank", "width=960,height=760");
     if (!win) return;
 
-    win.document.write(`
+    win.document.write(String(html`
       <html>
         <head>
           <title>${itinerary.title || "Tour Plan"} - Print</title>
@@ -732,7 +733,7 @@ const BookingDetails = () => {
                 <div>
                   <p class="eyebrow">${isCustomBooking ? "Custom Tour Plan" : "Standard Tour Plan"}</p>
                   <h1 class="title">${itinerary.title || "Created Tour Plan"}</h1>
-                  <p class="subtitle">Prepared for ${booking.customer || "Customer"} from ${isCustomBooking ? `custom request ${booking.bookingCode || ""}` : `booking ${booking.bookingCode || ""}`}. This print view summarizes the approved route, travel setup, and day-wise itinerary in one clean document.</p>
+                  <p class="subtitle">Prepared for ${booking.customer || "Customer"} from ${isCustomBooking ? html`custom request ${booking.bookingCode || ""}` : html`booking ${booking.bookingCode || ""}`}. This print view summarizes the approved route, travel setup, and day-wise itinerary in one clean document.</p>
                 </div>
                 <div class="meta-panel">
                   <div class="meta-grid">
@@ -767,7 +768,7 @@ const BookingDetails = () => {
                   </div>
                   <div class="intro-card">
                     <p class="intro-title">${isCustomBooking ? "Trip Context" : "Booking Context"}</p>
-                    <p class="intro-value">${isCustomBooking ? `Requested destinations: ${request.preferredDestinations || "Flexible"}<br />Travel window: ${travelWindow || "Flexible"}` : `Tour: ${booking.tour || "Selected Tour"}<br />Travel date: ${standardDetails.travelDate || "Scheduled Tour"}`}</p>
+                    <p class="intro-value">${isCustomBooking ? html`Requested destinations: ${request.preferredDestinations || "Flexible"}<br />Travel window: ${travelWindow || "Flexible"}` : html`Tour: ${booking.tour || "Selected Tour"}<br />Travel date: ${standardDetails.travelDate || "Scheduled Tour"}`}</p>
                   </div>
                 </div>
               </section>
@@ -779,14 +780,13 @@ const BookingDetails = () => {
                     <tbody>
                       ${summaryRows
                         .map(
-                          ([label, value]) => `
+                          ([label, value]) => html`
                             <tr>
                               <th>${label}</th>
                               <td>${value || "-"}</td>
                             </tr>
                           `,
-                        )
-                        .join("")}
+                        )}
                     </tbody>
                   </table>
                 </div>
@@ -797,16 +797,15 @@ const BookingDetails = () => {
                 ${printDays.length
                   ? printDays
                       .map(
-                        (item, index) => `
+                        (item, index) => html`
                           <article class="day-card">
                             <p class="day-kicker">Day ${index + 1}</p>
-                            <h3 class="day-title">${item.title || `Plan ${index + 1}`}</h3>
+                            <h3 class="day-title">${item.title || html`Plan ${index + 1}`}</h3>
                             <p class="day-plan">${item.plan || "No day plan added yet."}</p>
                           </article>
                         `,
                       )
-                      .join("")
-                  : `
+                  : html`
                       <article class="day-card">
                         <p class="day-kicker">Itinerary</p>
                         <h3 class="day-title">Custom Plan</h3>
@@ -816,7 +815,7 @@ const BookingDetails = () => {
               </section>
 
               ${extraNotes
-                ? `
+                ? html`
                   <section class="section">
                     <h2 class="section-title">Extra Notes</h2>
                     <div class="notes-card">
@@ -831,7 +830,7 @@ const BookingDetails = () => {
           </div>
         </body>
       </html>
-    `);
+    `));
     win.document.close();
     win.focus();
     setTimeout(() => win.print(), 350);

@@ -5,6 +5,7 @@ import { useAdminTours, useCreateTour, useDeleteTour, useSettings, useUpdateTour
 import { useToast } from "../../context/ToastContext";
 import { getApiErrorMessage } from "../../lib/apiError";
 import { CURRENCY_OPTIONS, displayCurrency } from "../../utils/currency";
+import { html, safeUrl } from "../../lib/html.mjs";
 
 const initialForm = {
   title: "",
@@ -289,7 +290,7 @@ const TourManagement = () => {
   const printTourPdf = (tour) => {
     const win = window.open("", "_blank", "width=900,height=700");
     if (!win) return;
-    win.document.write(`
+    win.document.write(String(html`
       <html>
         <head>
           <title>${tour.title} - Tour PDF</title>
@@ -307,10 +308,10 @@ const TourManagement = () => {
         <body>
           <h1>${tour.title}</h1>
           <p>${tour.shortDescription || "Custom designed tour package."}</p>
-          ${tour.image ? `<img src="${tour.image}" alt="${tour.title}" />` : ""}
+          ${safeUrl(tour.image) ? html`<img src="${safeUrl(tour.image)}" alt="${tour.title}" />` : ""}
           <div class="meta">
             <div class="card"><div class="label">Location</div><div class="value">${tour.location || "-"}</div></div>
-            <div class="card"><div class="label">Duration</div><div class="value">${tour.durationLabel || `${tour.durationDays} Days`}</div></div>
+            <div class="card"><div class="label">Duration</div><div class="value">${tour.durationLabel || html`${tour.durationDays} Days`}</div></div>
             <div class="card"><div class="label">Price</div><div class="value">${tour.currency} ${tour.price}</div></div>
             <div class="card"><div class="label">Seats</div><div class="value">${tour.availableSeats || "-"}</div></div>
           </div>
@@ -319,15 +320,14 @@ const TourManagement = () => {
             <p>${tour.shortDescription || "No summary added yet."}</p>
           </div>
           ${Array.isArray(tour.itinerary) && tour.itinerary.length
-            ? `<div class="card" style="margin-top: 16px;"><div class="label">Itinerary</div>${tour.itinerary
+            ? html`<div class="card" style="margin-top: 16px;"><div class="label">Itinerary</div>${tour.itinerary
                 .map(
-                  (item) => `<div style="margin-top: 14px;"><p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#20b77a;">Day ${item.day || ""}${item.title ? ` - ${item.title}` : ""}</p><p style="margin:0;line-height:1.7;">${item.description || "No details added."}</p></div>`,
-                )
-                .join("")}</div>`
+                  (item) => html`<div style="margin-top: 14px;"><p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#20b77a;">Day ${item.day || ""}${item.title ? html` - ${item.title}` : ""}</p><p style="margin:0;line-height:1.7;">${item.description || "No details added."}</p></div>`,
+                )}</div>`
             : ""}
         </body>
       </html>
-    `);
+    `));
     win.document.close();
     win.focus();
     setTimeout(() => win.print(), 350);

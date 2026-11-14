@@ -13,6 +13,7 @@ import {
 import { useBookings, useDeleteBooking } from "../../hooks/useCms";
 import { useNotifications, useUpdateNotification } from "../../hooks/useCms";
 import { useToast } from "../../context/ToastContext";
+import { html } from "../../lib/html.mjs";
 
 const parseCustomRequest = (value = "") =>
   String(value || "")
@@ -77,7 +78,7 @@ const openTourPlanPrint = (booking) => {
   const win = window.open("", "_blank", "width=960,height=760");
   if (!win) return;
 
-  win.document.write(`
+  win.document.write(String(html`
     <html>
       <head>
         <title>${itinerary.title || "Tour Plan"} - Print</title>
@@ -93,17 +94,17 @@ const openTourPlanPrint = (booking) => {
       </head>
       <body>
         <h1>${itinerary.title || "Created Tour Plan"}</h1>
-        <p>Prepared for ${booking.customer || "Customer"} from ${isCustomBooking ? `custom booking request ${booking.bookingCode || ""}` : `booking ${booking.bookingCode || ""}` }.</p>
+        <p>Prepared for ${booking.customer || "Customer"} from ${isCustomBooking ? html`custom booking request ${booking.bookingCode || ""}` : html`booking ${booking.bookingCode || ""}` }.</p>
         <div class="grid">
           <div class="card"><div class="label">${isCustomBooking ? "Requested Destinations" : "Tour"}</div><div class="value">${isCustomBooking ? request.preferredDestinations : booking.tour || "Selected Tour"}</div></div>
-          <div class="card"><div class="label">${isCustomBooking ? "Travel Window" : "Travel Date"}</div><div class="value">${isCustomBooking ? `${request.startDate}${request.endDate && request.endDate !== "Flexible" ? ` - ${request.endDate}` : ""}` : new Date(booking.date || booking.createdAt).toLocaleDateString()}</div></div>
+          <div class="card"><div class="label">${isCustomBooking ? "Travel Window" : "Travel Date"}</div><div class="value">${isCustomBooking ? html`${request.startDate}${request.endDate && request.endDate !== "Flexible" ? html` - ${request.endDate}` : ""}` : new Date(booking.date || booking.createdAt).toLocaleDateString()}</div></div>
           <div class="card"><div class="label">Final Budget</div><div class="value">${itinerary.currency || booking.currency || "PKR"} ${itinerary.finalBudget || booking.amount || 0}</div></div>
           <div class="card"><div class="label">Duration</div><div class="value">${itinerary.durationLabel || (isCustomBooking ? "Custom Duration" : "Scheduled Tour")}</div></div>
         </div>
         <div class="card" style="margin-top: 16px;"><div class="label">Itinerary Details</div><div class="value">${itinerary.planDetails || request.requirements || booking.specialRequirements || "No itinerary details added yet."}</div></div>
       </body>
     </html>
-  `);
+  `));
   win.document.close();
   win.focus();
   setTimeout(() => win.print(), 350);
