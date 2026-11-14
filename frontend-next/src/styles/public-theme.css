@@ -138,13 +138,9 @@
 
 /* Equal photo tiles share one baseline, crop and gutter. */
 
-.tour-photo-gallery { min-width: 0; }
 
-.tour-photo-grid { display: grid; grid-template-columns: repeat(var(--photo-columns), minmax(0, 1fr)); gap: 12px; }
 
-.tour-photo-tile { position: relative; display: block; min-width: 0; height: clamp(200px, 21vw, 280px); overflow: hidden; border-radius: 8px; background: var(--c-hover); }
 
-.tour-photo-tile img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; }
 
 .tour-itinerary { padding: 0; margin-bottom: 0; list-style: none; }
 
@@ -167,11 +163,8 @@
 .tour-itinerary-panel { margin-top: 12px; padding: 12px 14px; border-radius: 8px; background: var(--c-hover); }
 
 @media (max-width: 639px) {
-.tour-photo-grid { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 85%; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 4px; }
 
-  .tour-photo-grid:has(> :only-child) { grid-auto-columns: 100%; }
 
-  .tour-photo-tile { height: 200px; scroll-snap-align: start; }
 
   .tour-itinerary-step { gap: 10px; }
 }
