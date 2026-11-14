@@ -1,14 +1,35 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "@/lib/router";
-import { Plus, Search, Edit2, Trash2, Eye, FileText, CheckCircle2, Circle, Filter } from "lucide-react";
+import { Link, useSearchParams } from "@/lib/router";
+import { CircleCheck, CircleDashed, Edit2, ExternalLink, FileText, Plus, Search, Trash2 } from "lucide-react";
 import { useAdminBlogs, useDeleteBlog, useUpdateBlog } from "../../hooks/useCms";
 import { useToast } from "../../context/ToastContext";
 import { getApiErrorMessage } from "../../lib/apiError";
+import {
+  Badge,
+  Button,
+  EmptyState,
+  ErrorState,
+  Input,
+  PageHeader,
+  RowActions,
+  Select,
+  SkeletonRows,
+  StatusBadge,
+  useConfirm,
+} from "../ui";
+
+const formatDate = (value) => {
+  if (!value) return "—";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? "—"
+    : date.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+};
 
 const BlogList = () => {
-  const navigate = useNavigate();
   const toast = useToast();
-  const { data: blogs = [] } = useAdminBlogs();
+  const confirm = useConfirm();
+  const { data: blogs = [], isLoading, isError, refetch } = useAdminBlogs();
   const updateBlog = useUpdateBlog();
   const deleteBlog = useDeleteBlog();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -36,21 +57,19 @@ const BlogList = () => {
     updateBlog.mutate({ id, status: blog.status === "published" ? "draft" : "published" });
   };
 
-  const handleDelete = (id) => {
-    toast.confirm(
-      "Delete Post?",
-      "This will permanently remove this blog post.",
-      () =>
-        deleteBlog.mutate(id, {
-          onSuccess: () => toast.success("Deleted", "Blog post removed successfully."),
-          onError: (error) =>
-            toast.error("Delete failed", getApiErrorMessage(error, "Could not delete this post.")),
-        }),
-      {
-        confirmLabel: "Delete",
-        tone: "danger",
-      },
-    );
+  const handleDelete = async (blog) => {
+    const ok = await confirm({
+      title: "Delete post?",
+      description: `“${blog.title}” will be permanently removed. This cannot be undone.`,
+      confirmLabel: "Delete post",
+      cancelLabel: "Keep post",
+    });
+    if (!ok) return;
+    deleteBlog.mutate(blog.id, {
+      onSuccess: () => toast.success("Deleted", "Blog post removed successfully."),
+      onError: (error) =>
+        toast.error("Delete failed", getApiErrorMessage(error, "Could not delete this post.")),
+    });
   };
 
   const filteredBlogs = useMemo(
@@ -71,133 +90,138 @@ const BlogList = () => {
     [blogs, searchQuery, statusFilter],
   );
 
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <h1 className="admin-page-title">
-            Blog Management
-          </h1>
-          <p className="admin-page-subtitle">Create and manage your travel stories.</p>
-        </div>
-        <Link to="/admin/blogs/new" className="admin-soft-button w-full sm:w-auto">
-          <Plus size={18} /> Write New Post
-        </Link>
-      </div>
+  const actionsFor = (blog) => [
+    { label: "Edit", icon: Edit2, to: `/admin/blogs/edit/${blog.id}` },
+    { label: "View on site", icon: ExternalLink, to: `/blog/${blog.slug}`, hidden: blog.status !== "published" },
+    blog.status === "published"
+      ? { label: "Unpublish (move to draft)", icon: CircleDashed, onClick: () => toggleStatus(blog.id) }
+      : { label: "Publish", icon: CircleCheck, onClick: () => toggleStatus(blog.id) },
+    { label: "Delete", icon: Trash2, danger: true, onClick: () => handleDelete(blog) },
+  ];
 
-      <div className="flex flex-col gap-4 md:flex-row">
-        <div className="flex-1">
-          <input
-            type="text"
-            placeholder="Search title, author, slug, or status..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-3 text-sm font-medium"
-          />
-        </div>
-        <div className="flex items-center gap-2 rounded-2xl border border-white/35 bg-white/50 px-4 py-1 shadow-[0_16px_34px_rgba(148,163,184,0.08)] backdrop-blur-xl">
-          <Filter size={16} className="text-[var(--admin-muted)]" />
-          <select
-            className="cursor-pointer bg-transparent py-2 text-sm font-bold"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option>All Posts</option>
-            <option>Published</option>
-            <option>Draft</option>
-          </select>
-        </div>
-      </div>
+  const newPostButton = (
+    <Button variant="primary" icon={Plus} to="/admin/blogs/new">New post</Button>
+  );
 
-      <div className="admin-soft-table overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="border-b border-white/35">
+  const hasFilters = Boolean(searchQuery.trim()) || statusFilter !== "All Posts";
+
+  let body;
+  if (isLoading) {
+    body = <SkeletonRows rows={6} />;
+  } else if (isError) {
+    body = <ErrorState description="Blog posts could not be loaded." onRetry={() => refetch()} />;
+  } else if (!filteredBlogs.length) {
+    body = blogs.length ? (
+      <EmptyState
+        icon={Search}
+        title="No posts match these filters"
+        description="Try a different search or status."
+        action={hasFilters ? (
+          <Button size="sm" onClick={() => { setSearchQuery(""); setStatusFilter("All Posts"); }}>Clear filters</Button>
+        ) : null}
+      />
+    ) : (
+      <EmptyState
+        icon={FileText}
+        title="No blog posts yet"
+        description="Write the first travel story for the public blog."
+        action={<Button variant="primary" size="sm" icon={Plus} to="/admin/blogs/new">New post</Button>}
+      />
+    );
+  } else {
+    body = (
+      <>
+        {/* Phones: stacked cards */}
+        <ul className="divide-y divide-line md:hidden">
+          {filteredBlogs.map((blog) => (
+            <li key={blog.id} className="flex items-start gap-3 px-4 py-3">
+              <div className="min-w-0 flex-1">
+                <Link to={`/admin/blogs/edit/${blog.id}`} className="block truncate text-sm font-semibold text-navy-900 hover:text-brand-700">
+                  {blog.title}
+                </Link>
+                <p className="mt-0.5 truncate text-xs text-subtle">
+                  {blog.category || "No category"} · Updated {formatDate(blog.updatedAt || blog.date)}
+                </p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  <StatusBadge status={blog.status} />
+                  {blog.featured && <Badge tone="brand">Featured</Badge>}
+                </div>
+              </div>
+              <RowActions actions={actionsFor(blog)} />
+            </li>
+          ))}
+        </ul>
+
+        {/* md+: table */}
+        <div className="admin-table-wrap hidden md:block">
+          <table className="admin-table">
+            <thead>
               <tr>
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                  Post Title
-                </th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                  Date
-                </th>
-                <th className="px-6 py-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-400">
-                  Actions
-                </th>
+                <th scope="col">Post</th>
+                <th scope="col">Category</th>
+                <th scope="col">Status</th>
+                <th scope="col">Updated</th>
+                <th scope="col"><span className="sr-only">Actions</span></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/25">
-              {filteredBlogs.length > 0 ? (
-                filteredBlogs.map((blog) => (
-                  <tr key={blog.id} className="group">
-                    <td className="px-6 py-5">
-                      <div className="flex items-start gap-3">
-                        <div className="mt-1 rounded-xl bg-white/75 p-2 text-[var(--admin-muted)] transition-all group-hover:bg-[var(--admin-accent)] group-hover:text-white">
-                          <FileText size={16} />
-                        </div>
-                        <div>
-                          <p className="admin-soft-heading font-bold leading-tight">
-                            {blog.title}
-                            {blog.featured && (
-                              <span className="admin-soft-badge admin-soft-badge-primary ml-2 italic">
-                                Featured
-                              </span>
-                            )}
-                          </p>
-                          <p className="admin-soft-muted mt-1 text-xs">
-                            by {blog.author} • {blog.views} views
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <button
-                        onClick={() => toggleStatus(blog.id)}
-                        className={`admin-soft-badge ${
-                          blog.status === "published"
-                            ? "admin-soft-badge-success"
-                            : "admin-soft-badge-muted"
-                        }`}
-                      >
-                        {blog.status === "published" ? <CheckCircle2 size={12} /> : <Circle size={12} />}
-                        {blog.status}
-                      </button>
-                    </td>
-                    <td className="admin-soft-muted px-6 py-5 text-sm font-bold">
-                      {new Date(blog.date).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <button
-                          onClick={() => navigate(`/blog/${blog.slug}`)}
-                          className="admin-soft-icon-button"
-                          data-tone="view"
-                        >
-                          <Eye size={18} />
-                        </button>
-                        <Link to={`/admin/blogs/edit/${blog.id}`} className="admin-soft-icon-button" data-tone="edit">
-                          <Edit2 size={18} />
-                        </Link>
-                        <button onClick={() => handleDelete(blog.id)} className="admin-soft-icon-button" data-tone="danger">
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="4" className="admin-soft-muted px-6 py-10 text-center text-sm font-bold">
-                    No posts found matching your criteria.
+            <tbody>
+              {filteredBlogs.map((blog) => (
+                <tr key={blog.id}>
+                  <td className="max-w-md">
+                    <Link to={`/admin/blogs/edit/${blog.id}`} className="cell-primary block truncate hover:text-brand-700">
+                      {blog.title}
+                    </Link>
+                    <p className="mt-0.5 truncate text-xs text-subtle">/{blog.slug}</p>
+                  </td>
+                  <td className="whitespace-nowrap">{blog.category || "—"}</td>
+                  <td>
+                    <div className="flex flex-wrap gap-1.5">
+                      <StatusBadge status={blog.status} />
+                      {blog.featured && <Badge tone="brand">Featured</Badge>}
+                    </div>
+                  </td>
+                  <td className="whitespace-nowrap">{formatDate(blog.updatedAt || blog.date)}</td>
+                  <td className="w-px">
+                    <RowActions actions={actionsFor(blog)} />
                   </td>
                 </tr>
-              )}
+              ))}
             </tbody>
           </table>
         </div>
+      </>
+    );
+  }
+
+  return (
+    <div>
+      <PageHeader title="Blog" description="Travel stories published on the public blog." actions={newPostButton} />
+
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="relative sm:max-w-xs sm:flex-1">
+          <Search size={15} aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-subtle" />
+          <Input
+            type="search"
+            aria-label="Search posts"
+            placeholder="Search title, author or slug"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <Select
+          aria-label="Filter by status"
+          className="sm:w-40"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="All Posts">All posts</option>
+          <option value="Published">Published</option>
+          <option value="Draft">Draft</option>
+        </Select>
       </div>
+
+      <div className="overflow-hidden rounded-card border border-line bg-surface">{body}</div>
     </div>
   );
 };

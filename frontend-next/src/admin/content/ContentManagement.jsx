@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Edit2, Plus, Trash2, Upload, X } from "lucide-react";
+import { Edit2, FileText, Plus, Search, Trash2, Upload, X } from "lucide-react";
 import { useSearchParams } from "@/lib/router";
 import {
   useAdminContentList,
@@ -9,17 +9,36 @@ import {
 } from "../../hooks/useCms";
 import { useToast } from "../../context/ToastContext";
 import { getApiErrorMessage } from "../../lib/apiError";
+import {
+  Badge,
+  Button,
+  Checkbox,
+  Drawer,
+  EmptyState,
+  ErrorState,
+  Field,
+  IconButton,
+  Input,
+  PageHeader,
+  RowActions,
+  Select,
+  SkeletonRows,
+  StatusBadge,
+  Tabs,
+  Textarea,
+  useConfirm,
+} from "../ui";
 
 const contentTypes = [
   { value: "destination", label: "Destinations" },
   { value: "activity", label: "Activities" },
   { value: "service", label: "Services" },
-  { value: "season", label: "Seasonal Journeys" },
-  { value: "career", label: "Career" },
+  { value: "season", label: "Seasonal journeys" },
+  { value: "career", label: "Careers" },
   { value: "faq", label: "FAQs" },
-  { value: "help-center", label: "Help Center" },
-  { value: "privacy-policy", label: "Privacy Policy" },
-  { value: "terms-of-service", label: "Terms of Service" },
+  { value: "help-center", label: "Help center" },
+  { value: "privacy-policy", label: "Privacy policy" },
+  { value: "terms-of-service", label: "Terms of service" },
 ];
 
 const initialForm = {
@@ -95,38 +114,42 @@ const ImageCollectionField = ({ label, value, onChange, placeholder, helperText 
   };
 
   return (
-    <div className="md:col-span-2 space-y-2">
-      <span className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">{label}</span>
-      <textarea
-        className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-        rows={3}
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      />
-      <div className="flex flex-wrap items-center gap-3">
-        <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">
-          <Upload size={14} />
-          Upload Images
-          <input type="file" accept="image/*" multiple className="hidden" onChange={handleFiles} />
-        </label>
-        <p className="text-xs text-slate-500 dark:text-slate-300">{helperText}</p>
-      </div>
+    <div className="space-y-2 sm:col-span-2">
+      <Field
+        label={label}
+        hint={helperText}
+        labelAction={(
+          <label className="inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-control border border-line-strong bg-surface px-2.5 text-xs font-semibold text-navy-900 hover:bg-canvas focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand">
+            <Upload size={14} aria-hidden="true" />
+            Upload images
+            <input type="file" accept="image/*" multiple className="sr-only" onChange={handleFiles} />
+          </label>
+        )}
+      >
+        <Textarea
+          rows={3}
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      </Field>
       {images.length ? (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+        <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
           {images.map((image, index) => (
-            <div key={`${image.slice(0, 24)}-${index}`} className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
-              <img src={image} alt={`${label} ${index + 1}`} className="h-28 w-full object-cover" />
-              <button
-                type="button"
+            <li key={`${image.slice(0, 24)}-${index}`} className="relative overflow-hidden rounded-control border border-line bg-canvas">
+              <img src={image} alt={`${label} ${index + 1}`} className="aspect-[4/3] w-full object-cover" />
+              <IconButton
+                label={`Remove image ${index + 1}`}
+                icon={X}
+                size="sm"
+                iconSize={14}
+                variant="secondary"
+                className="absolute right-1 top-1 h-7 w-7"
                 onClick={() => removeImage(image)}
-                className="absolute right-2 top-2 inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-black/70 text-white transition hover:bg-black"
-              >
-                <X size={14} />
-              </button>
-            </div>
+              />
+            </li>
           ))}
-        </div>
+        </ul>
       ) : null}
     </div>
   );
@@ -260,13 +283,26 @@ const typeText = {
   season: "Season",
   career: "Career",
   faq: "FAQ",
-  "help-center": "Help Center",
-  "privacy-policy": "Privacy Policy",
-  "terms-of-service": "Terms of Service",
+  "help-center": "Help center",
+  "privacy-policy": "Privacy policy",
+  "terms-of-service": "Terms of service",
 };
+
+const pluralText = Object.fromEntries(contentTypes.map((type) => [type.value, type.label]));
+
+const FORM_ID = "content-entry-form";
+
+/** A titled group of fields inside the drawer; separated by a hairline, never a nested box. */
+const Section = ({ title, children }) => (
+  <fieldset className="border-t border-line pt-4 first:border-t-0 first:pt-0">
+    <legend className="float-left mb-3 w-full text-sm font-semibold text-navy-900">{title}</legend>
+    <div className="clear-both grid gap-4 sm:grid-cols-2">{children}</div>
+  </fieldset>
+);
 
 const ContentManagement = ({ fixedType = null }) => {
   const toast = useToast();
+  const confirm = useConfirm();
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedType, setSelectedType] = useState(fixedType || "destination");
   const [search, setSearch] = useState(() => searchParams.get("search") || "");
@@ -275,10 +311,11 @@ const ContentManagement = ({ fixedType = null }) => {
   const [form, setForm] = useState(initialForm);
   const activeType = fixedType || selectedType;
 
-  const { data: items = [] } = useAdminContentList(activeType);
+  const { data: items = [], isLoading, isError, refetch } = useAdminContentList(activeType);
   const createContent = useCreateContent();
   const updateContent = useUpdateContent();
   const deleteContent = useDeleteContent();
+  const isSaving = createContent.isPending || updateContent.isPending;
 
   useEffect(() => {
     const next = searchParams.get("search") || "";
@@ -378,225 +415,308 @@ const ContentManagement = ({ fixedType = null }) => {
     setIsFormOpen(true);
   };
 
-  const removeItem = (id) => {
-    toast.confirm(
-      "Delete Entry?",
-      "This will permanently remove this content entry.",
-      () =>
-        deleteContent.mutate(id, {
-          onSuccess: () => toast.success("Deleted", "The item has been removed."),
-          onError: (error) =>
-            toast.error("Delete failed", getApiErrorMessage(error, "Could not delete content.")),
-        }),
-      {
-        confirmLabel: "Delete",
-        tone: "danger",
-      },
-    );
+  const removeItem = async (item) => {
+    const ok = await confirm({
+      title: `Delete ${String(typeText[activeType] || "entry").toLowerCase()}?`,
+      description: `“${item.title || "This entry"}” will be permanently removed. This cannot be undone.`,
+      confirmLabel: "Delete",
+      cancelLabel: "Keep it",
+    });
+    if (!ok) return;
+    deleteContent.mutate(item.id, {
+      onSuccess: () => toast.success("Deleted", "The item has been removed."),
+      onError: (error) =>
+        toast.error("Delete failed", getApiErrorMessage(error, "Could not delete content.")),
+    });
   };
 
-  const addLabel = `Add ${typeText[activeType] || "Content"}`;
-  const updateLabel = `Update ${typeText[activeType] || "Content"}`;
+  const openCreate = () => {
+    setEditing(null);
+    setForm(initialForm);
+    setIsFormOpen(true);
+  };
+
+  const singular = typeText[activeType] || "Content";
+  const addLabel = `Add ${singular.toLowerCase()}`;
+  const set = (key) => (e) => setForm((p) => ({ ...p, [key]: e.target.value }));
+  const showFeatured = isDestination || isActivity || isService;
+
+  const actionsFor = (item) => [
+    { label: "Edit", icon: Edit2, onClick: () => openEdit(item) },
+    { label: "Delete", icon: Trash2, danger: true, onClick: () => removeItem(item) },
+  ];
+
+  let body;
+  if (isLoading) {
+    body = <SkeletonRows rows={6} />;
+  } else if (isError) {
+    body = <ErrorState description="These entries could not be loaded." onRetry={() => refetch()} />;
+  } else if (!filtered.length) {
+    body = items.length ? (
+      <EmptyState
+        icon={Search}
+        title="No entries match your search"
+        action={<Button size="sm" onClick={() => setSearch("")}>Clear search</Button>}
+      />
+    ) : (
+      <EmptyState
+        icon={FileText}
+        title={`No ${String(pluralText[activeType] || "entries").toLowerCase()} yet`}
+        description="Entries you add here appear on the public site once published."
+        action={<Button variant="primary" size="sm" icon={Plus} onClick={openCreate}>{addLabel}</Button>}
+      />
+    );
+  } else {
+    body = (
+      <>
+        <ul className="divide-y divide-line md:hidden">
+          {filtered.map((item) => (
+            <li key={item.id} className="flex items-start gap-3 px-4 py-3">
+              <div className="min-w-0 flex-1">
+                <button type="button" onClick={() => openEdit(item)} className="block max-w-full truncate text-left text-sm font-semibold text-navy-900 hover:text-brand-700">
+                  {item.title}
+                </button>
+                {item.slug && <p className="mt-0.5 truncate text-xs text-subtle">/{item.slug}</p>}
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  <StatusBadge status={item.status} />
+                  {item.featured && <Badge tone="brand">Featured</Badge>}
+                </div>
+              </div>
+              <RowActions actions={actionsFor(item)} />
+            </li>
+          ))}
+        </ul>
+        <div className="admin-table-wrap hidden md:block">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th scope="col">Title</th>
+                <th scope="col">Status</th>
+                <th scope="col" className="w-24">Order</th>
+                <th scope="col"><span className="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((item) => (
+                <tr key={item.id}>
+                  <td className="max-w-md">
+                    <button type="button" onClick={() => openEdit(item)} className="cell-primary block max-w-full truncate text-left hover:text-brand-700">
+                      {item.title}
+                    </button>
+                    {item.slug && <p className="mt-0.5 truncate text-xs text-subtle">/{item.slug}</p>}
+                  </td>
+                  <td>
+                    <div className="flex flex-wrap gap-1.5">
+                      <StatusBadge status={item.status} />
+                      {item.featured && <Badge tone="brand">Featured</Badge>}
+                    </div>
+                  </td>
+                  <td className="tabular-nums">{Number(item.sortOrder || 0)}</td>
+                  <td className="w-px"><RowActions actions={actionsFor(item)} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="admin-page-title">
-            {fixedType ? `${typeText[activeType] || "Content"} Management` : "Content Management"}
-          </h1>
-          <p className="admin-soft-muted text-sm">
-            {fixedType
-              ? `Add, update, and manage ${String(typeText[activeType] || "content").toLowerCase()} entries for future site updates.`
-              : "Update destinations, activities, services, seasonal journeys, careers, and support pages from one place."}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => {
-            setEditing(null);
-            setForm(initialForm);
-            setIsFormOpen((v) => !v);
+    <div>
+      <PageHeader
+        title={fixedType ? pluralText[activeType] || "Content" : "Content"}
+        description={fixedType
+          ? `Add, update and manage ${String(pluralText[activeType] || "content").toLowerCase()} shown on the public site.`
+          : "Destinations, activities, services, seasonal journeys, careers and support pages."}
+        actions={<Button variant="primary" icon={Plus} onClick={openCreate}>{addLabel}</Button>}
+      />
+
+      {!fixedType ? (
+        <Tabs
+          ariaLabel="Content type"
+          value={selectedType}
+          onValueChange={(value) => {
+            setSelectedType(value);
+            resetForm();
           }}
-          className="admin-soft-button"
-        >
-          <Plus size={16} />
-          {isFormOpen ? "Close Form" : addLabel}
-        </button>
-      </div>
-
-      <div className="flex flex-col gap-3 md:flex-row">
-        {!fixedType ? (
-          <select
-            className="rounded-2xl px-4 py-3 text-sm font-semibold"
-            value={selectedType}
-            onChange={(e) => {
-              setSelectedType(e.target.value);
-              resetForm();
-            }}
-          >
-            {contentTypes.map((type) => (
-              <option key={type.value} value={type.value}>
-                {type.label}
-              </option>
-            ))}
-          </select>
-        ) : null}
-        <input
-          className="flex-1 rounded-2xl px-4 py-3 text-sm font-medium"
-          placeholder="Search title, slug, type, category, location, or status..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          items={contentTypes}
         />
-      </div>
-
-      {isFormOpen ? (
-        <form
-          onSubmit={onSubmit}
-          className="admin-soft-form grid gap-4 p-6 md:grid-cols-2"
-        >
-          {!isFaq ? (
-            <label className="space-y-2">
-              <span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Title *</span>
-              <input className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} required />
-            </label>
-          ) : null}
-          <label className="space-y-2">
-            <span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Slug</span>
-            <input className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" value={form.slug} onChange={(e) => setForm((p) => ({ ...p, slug: e.target.value }))} />
-          </label>
-
-          {isCareer || isStaticPolicy ? (
-            <>
-              <label className="space-y-2"><span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Eyebrow</span><input className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" value={form.eyebrow} onChange={(e) => setForm((p) => ({ ...p, eyebrow: e.target.value }))} /></label>
-              <label className="space-y-2"><span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Highlight</span><input className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" value={form.highlight} onChange={(e) => setForm((p) => ({ ...p, highlight: e.target.value }))} /></label>
-            </>
-          ) : null}
-
-          {isDestination || isActivity || isService || isSeason || isCareer || isStaticPolicy ? (
-            <label className="space-y-2 md:col-span-2"><span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Short Description</span><textarea className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" rows={2} value={form.shortDescription} onChange={(e) => setForm((p) => ({ ...p, shortDescription: e.target.value }))} /></label>
-          ) : null}
-
-          {isDestination || isActivity || isService || isSeason ? (
-            <label className="space-y-2 md:col-span-2"><span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Description</span><textarea className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" rows={3} value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} /></label>
-          ) : null}
-
-          {isDestination || isService || isSeason || isCareer || isStaticPolicy ? (
-            <label className="space-y-2 md:col-span-2"><span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Main Content</span><textarea className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" rows={5} value={form.content} onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))} /></label>
-          ) : null}
-
-          {isActivity ? (
-            <label className="space-y-2 md:col-span-2"><span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Detailed Description</span><textarea className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" rows={5} placeholder="Add a fuller activity description for the details page." value={form.content} onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))} /></label>
-          ) : null}
-
-          {isDestination || isActivity || isService || isSeason ? (
-            <label className="space-y-2 md:col-span-2"><span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Cover Image URL</span><input className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" value={form.image} onChange={(e) => setForm((p) => ({ ...p, image: e.target.value }))} /></label>
-          ) : null}
-
-          {isDestination ? (
-            <ImageCollectionField label="Gallery Images" value={form.galleryImages} onChange={(value) => setForm((p) => ({ ...p, galleryImages: value }))} placeholder="Add image URLs separated by commas or new lines" helperText="Paste image URLs or upload multiple destination images. The first one can be used as the main slider image." />
-          ) : null}
-
-          {isService ? (
-            <ImageCollectionField label="Service Slider Images" value={form.galleryImages} onChange={(value) => setForm((p) => ({ ...p, galleryImages: value }))} placeholder="Add image URLs separated by commas or new lines" helperText="Paste URLs or upload multiple service images. These appear in the service details slider." />
-          ) : null}
-
-          {isDestination || isActivity ? (
-            <label className="space-y-2"><span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Location</span><input className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" value={form.location} onChange={(e) => setForm((p) => ({ ...p, location: e.target.value }))} /></label>
-          ) : null}
-          {isService ? (
-            <label className="space-y-2"><span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Category</span><input className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" value={form.category} onChange={(e) => setForm((p) => ({ ...p, category: e.target.value }))} /></label>
-          ) : null}
-
-          {isSeason ? (
-            <>
-              <label className="space-y-2"><span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Best Time</span><input className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" value={form.bestTime} onChange={(e) => setForm((p) => ({ ...p, bestTime: e.target.value }))} /></label>
-              <label className="space-y-2"><span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Ideal For</span><input className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" value={form.idealFor} onChange={(e) => setForm((p) => ({ ...p, idealFor: e.target.value }))} /></label>
-              <label className="space-y-2 md:col-span-2"><span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Weather Feel</span><input className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" value={form.weather} onChange={(e) => setForm((p) => ({ ...p, weather: e.target.value }))} /></label>
-              <label className="space-y-2 md:col-span-2"><span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Top Regions (comma separated)</span><input className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" value={form.destinations} onChange={(e) => setForm((p) => ({ ...p, destinations: e.target.value }))} /></label>
-              <label className="space-y-2 md:col-span-2"><span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Season Tags (comma separated)</span><input className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" placeholder="spring, blossom, april" value={form.terms} onChange={(e) => setForm((p) => ({ ...p, terms: e.target.value }))} /></label>
-            </>
-          ) : null}
-
-          {isActivity ? (
-            <>
-              <label className="space-y-2"><span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Duration</span><input className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" value={form.duration} onChange={(e) => setForm((p) => ({ ...p, duration: e.target.value }))} /></label>
-              <label className="space-y-2"><span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Level</span><input className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" value={form.level} onChange={(e) => setForm((p) => ({ ...p, level: e.target.value }))} /></label>
-              <ImageCollectionField label="Hero Slider Images" value={form.heroSliderImages} onChange={(value) => setForm((p) => ({ ...p, heroSliderImages: value }))} placeholder="Add image URLs separated by commas or new lines" helperText="Paste URLs or upload multiple hero images for the activity slider." />
-              <ImageCollectionField label="Activity Highlights Images" value={form.activityHighlightsImages} onChange={(value) => setForm((p) => ({ ...p, activityHighlightsImages: value }))} placeholder="Add image URLs separated by commas or new lines" helperText="Paste URLs or upload multiple images for the activity highlights or gallery area." />
-            </>
-          ) : null}
-
-          {isFaq ? (
-            <>
-              <label className="space-y-2 md:col-span-2"><span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Question</span><input className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" value={form.question} onChange={(e) => setForm((p) => ({ ...p, question: e.target.value }))} /></label>
-              <label className="space-y-2 md:col-span-2"><span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Answer</span><textarea className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" rows={3} value={form.answer} onChange={(e) => setForm((p) => ({ ...p, answer: e.target.value }))} /></label>
-            </>
-          ) : null}
-
-          {isDestination ? (
-            <>
-              <label className="space-y-2 md:col-span-2"><span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Highlights (comma separated)</span><input className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" value={form.highlights} onChange={(e) => setForm((p) => ({ ...p, highlights: e.target.value }))} /></label>
-              <label className="space-y-2 md:col-span-2"><span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Features (comma separated)</span><input className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" value={form.features} onChange={(e) => setForm((p) => ({ ...p, features: e.target.value }))} /></label>
-              <label className="space-y-2"><span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Best Time</span><input className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" value={form.bestTime} onChange={(e) => setForm((p) => ({ ...p, bestTime: e.target.value }))} /></label>
-              <label className="space-y-2"><span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Ideal For</span><input className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" value={form.idealFor} onChange={(e) => setForm((p) => ({ ...p, idealFor: e.target.value }))} /></label>
-            </>
-          ) : null}
-
-          {isActivity || isSeason ? (
-            <label className="space-y-2 md:col-span-2"><span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">{isSeason ? "Activities (comma separated)" : "Includes (comma separated)"}</span><input className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" value={form.includes} onChange={(e) => setForm((p) => ({ ...p, includes: e.target.value }))} /></label>
-          ) : null}
-
-          {isService || isSeason ? (
-            <label className="space-y-2 md:col-span-2"><span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">{isSeason ? "Services (comma separated)" : "Deliverables (comma separated)"}</span><input className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" value={form.deliverables} onChange={(e) => setForm((p) => ({ ...p, deliverables: e.target.value }))} /></label>
-          ) : null}
-
-          {isSeason ? (
-            <>
-              <label className="space-y-2 md:col-span-2"><span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Why Go (comma separated)</span><input className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" value={form.highlights} onChange={(e) => setForm((p) => ({ ...p, highlights: e.target.value }))} /></label>
-              <label className="space-y-2 md:col-span-2"><span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Planning Notes (comma separated)</span><input className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" value={form.features} onChange={(e) => setForm((p) => ({ ...p, features: e.target.value }))} /></label>
-            </>
-          ) : null}
-
-          <label className="space-y-2"><span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Status</span><select className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" value={form.status} onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))}><option value="draft">Draft</option><option value="published">Published</option></select></label>
-          <label className="space-y-2"><span className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Sort Order</span><input type="number" className="w-full rounded-xl border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" value={form.sortOrder} onChange={(e) => setForm((p) => ({ ...p, sortOrder: Number(e.target.value) }))} /></label>
-          {isDestination || isActivity || isService ? (
-            <label className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-200"><input type="checkbox" checked={form.featured} onChange={(e) => setForm((p) => ({ ...p, featured: e.target.checked }))} />Featured</label>
-          ) : null}
-
-          <div className="flex gap-3 md:col-span-2">
-            <button type="submit" className="admin-soft-button">{editing ? updateLabel : addLabel}</button>
-            {editing ? (<button type="button" onClick={resetForm} className="admin-soft-button-ghost">Cancel</button>) : null}
-          </div>
-        </form>
       ) : null}
 
-      <div className="admin-soft-table overflow-hidden">
-        <table className="w-full text-left">
-          <thead>
-            <tr>
-              <th className="px-6 py-4 text-xs font-black uppercase text-slate-400">Title</th>
-              <th className="px-6 py-4 text-xs font-black uppercase text-slate-400">Slug</th>
-              <th className="px-6 py-4 text-xs font-black uppercase text-slate-400">Status</th>
-              <th className="px-6 py-4 text-xs font-black uppercase text-slate-400 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length ? (
-              filtered.map((item) => (
-                <tr key={item.id} className="border-t border-slate-100 dark:border-slate-700">
-                  <td className="px-6 py-4"><p className="font-bold text-slate-900 dark:text-slate-100">{item.title}</p></td>
-                  <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-300">{item.slug}</td>
-                  <td className="px-6 py-4 text-sm capitalize text-slate-600 dark:text-slate-200">{item.status}</td>
-                  <td className="px-6 py-4"><div className="flex justify-end gap-2"><button onClick={() => openEdit(item)} className="cursor-pointer p-2 text-blue-600 hover:opacity-80"><Edit2 size={16} /></button><button onClick={() => removeItem(item.id)} className="cursor-pointer p-2 text-rose-600 hover:opacity-80"><Trash2 size={16} /></button></div></td>
-                </tr>
-              ))
-            ) : (
-              <tr><td colSpan={4} className="px-6 py-10 text-center font-semibold text-slate-400">No content entries found.</td></tr>
-            )}
-          </tbody>
-        </table>
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="relative sm:max-w-xs sm:flex-1">
+          <Search size={15} aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-subtle" />
+          <Input
+            type="search"
+            aria-label="Search entries"
+            className="pl-9"
+            placeholder="Search title, slug, location or status"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        {!isLoading && !isError && items.length > 0 && (
+          <p className="text-[13px] text-subtle sm:ml-auto">{filtered.length} of {items.length} entries</p>
+        )}
       </div>
+
+      <div className="overflow-hidden rounded-card border border-line bg-surface">{body}</div>
+
+      <Drawer
+        open={isFormOpen}
+        onOpenChange={(open) => { if (!open) resetForm(); }}
+        size="xl"
+        title={editing ? `Edit ${singular.toLowerCase()}` : addLabel}
+        description={editing ? editing.title : "Published entries appear on the public site."}
+        footer={(
+          <>
+            <Button onClick={resetForm}>Cancel</Button>
+            <Button type="submit" form={FORM_ID} variant="primary" loading={isSaving}>
+              {editing ? "Save changes" : addLabel}
+            </Button>
+          </>
+        )}
+      >
+        <form id={FORM_ID} onSubmit={onSubmit} className="space-y-5">
+          <Section title="Basics">
+            {!isFaq ? (
+              <Field label="Title" required>
+                <Input value={form.title} onChange={set("title")} />
+              </Field>
+            ) : null}
+            <Field label="Slug" hint="Leave blank to generate it from the title.">
+              <Input value={form.slug} onChange={set("slug")} />
+            </Field>
+            {isCareer || isStaticPolicy ? (
+              <>
+                <Field label="Eyebrow"><Input value={form.eyebrow} onChange={set("eyebrow")} /></Field>
+                <Field label="Highlight"><Input value={form.highlight} onChange={set("highlight")} /></Field>
+              </>
+            ) : null}
+            {isFaq ? (
+              <>
+                <Field label="Question" className="sm:col-span-2"><Input value={form.question} onChange={set("question")} /></Field>
+                <Field label="Answer" className="sm:col-span-2"><Textarea rows={4} value={form.answer} onChange={set("answer")} /></Field>
+              </>
+            ) : null}
+          </Section>
+
+          {isDestination || isActivity || isService || isSeason || isCareer || isStaticPolicy ? (
+            <Section title="Text">
+              <Field label="Short description" className="sm:col-span-2">
+                <Textarea rows={2} value={form.shortDescription} onChange={set("shortDescription")} />
+              </Field>
+              {isDestination || isActivity || isService || isSeason ? (
+                <Field label="Description" className="sm:col-span-2">
+                  <Textarea rows={3} value={form.description} onChange={set("description")} />
+                </Field>
+              ) : null}
+              {isDestination || isService || isSeason || isCareer || isStaticPolicy ? (
+                <Field label="Main content" className="sm:col-span-2">
+                  <Textarea rows={6} value={form.content} onChange={set("content")} />
+                </Field>
+              ) : null}
+              {isActivity ? (
+                <Field label="Detailed description" className="sm:col-span-2">
+                  <Textarea rows={6} placeholder="A fuller activity description for the details page." value={form.content} onChange={set("content")} />
+                </Field>
+              ) : null}
+            </Section>
+          ) : null}
+
+          {isDestination || isActivity || isService || isSeason ? (
+            <Section title="Images">
+              <Field label="Cover image URL" className="sm:col-span-2">
+                <Input value={form.image} onChange={set("image")} placeholder="https://…" />
+              </Field>
+              {isDestination ? (
+                <ImageCollectionField label="Gallery images" value={form.galleryImages} onChange={(value) => setForm((p) => ({ ...p, galleryImages: value }))} placeholder="Image URLs, separated by commas or new lines" helperText="Paste URLs or upload several images. The first can be used as the main slider image." />
+              ) : null}
+              {isService ? (
+                <ImageCollectionField label="Service slider images" value={form.galleryImages} onChange={(value) => setForm((p) => ({ ...p, galleryImages: value }))} placeholder="Image URLs, separated by commas or new lines" helperText="Paste URLs or upload several images. These appear in the service details slider." />
+              ) : null}
+              {isActivity ? (
+                <>
+                  <ImageCollectionField label="Hero slider images" value={form.heroSliderImages} onChange={(value) => setForm((p) => ({ ...p, heroSliderImages: value }))} placeholder="Image URLs, separated by commas or new lines" helperText="Paste URLs or upload several hero images for the activity slider." />
+                  <ImageCollectionField label="Activity highlight images" value={form.activityHighlightsImages} onChange={(value) => setForm((p) => ({ ...p, activityHighlightsImages: value }))} placeholder="Image URLs, separated by commas or new lines" helperText="Paste URLs or upload images for the activity highlights or gallery area." />
+                </>
+              ) : null}
+            </Section>
+          ) : null}
+
+          {isDestination || isActivity || isService || isSeason ? (
+            <Section title="Details">
+              {isDestination || isActivity ? (
+                <Field label="Location"><Input value={form.location} onChange={set("location")} /></Field>
+              ) : null}
+              {isService ? (
+                <Field label="Category"><Input value={form.category} onChange={set("category")} /></Field>
+              ) : null}
+              {isActivity ? (
+                <>
+                  <Field label="Duration"><Input value={form.duration} onChange={set("duration")} /></Field>
+                  <Field label="Level"><Input value={form.level} onChange={set("level")} /></Field>
+                </>
+              ) : null}
+              {isDestination || isSeason ? (
+                <>
+                  <Field label="Best time"><Input value={form.bestTime} onChange={set("bestTime")} /></Field>
+                  <Field label="Ideal for"><Input value={form.idealFor} onChange={set("idealFor")} /></Field>
+                </>
+              ) : null}
+              {isSeason ? (
+                <Field label="Weather feel" className="sm:col-span-2"><Input value={form.weather} onChange={set("weather")} /></Field>
+              ) : null}
+            </Section>
+          ) : null}
+
+          {isDestination || isActivity || isService || isSeason ? (
+            <Section title="Lists">
+              <p className="-mt-1 text-xs text-subtle sm:col-span-2">Separate items with commas.</p>
+              {isDestination || isSeason ? (
+                <>
+                  <Field label={isSeason ? "Why go" : "Highlights"} className="sm:col-span-2"><Input value={form.highlights} onChange={set("highlights")} /></Field>
+                  <Field label={isSeason ? "Planning notes" : "Features"} className="sm:col-span-2"><Input value={form.features} onChange={set("features")} /></Field>
+                </>
+              ) : null}
+              {isActivity || isSeason ? (
+                <Field label={isSeason ? "Activities" : "Includes"} className="sm:col-span-2"><Input value={form.includes} onChange={set("includes")} /></Field>
+              ) : null}
+              {isService || isSeason ? (
+                <Field label={isSeason ? "Services" : "Deliverables"} className="sm:col-span-2"><Input value={form.deliverables} onChange={set("deliverables")} /></Field>
+              ) : null}
+              {isSeason ? (
+                <>
+                  <Field label="Top regions" className="sm:col-span-2"><Input value={form.destinations} onChange={set("destinations")} /></Field>
+                  <Field label="Season tags" className="sm:col-span-2"><Input placeholder="spring, blossom, april" value={form.terms} onChange={set("terms")} /></Field>
+                </>
+              ) : null}
+            </Section>
+          ) : null}
+
+          <Section title="Publishing">
+            <Field label="Status">
+              <Select value={form.status} onChange={set("status")}>
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+              </Select>
+            </Field>
+            <Field label="Sort order" hint="Lower numbers show first.">
+              <Input type="number" value={form.sortOrder} onChange={(e) => setForm((p) => ({ ...p, sortOrder: Number(e.target.value) }))} />
+            </Field>
+            {showFeatured ? (
+              <Checkbox
+                className="sm:col-span-2"
+                label="Featured"
+                description="Highlight this entry in featured sections of the site."
+                checked={form.featured}
+                onChange={(e) => setForm((p) => ({ ...p, featured: e.target.checked }))}
+              />
+            ) : null}
+          </Section>
+        </form>
+      </Drawer>
     </div>
   );
 };
