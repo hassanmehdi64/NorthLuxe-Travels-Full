@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { ArrowRight, Heart, Mail, MapPin, Menu, MessageCircle, Phone, Search, ShoppingBag, X } from "lucide-react";
+import { Heart, Mail, MapPin, Menu, MessageCircle, Phone, Search, ShoppingBag, X } from "lucide-react";
 import { Link } from "@/lib/router";
 import { useSettings } from "../../hooks/useCms";
 import { getCart, getWishlist } from "../../features/commerce/storage";
@@ -91,12 +91,9 @@ export function SiteNavigation() {
                 key={to}
                 to={to}
                 aria-current={active ? "page" : undefined}
-                className={`relative rounded-control px-3 py-2 text-sm font-medium transition-colors ${
-                  active ? "text-brand-700" : "text-navy-900 hover:bg-canvas hover:text-brand-700"
-                }`}
+                className={`nav-link px-3 py-2 text-sm [--nav-x:0.75rem] ${active ? "font-semibold" : "font-medium"}`}
               >
                 {label}
-                {active && <span aria-hidden="true" className="absolute inset-x-3 -bottom-[13px] h-0.5 rounded-full bg-brand" />}
               </Link>
             );
           })}
@@ -142,12 +139,9 @@ export function SiteNavigation() {
                   key={to}
                   to={to}
                   aria-current={active ? "page" : undefined}
-                  className={`flex h-11 items-center justify-between rounded-control px-3 text-[15px] font-medium ${
-                    active ? "bg-brand-50 text-brand-700" : "text-navy-900 hover:bg-canvas"
-                  }`}
+                  className="flex h-11 items-center px-3 text-[15px]"
                 >
-                  {label}
-                  <ArrowRight size={16} className="text-subtle" aria-hidden="true" />
+                  <span className={`nav-link py-1 ${active ? "font-semibold" : "font-medium"}`}>{label}</span>
                 </Link>
               );
             })}
