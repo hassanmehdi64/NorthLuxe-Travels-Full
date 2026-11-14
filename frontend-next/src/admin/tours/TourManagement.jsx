@@ -255,7 +255,7 @@ const TourManagement = () => {
             <div class="card"><div class="label">Location</div><div class="value">${tour.location || "-"}</div></div>
             <div class="card"><div class="label">Duration</div><div class="value">${tour.durationLabel || html`${tour.durationDays} Days`}</div></div>
             <div class="card"><div class="label">Price</div><div class="value">${tour.currency} ${tour.price}</div></div>
-            <div class="card"><div class="label">Seats</div><div class="value">${tour.availableSeats || "-"}</div></div>
+            <div class="card"><div class="label">Seats per departure</div><div class="value">${tour.capacity ?? tour.availableSeats ?? "-"}</div></div>
           </div>
           <div class="card">
             <div class="label">Summary</div>
@@ -379,6 +379,8 @@ const TourManagement = () => {
     openForm({
       ...initialForm,
       ...tour,
+      // Seats per departure: edit capacity itself (availableSeats used to overwrite it).
+      availableSeats: tour.capacity ?? tour.availableSeats,
       currency: displayCurrency(tour.currency || settings?.currency || "PKR"),
       image: tour.image,
       galleryText: normalizeGalleryText(tour.gallery),
@@ -459,7 +461,7 @@ const TourManagement = () => {
                 <p className="truncate text-sm font-semibold text-navy-900">{tour.title}</p>
                 <p className="truncate text-[13px] text-subtle">{tour.location || "—"}</p>
                 <p className="mt-1 text-[13px] text-body">
-                  {formatTourPrice(tour)} <span className="text-subtle">per day · {formatDuration(tour)} · {tour.availableSeats ?? "—"} seats</span>
+                  {formatTourPrice(tour)} <span className="text-subtle">per day · {formatDuration(tour)} · {tour.capacity ?? tour.availableSeats ?? "—"} seats per departure</span>
                 </p>
                 <div className="mt-2">{tourBadges(tour)}</div>
               </div>
@@ -488,7 +490,7 @@ const TourManagement = () => {
                   </td>
                   <td className="whitespace-nowrap font-medium text-navy-900">{formatTourPrice(tour)}</td>
                   <td className="whitespace-nowrap">{formatDuration(tour)}</td>
-                  <td>{tour.availableSeats ?? "—"}</td>
+                  <td>{tour.capacity ?? tour.availableSeats ?? "—"}</td>
                   <td>{tourBadges(tour)}</td>
                   <td><RowActions actions={tourActions(tour)} /></td>
                 </tr>

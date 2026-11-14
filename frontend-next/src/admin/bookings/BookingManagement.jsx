@@ -314,7 +314,7 @@ const BookingManagement = () => {
                 <span className="mt-2 flex flex-wrap items-center gap-1.5">
                   <span className="mr-1 text-[13px] font-semibold text-navy-900">{amount}</span>
                   <StatusBadge status={booking.status} />
-                  {!customTab ? <StatusBadge status={booking.payment} /> : null}
+                  {!customTab ? <StatusBadge status={booking.paymentLabel || booking.payment} /> : null}
                   {customTab && persons ? <span className="text-xs text-subtle">{persons}</span> : null}
                 </span>
               </Link>
@@ -360,7 +360,7 @@ const BookingManagement = () => {
                   <td>
                     <div className="flex flex-wrap items-center gap-1.5">
                       <StatusBadge status={booking.status} />
-                      {!customTab ? <StatusBadge status={booking.payment} /> : null}
+                      {!customTab ? <StatusBadge status={booking.paymentLabel || booking.payment} /> : null}
                     </div>
                   </td>
                   <td className="w-px whitespace-nowrap">

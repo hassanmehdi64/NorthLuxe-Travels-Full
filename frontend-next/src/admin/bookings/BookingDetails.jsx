@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "@/lib/router";
-import { BadgeCheck, CalendarX2, ExternalLink, FileText, PencilLine, Printer, Wallet, XCircle } from "lucide-react";
-import { useAdminTours, useBooking, useConfirmBookingPayment, useUpdateBooking } from "../../hooks/useCms";
+import { BadgeCheck, CalendarX2, CheckCheck, ExternalLink, FileText, History, PencilLine, Printer, RotateCcw, Wallet, XCircle } from "lucide-react";
+import { useAdminTours, useBooking, useBookingTransition, useConfirmBookingPayment, useUpdateBooking } from "../../hooks/useCms";
 import { useToast } from "../../context/ToastContext";
 import { html } from "../../lib/html.mjs";
 import { formatCurrencyAmount } from "../../utils/currency";
@@ -244,8 +244,9 @@ const BookingDetails = () => {
     setOpenPlanDay(0);
   }, [booking, linkedTour]);
 
-  const updateStatus = async (newStatus) => {
-    await updateBooking.mutateAsync({ id, status: newStatus });
+  const transition = useBookingTransition();
+  const runTransition = async (action) => {
+    await transition.mutateAsync({ id, action });
   };
 
   const verifyAdvancePayment = async () => {
@@ -299,27 +300,18 @@ const BookingDetails = () => {
   const totalAmount = Number(booking.totalAmount || booking.amount || standardDetails.finalBudget || 0);
   const paidAmount = Number(booking.paidAmount || booking.advanceAmount || 0);
   const paymentPercent = totalAmount > 0 ? Math.min(100, Math.round((paidAmount / totalAmount) * 100)) : 0;
-  const bookingStages = [
-    { key: "created", title: "Booking Created", done: true, active: booking.status === "pending" && !booking.paymentVerified },
-    {
-      key: "advance",
-      title: "Advance Received",
-      done: paidAmount > 0,
-      active: paidAmount > 0 && !booking.paymentVerified,
-    },
-    {
-      key: "verified",
-      title: "Payment Verification",
-      done: Boolean(booking.paymentVerified),
-      active: !booking.paymentVerified && !isCustomBooking,
-    },
-    {
-      key: "confirmed",
-      title: "Booking Confirmed",
-      done: booking.status === "confirmed" || booking.status === "completed",
-      active: booking.status === "confirmed" || booking.status === "completed",
-    },
-  ];
+  // Stepper follows the booking lifecycle (Requested → Confirmed → Completed),
+  // or ends at Cancelled / Expired.
+  const bookingStages = ["cancelled", "expired"].includes(booking.status)
+    ? [
+        { key: "created", title: "Requested", done: true },
+        { key: booking.status, title: booking.status === "expired" ? "Expired (unpaid 48h)" : "Cancelled", done: true, active: true },
+      ]
+    : [
+        { key: "created", title: "Requested", done: true, active: booking.status === "pending" },
+        { key: "confirmed", title: "Confirmed", done: ["confirmed", "completed"].includes(booking.status), active: booking.status === "confirmed" },
+        { key: "completed", title: "Completed", done: booking.status === "completed", active: booking.status === "completed" },
+      ];
 
   const handleOpenItineraryEditor = () => {
     if (!booking) return;
@@ -788,11 +780,16 @@ const BookingDetails = () => {
   const paymentHistory = Array.isArray(booking.paymentHistory) ? booking.paymentHistory : [];
   const manual = booking.manualPayment || {};
   const addOns = booking.facilities?.addOns?.length ? booking.facilities.addOns.map((item) => humanize(item)).join(", ") : "";
-  const stageLabels = { created: "Created", advance: "Advance received", verified: "Payment review", confirmed: "Confirmed" };
+  const stageLabels = {};
 
-  const canConfirm = !isCustomBooking && booking.status === "pending";
-  const canVerifyAdvance = !isCustomBooking && !booking.paymentVerified && booking.paymentMethod !== "pay_on_arrival";
-  const canCancel = !isCustomBooking && booking.status !== "cancelled";
+  const allowed = Array.isArray(booking.allowedActions) ? booking.allowedActions : [];
+  const canConfirm = allowed.includes("confirm");
+  const canComplete = allowed.includes("complete");
+  const canReopen = allowed.includes("reopen");
+  const canCancel = allowed.includes("cancel");
+  const canVerifyAdvance = !isCustomBooking && !booking.paymentVerified && booking.paymentMethod !== "pay_on_arrival" && ["pending", "confirmed"].includes(booking.status);
+  const holdUntil = booking.seatState === "held" && booking.holdExpiresAt ? new Date(booking.holdExpiresAt) : null;
+  const history = Array.isArray(booking.history) ? [...booking.history].reverse() : [];
   const busy = Boolean(pendingAction);
 
   const runAction = async (key, action, failureTitle) => {
@@ -809,12 +806,37 @@ const BookingDetails = () => {
   const handleConfirmBooking = async () => {
     const ok = await confirm({
       title: "Confirm booking?",
-      description: `${booking.customer || "This customer"}'s booking will be marked as confirmed.`,
+      description:
+        actualPaid > 0
+          ? `${booking.customer || "This customer"}'s booking will be confirmed and its seats kept.`
+          : `Nothing has been paid yet. The booking will be confirmed, its seats kept, and it will show as "Unpaid · pay on arrival".`,
       confirmLabel: "Confirm booking",
       cancelLabel: "Not now",
       tone: "primary",
     });
-    if (ok) runAction("confirm", () => updateStatus("confirmed"), "Could not confirm booking");
+    if (ok) runAction("confirm", () => runTransition("confirm"), "Could not confirm booking");
+  };
+
+  const handleCompleteBooking = async () => {
+    const ok = await confirm({
+      title: "Mark trip as completed?",
+      description: balance > 0 ? `A balance of ${money(balance)} is still outstanding.` : "The trip will be marked as completed.",
+      confirmLabel: "Mark completed",
+      cancelLabel: "Not now",
+      tone: "primary",
+    });
+    if (ok) runAction("complete", () => runTransition("complete"), "Could not complete booking");
+  };
+
+  const handleReopenBooking = async () => {
+    const ok = await confirm({
+      title: "Reopen this booking?",
+      description: "It returns to Pending and its seats are held again for 48 hours, if the date still has space.",
+      confirmLabel: "Reopen booking",
+      cancelLabel: "Not now",
+      tone: "primary",
+    });
+    if (ok) runAction("reopen", () => runTransition("reopen"), "Could not reopen booking");
   };
 
   const handleVerifyAdvance = async () => {
@@ -832,11 +854,11 @@ const BookingDetails = () => {
   const handleCancelBooking = async () => {
     const ok = await confirm({
       title: "Cancel this booking?",
-      description: `${booking.customer || "This customer"}'s booking status will change to cancelled.`,
+      description: `${booking.customer || "This customer"}'s booking will be cancelled and its seats released.`,
       confirmLabel: "Cancel booking",
       cancelLabel: "Keep booking",
     });
-    if (ok) runAction("cancel", () => updateStatus("cancelled"), "Could not cancel booking");
+    if (ok) runAction("cancel", () => runTransition("cancel"), "Could not cancel booking");
   };
 
   const itineraryItems = hasSavedItinerary
@@ -860,7 +882,7 @@ const BookingDetails = () => {
             <span>Booking {booking.bookingCode ? `#${booking.bookingCode}` : ""}</span>
             <span className="flex flex-wrap items-center gap-1.5">
               <StatusBadge status={booking.status || "pending"} />
-              {!isCustomBooking ? <StatusBadge status={booking.payment || "Pending"} /> : null}
+              {!isCustomBooking ? <StatusBadge status={booking.paymentLabel || booking.payment || "Unpaid"} /> : null}
               {isCustomBooking ? <Badge tone="brand">Custom request</Badge> : null}
             </span>
           </span>
@@ -873,6 +895,16 @@ const BookingDetails = () => {
         {canConfirm ? (
           <Button variant="primary" icon={BadgeCheck} onClick={handleConfirmBooking} loading={pendingAction === "confirm"} disabled={busy}>
             Confirm booking
+          </Button>
+        ) : null}
+        {canComplete ? (
+          <Button variant="primary" icon={CheckCheck} onClick={handleCompleteBooking} loading={pendingAction === "complete"} disabled={busy}>
+            Mark completed
+          </Button>
+        ) : null}
+        {canReopen ? (
+          <Button icon={RotateCcw} onClick={handleReopenBooking} loading={pendingAction === "reopen"} disabled={busy}>
+            Reopen booking
           </Button>
         ) : null}
         {canVerifyAdvance ? (
@@ -903,6 +935,12 @@ const BookingDetails = () => {
           <Fact label="Paid" value={money(actualPaid)} emphasis={actualPaid > 0} />
           <Fact label="Balance" value={money(balance)} />
         </dl>
+        {holdUntil ? (
+          <p className="mt-3 text-[13px] text-subtle">
+            Seats held until <strong className="font-semibold text-navy-900">{formatDate(holdUntil.toISOString(), true)}</strong>.
+            {" "}If nothing is paid by then, the booking expires and the seats are released.
+          </p>
+        ) : null}
         <div className="mt-4 flex items-center gap-3" title={`${paidPercent}% paid`}>
           <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-line" role="progressbar" aria-label="Amount paid" aria-valuemin={0} aria-valuemax={100} aria-valuenow={paidPercent}>
             <div className="h-full rounded-full bg-brand" style={{ width: `${paidPercent}%` }} />
@@ -1074,6 +1112,28 @@ const BookingDetails = () => {
 
           <TextSection title="Special requests" text={isCustomBooking ? request.requirements : booking.specialRequirements} />
           <TextSection title="Admin notes" text={booking.notes} />
+
+          {history.length ? (
+            <Card title="Activity" description="Status changes, payments and seat events, newest first.">
+              <ol className="space-y-3">
+                {history.map((entry, index) => (
+                  <li key={`${entry.at}-${index}`} className="flex gap-3">
+                    <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-canvas text-subtle">
+                      <History size={13} aria-hidden="true" />
+                    </span>
+                    <div className="min-w-0 text-[13px] leading-relaxed">
+                      <p className="font-semibold text-navy-900">
+                        {humanize(entry.action)}
+                        {entry.byName ? <span className="font-normal text-subtle"> · {entry.byName}</span> : null}
+                      </p>
+                      {entry.note ? <p className="text-body">{entry.note}</p> : null}
+                      <p className="text-xs text-subtle">{formatDate(entry.at, true)}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </Card>
+          ) : null}
         </div>
       </div>
 

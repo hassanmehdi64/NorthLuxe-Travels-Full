@@ -370,6 +370,21 @@ export const useConfirmBookingPayment = () => {
   });
 };
 
+/** Booking status changes (confirm | cancel | complete | reopen) — validated + logged server-side. */
+export const useBookingTransition = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, action, note }) =>
+      apiClient.post(`/bookings/${id}/transition`, { action, note }).then(unwrap).then((d) => d.item),
+    onSuccess: (item) => {
+      qc.setQueryData(keys.booking(item.id), item);
+      qc.invalidateQueries({ queryKey: keys.bookings });
+      qc.invalidateQueries({ queryKey: keys.dashboard });
+      qc.invalidateQueries({ queryKey: keys.notifications });
+    },
+  });
+};
+
 export const useUpdateBooking = () => {
   const qc = useQueryClient();
   return useMutation({

@@ -19,12 +19,16 @@ const STATUS_TONES = {
   confirmed: "success",
   completed: "info",
   cancelled: "danger",
+  expired: "neutral",
   // payment status
   "verification pending": "warning",
   "partially paid": "info",
   paid: "success",
   failed: "danger",
   refunded: "neutral",
+  unpaid: "warning",
+  "unpaid · pay on arrival": "warning",
+  "awaiting verification": "warning",
   // inquiries
   new: "brand",
   unread: "warning",

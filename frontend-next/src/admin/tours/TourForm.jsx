@@ -147,7 +147,7 @@ const TourForm = ({
               ))}
             </Select>
           </Field>
-          <Field label="Available seats">
+          <Field label="Seats per departure" hint="Seats are held for 48h when someone books a date, and released if unpaid.">
             <Input type="number" min={0} value={form.availableSeats} onChange={setNumber("availableSeats")} />
           </Field>
         </div>
