@@ -7,6 +7,11 @@ import "../styles/public-theme.css";
 import "../styles/ui-consistency.css";
 import "../styles/public-consistency.css";
 
+// Pages rebuilt on the design system opt out of the legacy `.public-page-content`
+// overrides (styles/public-theme.css). Remove this once the legacy CSS is deleted.
+const REBUILT_ROUTES = [/^\/$/, /^\/tours\/[^/]+\/?$/, /^\/book(\/|$)/, /^\/custom-booking(\/|$)/];
+const usesLegacyStyles = (pathname = "") => !REBUILT_ROUTES.some((pattern) => pattern.test(pathname));
+
 const PublicLayout = ({ children }) => {
   const { data: settings } = useSettings(true);
   const location = useLocation();
@@ -35,7 +40,7 @@ const PublicLayout = ({ children }) => {
         Skip to content
       </a>
       <SiteNavigation />
-      <div id="main-content" className={`flex-1 ${location.pathname === "/" ? "" : "public-page-content"}`}>
+      <div id="main-content" className={`flex-1 ${usesLegacyStyles(location.pathname) ? "public-page-content" : ""}`}>
         {children}
       </div>
       <SiteFooter />
