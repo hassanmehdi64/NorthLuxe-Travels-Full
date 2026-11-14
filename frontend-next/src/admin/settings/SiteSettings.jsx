@@ -7,6 +7,7 @@ import SecuritySettings from "./SecuritySettings";
 import BookingPricingSettings from "./BookingPricingSettings";
 import EmailSettings from "./EmailSettings";
 import { useSettings, useUpdateSettings } from "../../hooks/useCms";
+import { Button, Card, PageHeader, Skeleton, TabPanel, Tabs } from "../ui";
 import { useToast } from "../../context/ToastContext";
 import { getApiErrorMessage } from "../../lib/apiError";
 
@@ -83,6 +84,9 @@ const buildSettingsPayload = (settings, activeTab) => {
   return settings;
 };
 
+// Tabs whose fields are included in buildSettingsPayload (Email/Security have nothing to save).
+const SAVABLE_TABS = ["General", "Appearance", "Pricing", "SEO"];
+
 const mergeSettingsAfterSave = (previous, savedSettings, payload) => ({
   ...(previous || {}),
   ...(savedSettings || {}),
@@ -134,75 +138,70 @@ const SiteSettings = () => {
   };
 
   const tabs = [
-    { id: "General", icon: <Globe size={18} />, label: "General" },
-    { id: "Appearance", icon: <Palette size={18} />, label: "Branding" },
-    { id: "Pricing", icon: <CreditCard size={18} />, label: "Payments & Pricing" },
-    { id: "Email", icon: <Mail size={18} />, label: "Email" },
-    { id: "SEO", icon: <Eye size={18} />, label: "SEO & Social" },
-    { id: "Security", icon: <Shield size={18} />, label: "Security" },
+    { value: "General", icon: Globe, label: "General" },
+    { value: "Appearance", icon: Palette, label: "Branding" },
+    { value: "Pricing", icon: CreditCard, label: "Payments & pricing" },
+    { value: "Email", icon: Mail, label: "Email" },
+    { value: "SEO", icon: Eye, label: "SEO & social" },
+    { value: "Security", icon: Shield, label: "Security" },
   ];
 
+  const pending = isSaving || updateSettings.isPending;
+  const canSave = SAVABLE_TABS.includes(activeTab);
+
+  const header = (
+    <PageHeader
+      title="Settings"
+      description="Manage branding, booking pricing, and customer payment setup."
+      actions={
+        canSave && settings ? (
+          <Button variant="primary" icon={Save} loading={pending} onClick={handleSave}>
+            {pending ? "Saving…" : "Save changes"}
+          </Button>
+        ) : null
+      }
+    />
+  );
+
   if (isLoading || !settings) {
-    return <div className="text-slate-500">Loading settings...</div>;
+    return (
+      <div className="max-w-5xl pb-10">
+        {header}
+        <Card>
+          <div aria-busy="true" aria-label="Loading settings" className="space-y-4">
+            <Skeleton className="h-9 w-2/3" />
+            <div className="grid gap-4 md:grid-cols-2">
+              {Array.from({ length: 6 }, (_, index) => <Skeleton key={index} className="h-9" />)}
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-6xl space-y-8 pb-10">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="admin-page-title">
-            Site Settings
-          </h1>
-          <p className="text-sm text-slate-500 font-medium">
-            Manage branding, booking pricing, and customer payment setup.
-          </p>
-        </div>
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="flex items-center gap-2 bg-slate-900 text-white px-8 py-4 rounded-[1.5rem] font-bold text-sm shadow-xl hover:bg-blue-600 transition-all disabled:opacity-50"
-        >
-          <Save size={18} /> {isSaving ? "Saving..." : `Save ${activeTab} Changes`}
-        </button>
-      </div>
-
-      <div className="flex flex-col lg:flex-row gap-8">
-        {/* Navigation Sidebar */}
-        <div className="w-full lg:w-64 space-y-2">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`w-full flex items-center gap-3 px-5 py-4 rounded-[1.5rem] font-bold text-sm transition-all ${
-                activeTab === tab.id
-                  ? "bg-white text-blue-600 shadow-md border border-slate-100"
-                  : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              {tab.icon} {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Dynamic Content Area */}
-        <div className="flex-1 bg-white rounded-[2.5rem] border border-slate-100 p-8 shadow-sm min-h-[500px]">
-          {activeTab === "General" && (
-            <GeneralSettings settings={settings} setSettings={updateDraft} />
-          )}
-          {activeTab === "Appearance" && (
-            <AppearanceSettings settings={settings} setSettings={updateDraft} />
-          )}
-          {activeTab === "Pricing" && (
-            <BookingPricingSettings settings={settings} setSettings={updateDraft} />
-          )}
-          {activeTab === "Email" && <EmailSettings />}
-          {activeTab === "SEO" && (
-            <SEOSettings settings={settings} setSettings={updateDraft} />
-          )}
-          {activeTab === "Security" && <SecuritySettings />}
-        </div>
-      </div>
+    <div className="max-w-5xl pb-10">
+      {header}
+      <Tabs value={activeTab} onValueChange={setActiveTab} items={tabs} ariaLabel="Settings sections">
+        <TabPanel value="General">
+          <GeneralSettings settings={settings} setSettings={updateDraft} />
+        </TabPanel>
+        <TabPanel value="Appearance">
+          <AppearanceSettings settings={settings} setSettings={updateDraft} />
+        </TabPanel>
+        <TabPanel value="Pricing">
+          <BookingPricingSettings settings={settings} setSettings={updateDraft} />
+        </TabPanel>
+        <TabPanel value="Email">
+          <EmailSettings />
+        </TabPanel>
+        <TabPanel value="SEO">
+          <SEOSettings settings={settings} setSettings={updateDraft} />
+        </TabPanel>
+        <TabPanel value="Security">
+          <SecuritySettings />
+        </TabPanel>
+      </Tabs>
     </div>
   );
 };

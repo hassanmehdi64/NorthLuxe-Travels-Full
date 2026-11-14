@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { AlertTriangle, CheckCircle2, Mail, RefreshCw, Send, ServerCog } from "lucide-react";
+import { AlertTriangle, CheckCircle2, RefreshCw, Send } from "lucide-react";
+import { Badge, Button, Card, Field, IconButton, Input, Skeleton } from "../ui";
 import {
   useEmailStatus,
   useSendTestEmail,
@@ -7,23 +8,16 @@ import {
 } from "../../hooks/useCms";
 import { useToast } from "../../context/ToastContext";
 
-const StatusPill = ({ active, label }) => (
-  <span
-    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${
-      active ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
-    }`}
-  >
-    {active ? <CheckCircle2 size={12} /> : <AlertTriangle size={12} />}
-    {label}
-  </span>
-);
-
-const FieldRow = ({ label, value, ok }) => (
-  <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-1 py-3 last:border-b-0">
-    <span className="text-xs font-bold text-slate-500">{label}</span>
-    <span className={`text-right text-sm font-black ${ok ? "text-slate-900" : "text-rose-600"}`}>
-      {value}
-    </span>
+const EnvRow = ({ label, value, ok }) => (
+  <div className="flex items-center justify-between gap-3 py-2.5">
+    <dt className="font-mono text-[13px] text-subtle">{label}</dt>
+    <dd className="min-w-0 text-right">
+      {ok ? (
+        <span className="break-all text-sm font-medium text-navy-900">{value}</span>
+      ) : (
+        <Badge tone="danger">{value}</Badge>
+      )}
+    </dd>
   </div>
 );
 
@@ -54,106 +48,85 @@ const EmailSettings = () => {
   };
 
   if (isLoading) {
-    return <div className="text-slate-500">Loading email setup...</div>;
+    return (
+      <Card>
+        <div aria-busy="true" aria-label="Loading email setup" className="space-y-3">
+          <Skeleton className="w-1/3" />
+          <Skeleton className="w-2/3" />
+          <Skeleton className="w-1/2" />
+        </div>
+      </Card>
+    );
   }
 
   const configured = Boolean(status?.configured);
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-      <div
-        className={`flex flex-col gap-4 rounded-[1.75rem] border px-5 py-5 sm:flex-row sm:items-start sm:justify-between ${
-          configured ? "border-emerald-100 bg-emerald-50/70" : "border-amber-100 bg-amber-50/70"
-        }`}
-      >
-        <div className="flex items-start gap-4">
-          <span
-            className={`mt-0.5 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${
-              configured ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
-            }`}
-          >
-            <Mail size={22} />
-          </span>
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">SMTP Delivery</p>
-            <h2 className="admin-section-title mt-1 text-[1.05rem]">
-              {configured ? "Email variables are present" : "Email variables are incomplete"}
-            </h2>
-            <p className="mt-1 text-sm font-medium text-slate-600">
-              Status is read from the running backend environment, so this reflects production after redeploy.
-            </p>
-          </div>
-        </div>
-        <StatusPill active={configured} label={configured ? "Configured" : "Missing"} />
-      </div>
-
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="rounded-[1.75rem] border border-slate-200 bg-white px-5 py-5">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div>
-              <h3 className="text-sm font-black uppercase tracking-[0.1em] text-slate-900">Environment Check</h3>
-              <p className="mt-1 text-xs font-medium text-slate-500">Secrets stay hidden; only presence is shown.</p>
-            </div>
-            <button
-              type="button"
+    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <Card
+        title={configured ? "Email variables are present" : "Email variables are incomplete"}
+        description="Read from the running backend environment, so this reflects production after redeploy. Secrets stay hidden; only presence is shown."
+        actions={
+          <>
+            <Badge tone={configured ? "success" : "danger"}>
+              {configured ? <CheckCircle2 size={13} aria-hidden="true" /> : <AlertTriangle size={13} aria-hidden="true" />}
+              {configured ? "Configured" : "Missing"}
+            </Badge>
+            <IconButton
+              label="Refresh SMTP status"
+              icon={RefreshCw}
+              variant="secondary"
+              size="sm"
+              iconSize={15}
               onClick={() => refetch()}
               disabled={isFetching}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
-              title="Refresh SMTP status"
-            >
-              <RefreshCw size={16} className={isFetching ? "animate-spin" : ""} />
-            </button>
-          </div>
+              className={isFetching ? "[&_svg]:animate-spin" : undefined}
+            />
+          </>
+        }
+      >
+        <dl className="divide-y divide-line">
+          <EnvRow label="SMTP_HOST" value={status?.hostSet ? "Set" : "Missing"} ok={status?.hostSet} />
+          <EnvRow label="SMTP_PORT" value={status?.port || "Missing"} ok={Boolean(status?.port)} />
+          <EnvRow label="SMTP_SECURE" value={String(Boolean(status?.secure))} ok />
+          <EnvRow label="SMTP_USER" value={status?.user || "Missing"} ok={status?.userSet} />
+          <EnvRow label="SMTP_PASS" value={status?.passSet ? "Set" : "Missing"} ok={status?.passSet} />
+          <EnvRow label="EMAIL_FROM" value={status?.from || "Missing"} ok={status?.fromSet} />
+        </dl>
+      </Card>
 
-          <FieldRow label="SMTP_HOST" value={status?.hostSet ? "Set" : "Missing"} ok={status?.hostSet} />
-          <FieldRow label="SMTP_PORT" value={status?.port || "Missing"} ok={Boolean(status?.port)} />
-          <FieldRow label="SMTP_SECURE" value={String(Boolean(status?.secure))} ok />
-          <FieldRow label="SMTP_USER" value={status?.user || "Missing"} ok={status?.userSet} />
-          <FieldRow label="SMTP_PASS" value={status?.passSet ? "Set" : "Missing"} ok={status?.passSet} />
-          <FieldRow label="EMAIL_FROM" value={status?.from || "Missing"} ok={status?.fromSet} />
-        </div>
-
-        <div className="space-y-4 rounded-[1.75rem] border border-slate-200 bg-white px-5 py-5">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
-              <ServerCog size={18} />
-            </span>
-            <div>
-              <h3 className="text-sm font-black uppercase tracking-[0.1em] text-slate-900">Live Test</h3>
-              <p className="mt-1 text-xs font-medium text-slate-500">Verify auth, then send a real message.</p>
-            </div>
-          </div>
-
-          <button
-            type="button"
+      <Card title="Live test" description="Verify the connection, then send a real message.">
+        <div className="space-y-4">
+          <Button
+            variant="secondary"
+            icon={CheckCircle2}
+            loading={verifyEmail.isPending}
             onClick={handleVerify}
-            disabled={verifyEmail.isPending}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-black text-white transition hover:bg-blue-600 disabled:opacity-50"
+            className="w-full"
           >
-            <CheckCircle2 size={16} /> {verifyEmail.isPending ? "Verifying..." : "Verify SMTP"}
-          </button>
+            {verifyEmail.isPending ? "Verifying…" : "Verify SMTP"}
+          </Button>
 
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-slate-400 px-1">Test Recipient</label>
-            <input
+          <Field label="Test recipient" hint="Leave blank to use the admin email.">
+            <Input
               type="email"
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-blue-100"
-              placeholder="Leave blank to use admin email"
+              placeholder="name@example.com"
             />
-          </div>
+          </Field>
 
-          <button
-            type="button"
+          <Button
+            variant="primary"
+            icon={Send}
+            loading={sendTestEmail.isPending}
             onClick={handleSendTest}
-            disabled={sendTestEmail.isPending}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-800 transition hover:bg-slate-50 disabled:opacity-50"
+            className="w-full"
           >
-            <Send size={16} /> {sendTestEmail.isPending ? "Sending..." : "Send Test Email"}
-          </button>
+            {sendTestEmail.isPending ? "Sending…" : "Send test email"}
+          </Button>
         </div>
-      </div>
+      </Card>
     </div>
   );
 };
