@@ -315,7 +315,11 @@ export const useCreatePublicBooking = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload) =>
-      apiClient.post("/bookings/public", payload).then(unwrap).then((d) => d.item),
+      apiClient
+        .post("/bookings/public", payload)
+        .then(unwrap)
+        // Keep the server's note when a card payment needs staff review.
+        .then((d) => ({ ...d.item, paymentVerificationNote: d.paymentVerificationNote || "" })),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: keys.bookings });
       qc.invalidateQueries({ queryKey: keys.dashboard });
@@ -323,6 +327,15 @@ export const useCreatePublicBooking = () => {
     },
   });
 };
+
+/** Seats left for a tour on a travel date (YYYY-MM-DD). */
+export const useTourAvailability = (slug, date) =>
+  useQuery({
+    queryKey: ["tours", "availability", slug, date],
+    queryFn: () => apiClient.get(`/tours/${encodeURIComponent(slug)}/availability`, { params: { date } }).then(unwrap),
+    enabled: Boolean(slug && date),
+    staleTime: 30_000,
+  });
 
 export const usePublicBookingQuote = () =>
   useMutation({
