@@ -13,10 +13,10 @@ const FooterSocial = ({ href, icon, name }) => {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="ql-btn-icon h-8 w-8 rounded-lg text-[var(--footer-muted)] shadow-none hover:shadow-none [--btn-icon-bg:rgba(255,255,255,0.04)] [--btn-icon-border:rgba(255,255,255,0.12)] [--btn-icon-text:var(--footer-muted)] [--btn-icon-hover-bg:rgba(255,255,255,0.08)] [--btn-icon-hover-border:rgba(var(--c-brand-rgb),0.38)] [--btn-icon-hover-text:var(--footer-accent)]"
+      className="grid h-8 w-8 place-items-center rounded-control border border-white/15 text-white/70 transition-colors hover:border-white/40 hover:text-white"
       aria-label={name}
     >
-      <span>{icons[icon]}</span>
+      {icons[icon]}
     </a>
   );
 };

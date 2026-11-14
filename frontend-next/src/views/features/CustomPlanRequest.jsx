@@ -5,7 +5,6 @@ import { useCreatePublicBooking } from "../../hooks/useCms";
 import { useToast } from "../../context/ToastContext";
 import BookingDropdown from "../../components/booking/BookingDropdown";
 import BookingDateField from "../../components/booking/BookingDateField";
-import { formatCurrencyAmount } from "../../utils/currency";
 
 const DESTINATION_OPTIONS = [
   "Hunza",
@@ -183,10 +182,8 @@ const CustomPlanRequest = () => {
   const sourceTour = location.state?.sourceTour || null;
   const [form, setForm] = useState(() => ({
     ...createInitialForm(sourceTour),
-    budget:
-      sourceTour?.price && sourceTour?.currency
-        ? formatCurrencyAmount(sourceTour.price, sourceTour.currency)
-        : "",
+    // Budget is the customer's own figure; a per-day tour rate is not a trip budget.
+    budget: "",
   }));
   const [submitting, setSubmitting] = useState(false);
   const [submissionNotice, setSubmissionNotice] = useState(null);
@@ -277,10 +274,7 @@ const CustomPlanRequest = () => {
       });
       setForm({
         ...createInitialForm(sourceTour),
-        budget:
-          sourceTour?.price && sourceTour?.currency
-            ? formatCurrencyAmount(sourceTour.price, sourceTour.currency)
-            : "",
+        budget: "",
       });
     } catch (error) {
       toast.error(

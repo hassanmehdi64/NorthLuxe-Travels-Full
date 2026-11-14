@@ -49,6 +49,8 @@ const buildSettingsPayload = (settings, activeTab) => {
     return pick(settings, [
       "siteName",
       "siteTagline",
+      "heroEyebrow",
+      "foundingYear",
       "siteEmail",
       "supportEmail",
       "sitePhone",

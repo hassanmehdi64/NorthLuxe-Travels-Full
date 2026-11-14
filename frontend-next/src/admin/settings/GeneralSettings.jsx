@@ -90,6 +90,18 @@ const GeneralSettings = ({ settings, setSettings }) => {
             onChange={(value) => setField(settings, setSettings, "siteTagline", value)}
             placeholder="Premium tours across Gilgit-Baltistan."
           />
+          <TextField
+            label="Home Hero Eyebrow"
+            value={settings.heroEyebrow}
+            onChange={(value) => setField(settings, setSettings, "heroEyebrow", value)}
+            placeholder="Gilgit-Baltistan · Since 2015 (leave empty to auto-build)"
+          />
+          <TextField
+            label="Founding Year"
+            value={settings.foundingYear}
+            onChange={(value) => setField(settings, setSettings, "foundingYear", value)}
+            placeholder="e.g. 2015"
+          />
           <div className="space-y-2">
             <label className="admin-soft-label px-1">Currency</label>
             <select

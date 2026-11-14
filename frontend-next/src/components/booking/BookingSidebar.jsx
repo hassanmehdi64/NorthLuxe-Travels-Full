@@ -1,6 +1,6 @@
 import { Link } from "@/lib/router";
 import { Check, MoveUpRight } from "lucide-react";
-import { formatCurrencyAmount } from "../../utils/currency";
+import { getTourPricing } from "../../lib/pricing";
 
 const BookingSidebar = ({ popularPlans, selectedTourId, setForm }) => (
   <aside className="min-w-0 space-y-4 lg:sticky lg:top-24 lg:self-start">
@@ -60,7 +60,7 @@ const BookingSidebar = ({ popularPlans, selectedTourId, setForm }) => (
 
                 <div className="mt-2 flex items-center justify-between gap-2">
                   <p className="text-sm font-bold text-[#345060]">
-                    {formatCurrencyAmount(plan.price, plan.currency)}
+                    {getTourPricing(plan).formattedFinal} <span className="text-[10px] font-normal text-muted">{getTourPricing(plan).unitLabel}</span>
                   </p>
                   {selectedTourId === plan.id ? (
                     <span className="inline-flex items-center rounded-full bg-[#123245] px-2 py-0.5 text-[8px] font-bold uppercase tracking-[0.12em] text-white">

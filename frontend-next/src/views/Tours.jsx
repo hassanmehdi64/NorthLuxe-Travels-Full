@@ -11,6 +11,7 @@ import {
   getTourSearchText,
   normalizeSearchValue,
 } from "../utils/tourSearch";
+import { getTourSortPrice } from "../lib/pricing";
 
 const Tours = () => {
   const { data: tours = [], isLoading } = usePublicTours();
@@ -110,8 +111,8 @@ const Tours = () => {
       .sort((a, b) => {
         const relevanceDiff = (b.meta.score || 0) - (a.meta.score || 0);
         if ((query.trim() || travelDate) && relevanceDiff !== 0) return relevanceDiff;
-        if (filters.sortBy === "price_low") return Number(a.tour.price || 0) - Number(b.tour.price || 0);
-        if (filters.sortBy === "price_high") return Number(b.tour.price || 0) - Number(a.tour.price || 0);
+        if (filters.sortBy === "price_low") return getTourSortPrice(a.tour) - getTourSortPrice(b.tour);
+        if (filters.sortBy === "price_high") return getTourSortPrice(b.tour) - getTourSortPrice(a.tour);
         if (filters.sortBy === "newest") return new Date(b.tour.createdAt) - new Date(a.tour.createdAt);
         const popularityA = Number(a.tour.reviews || 0) + (a.tour.featured ? 100 : 0);
         const popularityB = Number(b.tour.reviews || 0) + (b.tour.featured ? 100 : 0);

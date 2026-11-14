@@ -45,7 +45,7 @@ const ToursList = ({ tours = [], searchSummary = {}, isLoading = false }) => {
 
         {isLoading ? (
           <div
-            className="grid items-stretch gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4"
+            className="tour-card-grid"
             aria-label="Loading tours"
             aria-busy="true">
             {Array.from({ length: 8 }, (_, index) => (
@@ -67,7 +67,7 @@ const ToursList = ({ tours = [], searchSummary = {}, isLoading = false }) => {
             ))}
           </div>
         ) : tours.length ? (
-          <div className="grid items-stretch gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="tour-card-grid">
             {tours.map((tour, index) => (
               <TourCard key={tour.id} tour={tour} index={index} />
             ))}

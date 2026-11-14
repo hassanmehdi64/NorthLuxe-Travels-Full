@@ -142,19 +142,13 @@ export const ItinerarySection = ({ items = [], openIndex, onToggle }) => {
                     <span className="min-w-0">
                       <span className="block text-[10px] font-medium text-[var(--c-brand)]">Day {dayLabel}</span>
                       <span className="mt-1 block text-[13px] font-semibold leading-5 text-theme">{item.title || `Day ${dayLabel}`}</span>
-                      {item.placesCovered?.length > 0 && <span className="mt-1 block text-[11px] leading-5 text-muted">{item.placesCovered.join(" / ")}</span>}
                     </span>
                     <ChevronDown size={15} className={`shrink-0 text-muted transition-transform ${isOpen ? "rotate-180" : ""}`} />
                   </button>
                   <div id={panelId} role="region" aria-labelledby={headingId} hidden={!isOpen} className="tour-itinerary-panel">
-                    <ul className="space-y-2">
-                      {item.bulletPoints?.map((point, pointIndex) => (
-                        <li key={`${pointIndex}-${point}`} className="flex items-start gap-2 text-[12px] leading-6 text-muted">
-                          <Check size={13} className="mt-1.5 shrink-0 text-[var(--c-brand)]" />
-                          <span>{point}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    {item.description
+                      ? <p className="text-[12px] leading-6 text-muted">{item.description}</p>
+                      : <p className="text-[12px] leading-6 text-muted">Day details are shared before departure.</p>}
                   </div>
                 </div>
               </li>

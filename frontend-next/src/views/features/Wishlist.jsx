@@ -1,10 +1,10 @@
 import { Link } from "@/lib/router";
 import { Heart, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import FeaturePageHeader from "../../components/features/FeaturePageHeader";
 import { addToCart, clearWishlist, getWishlist, removeFromWishlist } from "../../features/commerce/storage";
 import { useToast } from "../../context/ToastContext";
-import { formatCurrencyAmount } from "../../utils/currency";
+import { getTourPricing } from "../../lib/pricing";
 
 const WishlistPage = () => {
   const [items, setItems] = useState([]);
@@ -17,7 +17,6 @@ const WishlistPage = () => {
     return () => window.removeEventListener("ql-wishlist-updated", sync);
   }, []);
 
-  const total = useMemo(() => items.reduce((sum, item) => sum + Number(item.price || 0), 0), [items]);
 
   const handleRemove = (id, title) => {
     removeFromWishlist(id);
@@ -50,10 +49,7 @@ const WishlistPage = () => {
           <>
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-theme bg-theme-surface px-4 py-3">
               <p className="text-sm text-theme font-semibold">
-                {items.length} saved tours | Total value:{" "}
-                <span className="text-[var(--c-brand)] font-bold">
-                  PKR {total.toLocaleString()}
-                </span>
+                {items.length} saved {items.length === 1 ? "tour" : "tours"}
               </p>
               <button
                 type="button"
@@ -75,7 +71,7 @@ const WishlistPage = () => {
                     </p>
                     <h3 className="mt-2 text-lg font-bold text-theme line-clamp-2">{item.title}</h3>
                     <p className="mt-1 text-sm text-muted">
-                      {item.durationDays} days | {formatCurrencyAmount(item.price, item.currency)}
+                      {item.durationDays} days | {getTourPricing(item).formattedFinal} {getTourPricing(item).unitLabel}
                     </p>
                     <div className="mt-4 flex gap-2">
                       <button

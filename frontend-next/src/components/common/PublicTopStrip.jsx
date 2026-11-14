@@ -6,8 +6,8 @@ const normalizePhoneHref = (value) => String(value || "").replace(/[^\d+]/g, "")
 const PublicTopStrip = () => {
   const { data: settings } = useSettings(true);
 
-  const phone = settings?.sitePhone || "+92 300 1234567";
-  const email = settings?.supportEmail || settings?.siteEmail || "info@northluxetravels.com";
+  const phone = settings?.sitePhone || "";
+  const email = settings?.supportEmail || settings?.siteEmail || "";
   const tagline = settings?.siteTagline || "Premium tours across Gilgit-Baltistan.";
 
   return (

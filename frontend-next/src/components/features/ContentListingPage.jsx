@@ -1,15 +1,15 @@
 import { Link } from "@/lib/router";
 import { usePublicContentList } from "../../hooks/useCms";
 import PageHero from "../common/PageHero";
+import SectionHeading from "../common/SectionHeading";
+import SafeImage from "../common/SafeImage";
 
 const ContentListingPage = ({
   type,
   route,
-  heroTag,
   heroTitle,
   heroAccent,
   heroText,
-  eyebrow,
   heading,
   itemLabel,
   itemsLabel,
@@ -22,7 +22,6 @@ const ContentListingPage = ({
       <PageHero
         page={route}
         label={`${itemLabel} hero`}
-        tag={heroTag}
         title={heroTitle}
         accent={heroAccent}
         text={heroText}
@@ -30,23 +29,13 @@ const ContentListingPage = ({
 
       <section className="pb-9 pt-5 sm:pb-10 sm:pt-6 lg:pb-12 lg:pt-7">
         <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10">
-          <div className="mb-4 flex flex-col gap-2 border-b border-slate-200 pb-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <div className="mb-2 inline-flex items-center gap-2.5 text-[9px] font-bold uppercase tracking-[0.2em] text-slate-500">
-                <span className="h-px w-6 bg-[var(--c-brand)]" />
-                {eyebrow}
-              </div>
-              <h2 className="text-xl font-bold tracking-tight text-[var(--c-navy)] sm:text-2xl">
-                {heading}
-              </h2>
-            </div>
-
+          <SectionHeading title={heading}>
             {!isLoading ? (
-              <span className="text-[10px] font-semibold text-slate-500">
+              <span className="brand-section-count">
                 {items.length} {items.length === 1 ? itemLabel : itemsLabel}
               </span>
             ) : null}
-          </div>
+          </SectionHeading>
 
           {isLoading ? (
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3.5 md:grid-cols-3 xl:grid-cols-4" aria-label={`Loading ${itemsLabel}`} aria-busy="true">
@@ -65,7 +54,7 @@ const ContentListingPage = ({
             <div className="grid grid-cols-1 items-stretch sm:grid-cols-2 gap-2.5 sm:gap-3.5 md:grid-cols-3 xl:grid-cols-4">
               {items.map((item) => {
                 const itemRoute = item.slug || item.id;
-                const image = item.image || item.coverImage || "/gb.jpg";
+                const image = item.image || item.coverImage || "";
                 const category =
                   type === "activity"
                     ? item.location || "Guided activity"
@@ -77,18 +66,11 @@ const ContentListingPage = ({
                     to={`/${route}/${itemRoute}`}
                     className="luxe-content-card group flex h-full min-w-0 flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-[0_3px_12px_rgba(var(--c-brand-rgb),0.05)] transition-[border-color,box-shadow] duration-200 hover:border-[rgba(var(--c-brand-rgb),0.35)] hover:shadow-[0_8px_20px_rgba(var(--c-brand-rgb),0.09)]">
                     <div className="relative h-28 overflow-hidden bg-slate-100 sm:h-40 lg:h-44">
-                      {/* CMS images can use dynamically configured external hosts. */}
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                      <SafeImage
                         src={image}
                         alt={item.title || itemLabel}
                         loading="lazy"
                         decoding="async"
-                        onError={(event) => {
-                          if (event.currentTarget.dataset.fallbackApplied) return;
-                          event.currentTarget.dataset.fallbackApplied = "true";
-                          event.currentTarget.src = "/gb.jpg";
-                        }}
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.035]"
                       />
                       <span className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-[var(--c-navy)]/45 to-transparent" />

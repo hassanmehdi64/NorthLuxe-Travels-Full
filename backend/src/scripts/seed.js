@@ -14,30 +14,6 @@ import { destinationSeedData } from "./data/destinationSeedData.js";
 import { activitySeedData } from "./data/activitySeedData.js";
 import { serviceSeedData } from "./data/serviceSeedData.js";
 
-const defaultTourReviewItems = [
-  {
-    name: "Ayesha Khan",
-    rating: 5,
-    date: "Jan 2026",
-    tag: "Family Trip",
-    comment: "Very smooth coordination, reliable stays, and great route planning.",
-  },
-  {
-    name: "Omar Ahmed",
-    rating: 4,
-    date: "Dec 2025",
-    tag: "Friends Group",
-    comment: "Clean itinerary and good support. Overall experience was excellent.",
-  },
-  {
-    name: "Nida Fatima",
-    rating: 5,
-    date: "Nov 2025",
-    tag: "Couple Tour",
-    comment: "Loved the balance of comfort and exploration. Team stayed responsive.",
-  },
-];
-
 const seed = async () => {
   await connectDb();
 
@@ -87,7 +63,6 @@ const seed = async () => {
       featured: true,
       status: "published",
       availableSeats: 12,
-      reviewItems: defaultTourReviewItems,
     },
     {
       title: "Skardu Explorer Tour",
@@ -104,7 +79,6 @@ const seed = async () => {
       featured: true,
       status: "published",
       availableSeats: 18,
-      reviewItems: defaultTourReviewItems,
     },
     {
       title: "Nagar and Hunza Panorama",
@@ -121,7 +95,6 @@ const seed = async () => {
       status: "published",
       availableSeats: 14,
       tags: ["Scenic", "Family", "Heritage"],
-      reviewItems: defaultTourReviewItems,
     },
     {
       title: "Khaplu and Shigar Heritage Route",
@@ -138,7 +111,6 @@ const seed = async () => {
       status: "published",
       availableSeats: 10,
       tags: ["Culture", "Premium", "History"],
-      reviewItems: defaultTourReviewItems,
     },
     {
       title: "Astore and Deosai Summer Escape",
@@ -155,7 +127,6 @@ const seed = async () => {
       status: "published",
       availableSeats: 16,
       tags: ["Nature", "Summer", "Photography"],
-      reviewItems: defaultTourReviewItems,
     },
     {
       title: "Fairy Meadows Signature Trek",
@@ -173,7 +144,6 @@ const seed = async () => {
       status: "published",
       availableSeats: 12,
       tags: ["Trekking", "Adventure", "Mountains"],
-      reviewItems: defaultTourReviewItems,
     },
   ]);
 

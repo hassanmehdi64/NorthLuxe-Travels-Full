@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useGallery, usePublicTours } from "../hooks/useCms";
 import { X, Maximize2 } from "lucide-react";
 import { buildGalleryItems } from "../utils/gallery";
+import SafeImage from "../components/common/SafeImage";
 
 const GalleryPage = () => {
   const { data: items = [] } = useGallery(true);
@@ -39,16 +40,11 @@ const GalleryPage = () => {
                 onClick={() => setSelectedImg(img)}
                 className="brand-gallery-tile group relative text-left"
               >
-                <img
+                <SafeImage
                   src={img.src}
                   alt={img.alt || img.title}
                   loading="lazy"
                   decoding="async"
-                  onError={(event) => {
-                    if (event.currentTarget.dataset.fallbackApplied) return;
-                    event.currentTarget.dataset.fallbackApplied = "true";
-                    event.currentTarget.src = "/gb.jpg";
-                  }}
                   className="h-full w-full object-cover transition-transform duration-[850ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.055]"
                 />
 
@@ -78,14 +74,9 @@ const GalleryPage = () => {
             <X size={20} />
           </button>
           <div className="relative max-w-5xl w-full flex flex-col items-center" onClick={(e) => e.stopPropagation()}>
-            <img
+            <SafeImage
               src={selectedImg.src}
               alt={selectedImg.alt || selectedImg.title}
-              onError={(event) => {
-                if (event.currentTarget.dataset.fallbackApplied) return;
-                event.currentTarget.dataset.fallbackApplied = "true";
-                event.currentTarget.src = "/gb.jpg";
-              }}
               className="max-h-[80vh] w-auto rounded-xl shadow-2xl"
             />
           </div>

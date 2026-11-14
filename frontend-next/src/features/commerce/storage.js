@@ -35,6 +35,7 @@ export const normalizeTourItem = (tour) => ({
   location: tour?.location || "",
   durationDays: Number(tour?.durationDays || 0),
   price: Number(tour?.price || 0),
+  discountPercent: Number(tour?.discountPercent || 0),
   currency: displayCurrency(tour?.currency),
   availableSeats: Number(tour?.availableSeats || 0),
 });

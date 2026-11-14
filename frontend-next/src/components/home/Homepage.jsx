@@ -2,127 +2,306 @@
 
 import { useEffect, useState } from "react";
 import { useReducedMotion } from "framer-motion";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  BedDouble,
+  BriefcaseBusiness,
+  Building2,
+  Map as MapIcon,
+  MessageCircle,
+  MessagesSquare,
+  Phone,
+  Plane,
+  Route,
+} from "lucide-react";
 import { Link } from "@/lib/router";
 import { usePublicContentList, usePublicTours, useSettings } from "../../hooks/useCms";
 import { getHomeHeroImages } from "../../lib/siteTheme";
-import Loader from "../spinner/Loader";
+import { getContactDetails } from "../../lib/contact";
 import TravelSearch from "./TravelSearch";
+import DestinationCard from "../featured-destinations/DestinationCard";
+import SectionHeading from "../common/SectionHeading";
+import SafeImage from "../common/SafeImage";
 import TourCard from "../tours/TourCard";
 import Testimonials from "../testimonials/Testimonials";
 import GallerySection from "../about/GallerySection";
 import { homeDestinations, featuredTours, contentCards, internationalDestinations } from "./homeData.mjs";
 import { homeAssets as assets } from "./homeAssets";
-import { Action, Icon, planRoute } from "./SiteChrome";
+import { planRoute } from "./SiteChrome";
+
+// Configurable in Admin → Settings → General. Never shows the street address.
+const getHeroEyebrow = (settings) => {
+  const custom = String(settings?.heroEyebrow || "").trim();
+  if (custom) return custom;
+  const year = String(settings?.foundingYear || "").trim();
+  return year ? `Gilgit-Baltistan · Since ${year}` : "Gilgit-Baltistan";
+};
 
 function Hero() {
   const { data: settings } = useSettings(true);
   const reducedMotion = useReducedMotion();
   const slides = settings?.homeHeroImages?.length ? getHomeHeroImages(settings) : [assets.CinematicHunzaHero];
   const [activeSlide, setActiveSlide] = useState(0);
+  const heroEyebrow = getHeroEyebrow(settings);
+
   useEffect(() => {
-    if (slides.length < 2 || reducedMotion) return;
+    if (slides.length < 2 || reducedMotion) return undefined;
     const timer = window.setInterval(() => setActiveSlide((current) => (current + 1) % slides.length), 7000);
     return () => window.clearInterval(timer);
   }, [slides.length, reducedMotion]);
-  return <><section className="home-hero">
-    {slides.map((src, index) => <img key={src} className={`home-cover home-hero-slide ${index === activeSlide % slides.length ? "is-active" : ""}`} src={src} alt={index === activeSlide % slides.length ? "North Luxe travel landscape" : ""} aria-hidden={index !== activeSlide % slides.length} fetchPriority={index === 0 ? "high" : "auto"} onError={(event) => { if (event.currentTarget.src.endsWith("/gb.jpg")) return; event.currentTarget.src = "/gb.jpg"; }} />)}
-    <div className="home-hero-scrim" />
-    <div className="home-hero-copy">
-      <h1>Travel Beyond the Ordinary</h1>
-      <p className="home-hero-description">{settings?.siteTagline || "Journeys across Pakistan and beyond, tailored to you."}</p>
-      <div className="home-hero-actions"><Action to="/destinations" variant="sand">Explore Destinations</Action><Action to={planRoute} variant="outline" arrow={false}>Plan My Trip</Action></div>
+
+  return (
+    <>
+    <section aria-labelledby="home-hero-title" className="relative isolate bg-navy-950">
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        {slides.map((src, index) => {
+          const active = index === activeSlide % slides.length;
+          return (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={src}
+              src={src}
+              alt={active ? "Northern Pakistan landscape" : ""}
+              aria-hidden={!active}
+              fetchPriority={index === 0 ? "high" : "auto"}
+              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${active ? "opacity-100" : "opacity-0"}`}
+              onError={(event) => { if (!event.currentTarget.src.endsWith("/gb.jpg")) event.currentTarget.src = "/gb.jpg"; }}
+            />
+          );
+        })}
+        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-navy-950/80 via-navy-950/45 to-navy-950/10" />
+        <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-navy-950/50 to-transparent" />
+      </div>
+
+      <div className="container-site pb-20 pt-14 sm:pb-24 sm:pt-20 lg:pb-28 lg:pt-24">
+        <div className="max-w-xl">
+          {heroEyebrow && <p className="eyebrow eyebrow-light mb-4">{heroEyebrow}</p>}
+          <h1 id="home-hero-title" className="heading-display text-white">Travel beyond the ordinary</h1>
+          <p className="mt-4 max-w-md text-base leading-relaxed text-white/85">
+            {settings?.siteTagline || "Journeys across Pakistan and beyond, tailored to you."}
+          </p>
+          <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
+            <Link to="/tours" className="btn btn-primary btn-lg">
+              Explore tours<ArrowRight size={16} aria-hidden="true" />
+            </Link>
+            <Link to={planRoute} className="text-sm font-semibold text-white underline-offset-4 hover:underline">
+              Or plan a private trip
+            </Link>
+          </div>
+        </div>
+      </div>
+
+    </section>
+    <div className="container-site relative z-10 -mt-12">
+      <TravelSearch />
     </div>
-    <p className="home-hero-location"><Icon name="MapPin" />{settings?.address || "Pakistan"}</p>
-  </section><TravelSearch /></>;
-}
-
-function SectionHeading({ eyebrow, title, description, link, to }) {
-  return <div className="home-section-heading"><div>{eyebrow && <p className="home-eyebrow">{eyebrow}</p>}<h2>{title}</h2>{description && <p className="home-description">{description}</p>}</div>
-    {link && <Link className="home-section-link" to={to}>{link}<Icon name="ArrowRight" /></Link>}
-  </div>;
-}
-
-function ContentState({ loading, children }) {
-  return <div className="home-content-state" role="status" aria-busy={loading}>{loading ? "Loading journeys…" : children}</div>;
-}
-
-function Photograph({ image, alt, className = "" }) {
-  return <div className={`home-photograph ${className}`}><img className="home-cover" src={assets[image] || image || "/gb.jpg"} alt={alt} loading="lazy" onError={(event) => { if (event.currentTarget.src.endsWith("/gb.jpg")) return; event.currentTarget.src = "/gb.jpg"; }} /></div>;
+    </>
+  );
 }
 
 function PopularDestinations() {
   const { data: tours = [], isLoading: toursLoading } = usePublicTours();
   const { data: entries = [], isLoading } = usePublicContentList("destination");
-  const destinations = homeDestinations(tours, entries).slice(0, 7);
-  return <section className="home-section home-container home-destinations">
-    <SectionHeading title="Popular destinations" link="All destinations" to="/destinations" />
-    <div className="home-destination-grid">{destinations.map((item, index) => <Link key={item.slug || item.title} to={item.href} className={`home-destination-card ${index < 3 ? "home-destination-primary" : ""}`}>
-      <Photograph image={item.image} alt={item.title} /><h3>{item.title}</h3>
-    </Link>)}</div>
-    {!destinations.length && <ContentState loading={isLoading || toursLoading}>Published destinations will appear here.</ContentState>}
-  </section>;
+  const destinations = homeDestinations(tours, entries).slice(0, 8);
+  const loading = !destinations.length && (isLoading || toursLoading);
+
+  return (
+    <section className="section pt-10 sm:pt-12">
+      <div className="container-site">
+        <SectionHeading eyebrow="Where to go" title="Popular destinations" link="All destinations" to="/destinations" />
+        {loading ? (
+          <div className="grid-cards-4" aria-busy="true" aria-label="Loading destinations">
+            {Array.from({ length: 8 }, (_, index) => <div key={index} className="destination-tile-skeleton" />)}
+          </div>
+        ) : destinations.length ? (
+          <div className="grid-cards-4">
+            {destinations.map((item) => <DestinationCard key={item.slug || item.id || item.title} destination={item} overlay />)}
+          </div>
+        ) : (
+          <p className="empty-state">Published destinations will appear here.</p>
+        )}
+      </div>
+    </section>
+  );
 }
 
-function FeaturedPackages() {
+function FeaturedTours() {
   const { data: tours = [], isLoading } = usePublicTours();
   const packages = featuredTours(tours);
-  return <section className="home-section home-container home-tinted">
-    <SectionHeading title="Featured tours" link="All packages" to="/tours" />
-    <div className="home-three-grid">{packages.map((tour, index) => <TourCard key={tour.id || tour.slug} tour={tour} index={index} />)}</div>
-    {!packages.length && <ContentState loading={isLoading}>Published tour packages will appear here.</ContentState>}
-  </section>;
-}
-
-function OurApproach() {
-  const principles = [
-    ["Route", "Personalized itineraries", "Trips shaped around your interests and pace."],
-    ["BedDouble", "Handpicked stays", "Comfortable stays selected for your journey."],
-    ["MessagesSquare", "Dedicated support", "Our team is here to help with your plans."],
-  ];
-  return <section className="home-section home-container home-approach"><SectionHeading title="Travel your way" />
-    <div className="home-three-grid">{principles.map(([icon, title, description]) => <article key={title}><span className="home-principle-icon"><Icon name={icon} /></span><div className="home-principle-copy"><h3>{title}</h3><p>{description}</p></div></article>)}</div>
-  </section>;
-}
-
-function PakistanFeature() {
-  return <section className="home-container home-feature-region" aria-labelledby="northern-pakistan-title">
-    <div className="home-pakistan-feature">
-      <div className="home-northern-landscape"><Photograph image="SkarduLandscape" alt="Upper Kachura Lake, Skardu" /></div>
-      <div className="home-northern-copy">
-        <span className="home-feature-label"><Icon name="MapPin3" />Northern Pakistan</span>
-        <h2 id="northern-pakistan-title">A little closer to the mountains</h2>
-        <p>Discover Hunza, Skardu and Swat with a journey shaped around you.</p>
-        <Action to="/tours?q=Pakistan" variant="sand">Explore Pakistan tours</Action>
+  return (
+    <section className="section section-white">
+      <div className="container-site">
+        <SectionHeading eyebrow="Ready-made journeys" title="Featured tours" link="All tours" to="/tours" />
+        {packages.length ? (
+          <div className="tour-card-grid scroll-row-mobile">{packages.map((tour) => <TourCard key={tour.id || tour.slug} tour={tour} />)}</div>
+        ) : (
+          <p className="empty-state">{isLoading ? "Loading tours…" : "Published tours will appear here."}</p>
+        )}
       </div>
-    </div>
-  </section>;
+    </section>
+  );
+}
+
+const benefits = [
+  [Route, "Personalised itineraries", "Routes shaped around your interests, pace and travel dates."],
+  [BedDouble, "Handpicked stays", "Comfortable hotels and guesthouses selected for each journey."],
+  [MessagesSquare, "Dedicated support", "One team to plan with before you go and to call on the road."],
+];
+
+function WhyNorthLuxe() {
+  return (
+    <section className="section" aria-labelledby="why-title">
+      <div className="container-site grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
+        <div className="media aspect-[4/3] rounded-panel lg:aspect-[5/4]">
+          <SafeImage src={assets.SkarduLandscape} alt="Upper Kachura Lake, Skardu" loading="lazy" />
+        </div>
+        <div>
+          <p className="eyebrow mb-2">Why North Luxe</p>
+          <h2 id="why-title" className="heading-2">A little closer to the mountains</h2>
+          <p className="mt-3 max-w-lg text-[15px] leading-relaxed text-subtle">
+            Discover Hunza, Skardu and beyond with a local team that plans every detail around you.
+          </p>
+          <ul className="mt-6 grid gap-4">
+            {benefits.map(([Icon, title, text]) => (
+              <li key={title} className="flex gap-3.5">
+                <span className="icon-tile"><Icon size={19} aria-hidden="true" /></span>
+                <div>
+                  <h3 className="text-[15px] font-semibold text-navy-900">{title}</h3>
+                  <p className="mt-0.5 text-sm leading-relaxed text-subtle">{text}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <Link to="/tours?q=Pakistan" className="btn btn-secondary mt-7">
+            Explore Pakistan tours<ArrowRight size={15} aria-hidden="true" />
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const serviceIcons = [Building2, Plane, BriefcaseBusiness, MapIcon];
+
+function ExperiencesAndServices() {
+  const { data: activities = [], isLoading: activitiesLoading } = usePublicContentList("activity");
+  const { data: serviceItems = [] } = usePublicContentList("service");
+  const experiences = contentCards(activities, "activities").slice(0, 3);
+  const services = contentCards(serviceItems, "services").slice(0, 4);
+
+  return (
+    <section className="section section-white">
+      <div className="container-site">
+        <SectionHeading eyebrow="Ways to explore" title="Experiences" link="All experiences" to="/activities" />
+        {experiences.length ? (
+          <div className="grid-cards-3 scroll-row-mobile">
+            {experiences.map((item) => (
+              <Link key={item.id || item.slug} to={item.href} className="card card-hover group flex flex-col overflow-hidden">
+                <div className="media media-zoom aspect-[16/10]">
+                  <SafeImage src={item.image} alt="" label="Photo coming soon" loading="lazy" />
+                </div>
+                <div className="flex flex-1 flex-col p-4">
+                  {(item.eyebrow || item.category || item.location) && (
+                    <p className="line-clamp-1 text-xs font-medium text-brand-700">{item.eyebrow || item.category || item.location}</p>
+                  )}
+                  <h3 className="heading-3 mt-1">{item.title}</h3>
+                  {item.description && <p className="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-subtle">{item.description}</p>}
+                  <span className="link-arrow mt-auto pt-3">Explore<ArrowRight size={14} aria-hidden="true" /></span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p className="empty-state">{activitiesLoading ? "Loading experiences…" : "Published activities will appear here."}</p>
+        )}
+
+        {services.length > 0 && (
+          <div className="mt-10">
+            <div className="mb-4 flex items-end justify-between gap-4">
+              <h3 className="heading-3">Travel services</h3>
+              <Link to="/services" className="link-arrow">All services<ArrowRight size={15} aria-hidden="true" /></Link>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {services.map((item, index) => {
+                const Icon = serviceIcons[index % serviceIcons.length];
+                return (
+                  <Link key={item.id || item.slug} to={item.href} className="card card-hover group flex gap-3 p-4">
+                    <span className="icon-tile h-9 w-9"><Icon size={17} aria-hidden="true" /></span>
+                    <div className="min-w-0">
+                      <h4 className="flex items-center gap-1 text-sm font-semibold text-navy-900 group-hover:text-brand-700">
+                        {item.title}
+                      </h4>
+                      {item.description && <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-subtle">{item.description}</p>}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  );
 }
 
 function InternationalDestinations() {
   const { data: entries = [] } = usePublicContentList("destination");
   const international = internationalDestinations(entries);
   if (!international.length) return null;
-  return <section className="home-container home-international home-section"><SectionHeading title="International destinations" link="International tours" to="/tours?q=international" />
-    <div className="home-four-grid">{international.map((item) => <article key={item.id || item.slug}><Link to={item.href}><Photograph image={item.image} alt={item.title} /><h3>{item.title}</h3></Link><Link className="home-text-link" to={item.href}>Explore {item.title} ↗</Link></article>)}</div>
-  </section>;
+  return (
+    <section className="section">
+      <div className="container-site">
+        <SectionHeading eyebrow="Beyond Pakistan" title="International destinations" link="International tours" to="/tours?q=international" />
+        <div className="grid-cards-4">
+          {international.map((item) => <DestinationCard key={item.id || item.slug} destination={item} overlay />)}
+        </div>
+      </div>
+    </section>
+  );
 }
 
-function Experiences() {
-  const { data: items = [], isLoading } = usePublicContentList("activity");
-  const experiences = contentCards(items, "activities").slice(0, 3);
-  return <section className="home-section home-container home-tinted"><SectionHeading title="Experiences" />
-    <div className="home-three-grid">{experiences.map((item) => <article className="home-experience" key={item.id || item.slug}><Photograph image={item.image} alt={item.title} /><div className="home-experience-details"><p className="home-eyebrow">{item.eyebrow || item.category || item.location}</p><h3>{item.title}</h3><p className="home-card-summary">{item.description}</p><Link className="home-text-link" to={item.href}>Explore experience<Icon name="ArrowUpRight2" /></Link></div></article>)}</div>
-    {!experiences.length && <ContentState loading={isLoading}>Published activities will appear here.</ContentState>}
-  </section>;
-}
-
-function Services() {
-  const { data: items = [], isLoading } = usePublicContentList("service");
-  const services = contentCards(items, "services").slice(0, 4);
-  const icons = ["Building2", "Plane1", "BriefcaseBusiness", "Map"];
-  return <section className="home-section home-container home-services"><SectionHeading title="Travel services" link="All services" to="/services" /><div className="home-four-grid">{services.map((item, index) => <Link className="home-service" key={item.id || item.slug} to={item.href}><Icon name={icons[index]} /><h3>{item.title}</h3><p className="home-card-summary">{item.description}</p></Link>)}</div>{!services.length && <ContentState loading={isLoading}>Published travel services will appear here.</ContentState>}</section>;
+function ContactBand() {
+  const { data: settings } = useSettings(true);
+  const { phone, phoneHref, whatsapp } = getContactDetails(settings);
+  const whatsappHref = whatsapp ? `https://wa.me/${whatsapp.replace(/[^\d]/g, "")}` : "";
+  return (
+    <section className="bg-navy-900">
+      <div className="container-site flex flex-col gap-6 py-10 sm:py-12 lg:flex-row lg:items-center lg:justify-between">
+        <div className="max-w-xl">
+          <h2 className="heading-2 text-white">Planning a trip to the north?</h2>
+          <p className="mt-2 text-[15px] leading-relaxed text-white/75">
+            Tell us your dates and group size and we&apos;ll put together a route, stays and transport for you.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <Link to={planRoute} className="btn btn-primary">Plan my trip<ArrowUpRight size={15} aria-hidden="true" /></Link>
+          {whatsappHref && (
+            <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="btn btn-outline-light">
+              <MessageCircle size={15} aria-hidden="true" />WhatsApp us
+            </a>
+          )}
+          {phone && (
+            <a href={phoneHref} className="btn btn-outline-light"><Phone size={15} aria-hidden="true" />{phone}</a>
+          )}
+        </div>
+      </div>
+    </section>
+  );
 }
 
 export default function Homepage() {
-  return <main className="public-home-content"><Hero /><PopularDestinations /><FeaturedPackages /><OurApproach /><PakistanFeature /><InternationalDestinations /><Experiences /><Services /><Testimonials /><GallerySection /></main>;
+  return (
+    <main>
+      <Hero />
+      <PopularDestinations />
+      <FeaturedTours />
+      <WhyNorthLuxe />
+      <ExperiencesAndServices />
+      <InternationalDestinations />
+      <Testimonials />
+      <GallerySection />
+      <ContactBand />
+    </main>
+  );
 }

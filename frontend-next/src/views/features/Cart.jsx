@@ -1,10 +1,10 @@
 import { Link } from "@/lib/router";
 import { ShoppingBag, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import FeaturePageHeader from "../../components/features/FeaturePageHeader";
 import { clearCart, getCart, removeFromCart } from "../../features/commerce/storage";
 import { useToast } from "../../context/ToastContext";
-import { formatCurrencyAmount } from "../../utils/currency";
+import { getTourPricing } from "../../lib/pricing";
 
 const CartPage = () => {
   const [items, setItems] = useState([]);
@@ -17,10 +17,6 @@ const CartPage = () => {
     return () => window.removeEventListener("ql-cart-updated", sync);
   }, []);
 
-  const subtotal = useMemo(
-    () => items.reduce((sum, item) => sum + Number(item.price || 0), 0),
-    [items],
-  );
 
   const handleRemove = (id, title) => {
     removeFromCart(id);
@@ -56,7 +52,7 @@ const CartPage = () => {
                     </p>
                     <h3 className="cart-tour-title text-base font-medium text-theme line-clamp-2">{item.title}</h3>
                     <p className="text-sm text-muted mt-1">
-                      {item.durationDays} days | {formatCurrencyAmount(item.price, item.currency)}
+                      {item.durationDays} days | {getTourPricing(item).formattedFinal} {getTourPricing(item).unitLabel}
                     </p>
                   </div>
                   <button
@@ -78,16 +74,11 @@ const CartPage = () => {
                   <span>Items</span>
                   <span>{items.length}</span>
                 </div>
-                <div className="flex justify-between text-muted">
-                  <span>Subtotal</span>
-                  <span>PKR {subtotal.toLocaleString()}</span>
-                </div>
               </div>
               <div className="my-4 border-t border-theme" />
-              <div className="flex justify-between font-bold text-theme">
-                <span>Total</span>
-                <span>PKR {subtotal.toLocaleString()}</span>
-              </div>
+              <p className="text-xs leading-5 text-muted">
+                Prices shown are per-day tour rates. Your total is calculated at booking from your dates, vehicle and number of guests.
+              </p>
               <Link
                 to="/book"
                 className="ql-btn-primary mt-5 w-full px-4 py-3 text-xs font-black uppercase tracking-[0.18em]"

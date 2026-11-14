@@ -39,10 +39,10 @@ const Footer = () => {
   const email =
     settings?.supportEmail ||
     settings?.siteEmail ||
-    "info@northluxetravels.com";
+    "";
 
-  const phone = settings?.sitePhone || "+92 300 1234567";
-  const address = settings?.address || "Skardu, Gilgit-Baltistan";
+  const phone = settings?.sitePhone || "";
+  const address = settings?.address || "";
 
   const footerColors = getFooterColors(settings);
   const footerLogoUrl = "/north-luxe-logo.png";

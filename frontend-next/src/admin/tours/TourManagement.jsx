@@ -14,6 +14,7 @@ const initialForm = {
   currency: "PKR",
   image: "",
   galleryText: "",
+  placesText: "",
   shortDescription: "",
   description: "",
   status: "draft",
@@ -173,6 +174,7 @@ const TourManagement = () => {
       ...prefill,
       currency: displayCurrency(prefill.currency || settings?.currency || "PKR"),
       galleryText: normalizeGalleryText(prefill.gallery),
+      placesText: (prefill.places || []).join("\n"),
       hotelCategoryKeys: prefill.hotelCategoryKeys || "",
       vehicleTypeKeys: normalizeKeyList(prefill.vehicleTypeKeys),
       itinerary: Array.isArray(prefill.itinerary) && prefill.itinerary.length
@@ -340,6 +342,7 @@ const TourManagement = () => {
       capacity: syncedSeats,
       availableSeats: syncedSeats,
       gallery: parseGalleryText(form.galleryText),
+      places: form.placesText.split("\n").map((item) => item.trim()).filter(Boolean),
       itinerary: form.itinerary
         .map((item, index) => ({
           day: index + 1,
@@ -534,6 +537,17 @@ const TourManagement = () => {
                     </div>
                   </div>
                 </label>
+                <label className="space-y-2 md:col-span-2">
+                  <span className={labelClassName}>Places Covered</span>
+                  <textarea
+                    rows={4}
+                    className={textareaClassName}
+                    placeholder={"One place per line, e.g.\nAltit Fort\nAttabad Lake"}
+                    value={form.placesText}
+                    onChange={(e) => setForm((p) => ({ ...p, placesText: e.target.value }))}
+                  />
+                  <p className="text-xs text-slate-500 dark:text-slate-300">Shown as chips on the tour page. Leave empty to hide the section.</p>
+                </label>
               </div>
             </section>
 
@@ -545,8 +559,8 @@ const TourManagement = () => {
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="space-y-2">
-                  <span className={labelClassName}>Price *</span>
-                  <input className={inputClassName} type="number" placeholder="Price" value={form.price} onChange={(e) => setForm((p) => ({ ...p, price: Number(e.target.value) }))} required />
+                  <span className={labelClassName}>Price per day *</span>
+                  <input className={inputClassName} type="number" placeholder="Price per day" value={form.price} onChange={(e) => setForm((p) => ({ ...p, price: Number(e.target.value) }))} required />
                 </label>
                 <AdminDropdownField
                   label="Currency"
@@ -965,6 +979,7 @@ const TourManagement = () => {
                             currency: displayCurrency(tour.currency || settings?.currency || "PKR"),
                             image: tour.image,
                             galleryText: normalizeGalleryText(tour.gallery),
+                            placesText: (tour.places || []).join("\n"),
                             hotelCategoryKeys: tour.availableOptions?.hotelCategories?.join(", ") || "",
                             vehicleTypeKeys: normalizeKeyList(tour.availableOptions?.vehicleTypes),
                             itinerary: Array.isArray(tour.itinerary) && tour.itinerary.length

@@ -30,22 +30,9 @@ import {
   getTourPlaceName,
   getTourPlanLabel,
 } from "../components/tour-details/tourDetailsData";
+import { getTourRating } from "../lib/reviews";
 
 
-
-const getRatingValue = (tour, reviews) => {
-  if (reviews.length) {
-    const totalRating = reviews.reduce(
-      (sum, item) => sum + Number(item.rating || 0),
-      0,
-    );
-
-    return Number((totalRating / reviews.length).toFixed(1));
-  }
-
-  const tourRating = Number(tour?.rating);
-  return Number.isFinite(tourRating) && tourRating > 0 ? tourRating : 0;
-};
 
 const buildBeforeYouBookNotes = (transportNote) => {
   const noteParts = String(transportNote || "")
@@ -85,8 +72,7 @@ const TourDetails = () => {
 
     const displayItinerary = buildDisplayItinerary(tour);
     const reviews = buildTourReviews(tour);
-    const ratingValue = getRatingValue(tour, reviews);
-    const reviewCount = reviews.length || Number(tour.reviews || 0);
+    const rating = getTourRating(tour);
     const includedServices = buildIncludedServices(tour);
     const planLabel = getTourPlanLabel(tour);
     const commonFacts = buildCommonTourFacts(settings);
@@ -95,13 +81,12 @@ const TourDetails = () => {
       heroImages: getTourHeroImages(tour),
       displayItinerary,
       reviews,
-      ratingValue,
-      reviewCount,
+      rating,
       includedServices,
       planLabel,
       commonFacts,
       packageOverview: buildPackageOverview(tour),
-      placesCovered: buildPlacesCovered(tour, displayItinerary),
+      placesCovered: buildPlacesCovered(tour),
       placeName: getTourPlaceName(tour),
       detailedDescription: buildDetailedDescription(tour),
       beforeYouBook: buildBeforeYouBookNotes(commonFacts.transportNote),
@@ -126,8 +111,7 @@ const TourDetails = () => {
     heroImages,
     displayItinerary,
     reviews,
-    ratingValue,
-    reviewCount,
+    rating,
     includedServices,
     planLabel,
     packageOverview,
@@ -142,7 +126,7 @@ const TourDetails = () => {
       <div className="tour-detail-container mx-auto w-full max-w-[1328px] px-6">
         <TourDetailsBreadcrumbs tour={tour} />
         <div className="mt-5 space-y-5">
-          <TourDetailsHeader tour={tour} ratingValue={ratingValue} reviewCount={reviewCount} planLabel={planLabel} />
+          <TourDetailsHeader tour={tour} rating={rating} planLabel={planLabel} />
           <TourImageGallery images={heroImages} title={tour.title} />
           <div className="tour-detail-layout grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="tour-detail-content min-w-0 rounded-xl border border-theme bg-white px-5 sm:px-6">

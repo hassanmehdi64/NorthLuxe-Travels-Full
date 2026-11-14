@@ -35,98 +35,19 @@ export const getTourMood = (tour) => {
   return "Scenic Tour";
 };
 
-const itineraryPlaceMap = {
-  hunza: [["Islamabad", "Naran or Chilas"], ["Hunza arrival", "Karimabad bazaar"], ["Baltit Fort", "Altit Village"], ["Attabad Lake", "Passu Cones"], ["Duikar viewpoint", "Local markets"]],
-  skardu: [["Skardu city arrival", "Shigar road"], ["Shangrila", "Upper Kachura"], ["Shigar Fort", "Blind Lake"], ["Katpana Desert", "Skardu bazaar"], ["Organic village stops", "Departure route"]],
-  nagar: [["Nagar arrival", "Village terraces"], ["Hopar Glacier", "Viewpoint stops"], ["Rakaposhi-facing routes", "Local settlements"], ["Hunza crossover", "Karimabad"]],
-  astore: [["Astore arrival", "Valley villages"], ["Rama Meadows", "Rama Lake"], ["Deosai approach", "Scenic stops"], ["Return valley route", "Departure transfer"]],
-  fairy: [["Raikot bridge", "Tattu village"], ["Fairy Meadows camp", "View deck"], ["Beyal trail", "Forest track"], ["Camp sunrise", "Return transfer"]],
-  khaplu: [["Khaplu arrival", "Old village lanes"], ["Khaplu Palace", "River viewpoints"], ["Chaqchan heritage surroundings", "Orchard walks"], ["Scenic drive", "Departure route"]],
-  shigar: [["Shigar arrival", "Valley viewpoints"], ["Shigar Fort", "Traditional settlements"], ["River edge stops", "Boutique stay experience"], ["Return route", "Skardu transfer"]],
-  deosai: [["Skardu or Astore arrival", "Route briefing"], ["Deosai plains", "Wildlife observation"], ["Sheosar Lake", "Photography points"], ["Plateau exit", "Return transfer"]],
-};
-
-const inferItineraryPlaces = (tour, dayIndex) => {
-  const searchKey = [tour?.location, tour?.title].filter(Boolean).join(" ").toLowerCase();
-  const matchedKey = Object.keys(itineraryPlaceMap).find((key) => searchKey.includes(key));
-  const places = matchedKey ? itineraryPlaceMap[matchedKey][dayIndex] : null;
-  if (places?.length) return places;
-  if (dayIndex === 0) return [normalizePlaceName(tour?.location), "Arrival and local check-in"];
-  if (dayIndex === 1) return ["Main sightseeing route", "Signature viewpoints"];
-  if (dayIndex === 2) return ["Local exploration", "Cultural stop"];
-  return ["Scenic transfer", "Departure route"];
-};
-
-const STOP_WORD_PATTERNS = [
-  /^(pick from|pickup from|pick up from|travel to|continue to|drive to|visit|stop at|stopover at|arrival at|arrive at|depart for|departure for|head to|move to)\s+/i,
-  /^(for|with|and)\s+/i,
-];
-
-const cleanAttractionLabel = (value = "") => {
-  let cleaned = String(value || "")
-    .replace(/[.]+$/g, "")
-    .replace(/\s{2,}/g, " ")
-    .trim();
-
-  STOP_WORD_PATTERNS.forEach((pattern) => {
-    cleaned = cleaned.replace(pattern, "").trim();
-  });
-
-  cleaned = cleaned
-    .replace(/\bfor check-?in\b/gi, "")
-    .replace(/\bfor sunset\b/gi, "")
-    .replace(/\bfor sightseeing\b/gi, "")
-    .replace(/\s{2,}/g, " ")
-    .trim();
-
-  if (!cleaned) return "";
-  if (cleaned.length < 3) return "";
-  if (/^(arrival|departure|travel|pickup|pick|continue|drive|visit|stop)$/i.test(cleaned)) return "";
-
-  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
-};
-
-const extractAttractionPlaces = (description = "", fallback = []) => {
-  const parsed = String(description || "")
-    .split(/,| and /i)
-    .map((entry) => cleanAttractionLabel(entry))
-    .filter(Boolean);
-
-  return parsed.length ? Array.from(new Set(parsed)).slice(0, 4) : fallback;
-};
-
+/**
+ * Itinerary is shown exactly as entered by the admin: one entry per day,
+ * description shown once. Nothing is invented when the itinerary is empty.
+ */
 export const buildDisplayItinerary = (tour) => {
-  const duration = Math.max(Number(tour?.durationDays || 0), 1);
   const source = Array.isArray(tour?.itinerary) ? tour.itinerary.filter(Boolean) : [];
-
-  if (source.length) {
-    return source.slice(0, duration).map((item, index) => {
-      const description = String(item?.description || "").trim();
-      const places = extractAttractionPlaces(description, inferItineraryPlaces(tour, index));
-      return {
-        day: item?.day || index + 1,
-        title: item?.title || `Day ${index + 1} Route`,
-        placesCovered: places.length ? places : inferItineraryPlaces(tour, index),
-        bulletPoints: [
-          `Places covered: ${(places.length ? places : inferItineraryPlaces(tour, index)).join(", ")}`,
-          description || "Detailed route timing is shared before departure.",
-        ],
-      };
-    });
-  }
-
-  return Array.from({ length: duration }, (_, index) => {
-    const placesCovered = inferItineraryPlaces(tour, index);
-    return {
-      day: index + 1,
-      title: `Day ${index + 1} Route`,
-      placesCovered,
-      bulletPoints: [
-        `Places covered: ${placesCovered.join(", ")}`,
-        `Travel flow includes ${placesCovered[0]} and ${placesCovered[1] || "planned sightseeing stops"}.`,
-      ],
-    };
-  });
+  return source
+    .map((item, index) => ({
+      day: Number(item?.day) || index + 1,
+      title: String(item?.title || "").trim() || `Day ${index + 1}`,
+      description: String(item?.description || "").trim(),
+    }))
+    .filter((item) => item.title || item.description);
 };
 
 export const buildIncludedServices = (tour) => {
@@ -188,23 +109,15 @@ export const buildVehicleDetails = (tour) => {
   return ["Transport arranged as per group size"];
 };
 
-export const buildPlacesCovered = (tour, itinerary) => {
-  const places = new Set();
-  itinerary.forEach((item) =>
-    item.placesCovered
-      .map((place) => cleanAttractionLabel(place))
-      .filter(Boolean)
-      .forEach((place) => places.add(place)),
+/** "Places covered" chips come only from the admin-entered `tour.places` list. */
+export const buildPlacesCovered = (tour) =>
+  Array.from(
+    new Set(
+      (Array.isArray(tour?.places) ? tour.places : [])
+        .map((place) => String(place || "").trim())
+        .filter(Boolean),
+    ),
   );
-  if (tour?.location) places.add(normalizePlaceName(tour.location));
-  if (Array.isArray(tour?.tags)) tour.tags.filter(Boolean).slice(0, 3).forEach((tag) => places.add(tag));
-  return Array.from(places).slice(0, 8);
-};
-
-export const getTourPlacesLabel = (tour, itinerary) => {
-  const places = buildPlacesCovered(tour, itinerary || buildDisplayItinerary(tour));
-  return places.length ? `${places.length} places` : "Planned route";
-};
 
 
 const heroGalleryFallbacks = {

@@ -1,0 +1,34 @@
+/* Shared public typography and surfaces, including detail and support pages. */
+
+.public-site .public-page-content h2 {
+  color: var(--c-navy); font-family: var(--font-heading); font-size: var(--section-title-size); font-weight: 600; line-height: var(--section-title-leading); letter-spacing: -.02em;
+}
+
+.public-site .public-page-content :is(.brand-card,.luxe-content-card,.luxe-blog-card,.about-team-card,article) { border-radius: var(--public-radius); border-color: var(--c-border); box-shadow: none; }
+
+.public-site .public-page-content :is(.luxe-content-card,.luxe-blog-card,.about-team-card,.about-value) h3 { color: var(--c-navy); font-size: var(--card-title-size); font-weight: 600; line-height: 1.45; letter-spacing: -.01em; }
+
+.public-site .public-page-content :is(.luxe-content-card,.luxe-blog-card) > div:last-child { padding: 16px; }
+
+.public-site .public-page-content :is(.luxe-content-card,.luxe-blog-card) > div:first-child:has(> img) { height: auto; aspect-ratio: 16/9; }
+
+.public-site .public-page-content :is(.luxe-content-card,.luxe-blog-card) p { color: var(--c-muted); font-size: 12px; line-height: 1.7; }
+
+.public-site .public-page-content h1 { font-size: var(--page-title-size); font-weight: 600; line-height: 1.25; letter-spacing: -.025em; margin-top: 0; }
+
+.public-site .feature-page-header h1 { color: var(--c-navy); }
+
+.public-site .feature-page-header { display: grid; gap: 10px; margin-bottom: var(--heading-content-gap); }
+
+.public-site .feature-page-header > * { margin: 0; }
+
+.public-site .feature-page-description { color: var(--c-muted); font-size: 13px; line-height: 1.7; }
+
+.public-site :is(.feature-page-eyebrow,.about-eyebrow) { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; color: var(--c-muted); font-size: 10px; font-weight: 600; line-height: 1.5; letter-spacing: .14em; text-transform: uppercase; }
+
+.public-site :is(.feature-page-eyebrow,.about-eyebrow)::before { content: ""; width: 24px; height: 1px; flex-shrink: 0; background: var(--c-brand); }
+
+.public-site .public-page-content :is(.compact-info-page article,.about-team-card) p { color: var(--c-muted); font-size: 13px; line-height: 1.7; }
+
+.public-site .public-page-content .tour-detail-content .tour-detail-section-title { margin: 0; color: var(--c-navy); font-size: var(--section-title-size); font-weight: 600; line-height: var(--section-title-leading); letter-spacing: -.02em; }
+

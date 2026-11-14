@@ -5,6 +5,7 @@ import WhatsAppFloatButton from "../components/common/WhatsAppFloatButton";
 import { useSettings } from "../hooks/useCms";
 import "../styles/public-theme.css";
 import "../styles/ui-consistency.css";
+import "../styles/public-consistency.css";
 
 const PublicLayout = ({ children }) => {
   const { data: settings } = useSettings(true);
@@ -29,9 +30,12 @@ const PublicLayout = ({ children }) => {
   }, [settings]);
 
   return (
-    <div className="luxe-home public-site">
+    <div className="public-site flex min-h-dvh flex-col">
+      <a href="#main-content" className="sr-only z-50 rounded-control bg-white px-4 py-2 text-sm font-semibold text-navy-900 focus:not-sr-only focus:fixed focus:left-4 focus:top-4">
+        Skip to content
+      </a>
       <SiteNavigation />
-      <div className={location.pathname === "/" ? "public-home-shell" : "public-page-content"}>
+      <div id="main-content" className={`flex-1 ${location.pathname === "/" ? "" : "public-page-content"}`}>
         {children}
       </div>
       <SiteFooter />

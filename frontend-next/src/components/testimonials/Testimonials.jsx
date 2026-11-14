@@ -5,10 +5,13 @@ import "swiper/css/pagination";
 import TestimonialCard from "./TestimonialCard";
 import { usePublicTestimonials } from "../../hooks/useCms";
 import { Star } from "lucide-react";
+import SectionHeading from "../common/SectionHeading";
+import { useReducedMotion } from "framer-motion";
 
 const Testimonials = () => {
   const { data: testimonials = [] } = usePublicTestimonials();
   const stories = testimonials;
+  const reducedMotion = useReducedMotion();
 
   const avgRating = stories.length
     ? (
@@ -18,42 +21,36 @@ const Testimonials = () => {
     : "5.0";
 
   return (
-    <section className="relative py-8 lg:py-10 bg-theme-bg overflow-hidden">
-      <div className="relative mx-auto w-full max-w-[1240px] px-4 sm:px-6 lg:px-10 xl:px-0">
-        <div className="mb-6 lg:mb-8">
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-            <div className="space-y-2 max-w-2xl">
-              <h2 className="text-3xl md:text-4xl font-bold text-theme tracking-tight">Guest reviews</h2>
-            </div>
-
-            <div className="flex self-center md:self-auto">
-              <span className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-[rgba(var(--c-brand-rgb),0.18)] bg-[rgba(var(--c-brand-rgb),0.045)] px-3.5 text-[10px] font-semibold text-[var(--c-navy)]">
-                <Star size={11} className="text-[var(--c-brand)] fill-[var(--c-brand)]" />
-                {avgRating} average · {stories.length} verified reviews
-              </span>
-            </div>
-          </div>
-        </div>
+    <section className="section overflow-hidden" aria-labelledby="guest-reviews-title">
+      <div className="container-site">
+        <SectionHeading id="guest-reviews-title" eyebrow="Guest reviews" title="What travellers say">
+          {stories.length > 0 && (
+            <span className="chip">
+              <Star size={13} className="fill-sand text-sand" aria-hidden="true" />
+              {avgRating} average · {stories.length} {stories.length === 1 ? "review" : "reviews"}
+            </span>
+          )}
+        </SectionHeading>
 
         {stories.length ? (
-          <div className="testimonial-swiper-container w-full overflow-hidden px-0.5 pb-1 pt-1">
+          <div className="testimonial-swiper-container w-full">
             <Swiper
               modules={[Pagination, Autoplay]}
               spaceBetween={14}
               slidesPerView={1}
-              loop={stories.length > 3}
+              loop={stories.length >= 6}
               speed={650}
-              autoplay={{ delay: 4300, disableOnInteraction: false, pauseOnMouseEnter: true }}
+              autoplay={reducedMotion ? false : { delay: 4300, disableOnInteraction: false, pauseOnMouseEnter: true }}
               pagination={{ clickable: true, dynamicBullets: true }}
               grabCursor
               breakpoints={{
                 640: { slidesPerView: 2, spaceBetween: 16 },
                 1024: { slidesPerView: 3, spaceBetween: 18 },
               }}
-              className="!overflow-visible !pb-10"
+              className="!pb-9"
             >
               {stories.map((testimonial) => (
-                <SwiperSlide key={testimonial.id} className="h-auto flex justify-center">
+                <SwiperSlide key={testimonial.id} className="!h-auto">
                   <TestimonialCard
                     name={testimonial.name}
                     role={testimonial.role}
@@ -68,35 +65,23 @@ const Testimonials = () => {
             </Swiper>
           </div>
         ) : (
-          <div className="rounded-2xl border border-dashed border-theme py-16 text-center text-muted bg-theme-surface">
-            <p className="text-sm font-medium tracking-wide">Guest stories arriving soon...</p>
-          </div>
+          <p className="empty-state">Guest reviews will appear here.</p>
         )}
       </div>
 
       <style jsx>{`
         :global(.testimonial-swiper-container .swiper-pagination-bullet) {
-          width: 5px;
-          height: 5px;
-          background: var(--c-navy);
+          width: 6px;
+          height: 6px;
+          background: var(--color-navy-900);
           opacity: 0.2;
-          transition: all 300ms ease;
+          transition: width 200ms ease, opacity 200ms ease;
         }
         :global(.testimonial-swiper-container .swiper-pagination-bullet-active) {
-          background: var(--c-brand);
-          opacity: 1;
-          width: 20px;
+          width: 18px;
           border-radius: 999px;
-        }
-        :global(.testimonial-message) {
-          display: -webkit-box;
-          -webkit-line-clamp: 4;
-          -webkit-box-orient: vertical;
-        }
-        @media (max-width: 480px) {
-          :global(.testimonial-message) {
-            -webkit-line-clamp: 5;
-          }
+          background: var(--color-brand);
+          opacity: 1;
         }
       `}</style>
     </section>

@@ -35,7 +35,7 @@ const normalizeFallbackTour = (tour, index) => {
     availableSeats: seatCount,
     featured: true,
     status: "published",
-    rating: 4.8,
+    rating: 0,
     reviews: 0,
     reviewItems: [],
     tags: [],

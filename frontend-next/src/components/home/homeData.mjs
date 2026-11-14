@@ -9,7 +9,7 @@ export function homeDestinations(tours = [], entries = []) {
 export function featuredTours(tours = []) {
   const published = tours.filter((tour) => tour.status !== "draft");
   const featured = published.filter((tour) => tour.featured);
-  return (featured.length ? featured : published).slice(0, 3);
+  return (featured.length ? featured : published).slice(0, 4);
 }
 
 export function contentCards(items = [], route) {

@@ -1,4 +1,6 @@
 
+import SectionHeading from "../common/SectionHeading";
+
 const leadershipTeam = [
   {
     name: "Hassan Mehdi",
@@ -21,10 +23,7 @@ const leadershipTeam = [
 const TeamSection = () => (
   <section className="about-team" aria-labelledby="about-team-title">
     <div className="about-container">
-      <div className="about-section-heading">
-        <h2 id="about-team-title">Meet our team</h2>
-        <p>The people behind your journey.</p>
-      </div>
+      <SectionHeading id="about-team-title" title="Meet our team" description="The people behind your journey." />
       <div className="about-team-grid">
         {leadershipTeam.map((leader) => (
           <article className="about-team-card" key={leader.name}>

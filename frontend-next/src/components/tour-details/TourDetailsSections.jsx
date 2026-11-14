@@ -8,7 +8,7 @@ import {
   Star,
   Users,
 } from "lucide-react";
-import { formatCurrencyAmount } from "../../utils/currency";
+import { getTourPricing } from "../../lib/pricing";
 
 const HeroFact = ({ icon: Icon, label, value }) => (
   <div className="rounded-lg border border-[rgba(15,23,42,0.08)] bg-theme-surface px-3 py-2.5 ">
@@ -60,8 +60,7 @@ export const TourDetailsBreadcrumbs = ({ tour }) => (
 
 export const TourDetailsHeader = ({
   tour,
-  ratingValue,
-  reviewCount,
+  rating,
   planLabel,
 }) => {
   const durationText = tour.durationLabel || (tour.durationDays ? `${tour.durationDays} Days` : "");
@@ -73,8 +72,8 @@ export const TourDetailsHeader = ({
         {locationText ? <span className="inline-flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.17em] text-[var(--c-brand)]"><MapPin size={11} />{locationText}</span> : null}
         <h1 className="mt-2 max-w-4xl text-[1.6rem] font-bold leading-[1.1] tracking-[-0.035em] text-theme sm:text-[2rem] lg:text-[2.35rem]">{tour.title}</h1>
         <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-muted">
-          {ratingValue > 0 ? <span className="inline-flex items-center gap-1.5"><span className="flex items-center gap-0.5 text-[var(--c-brand)]">{Array.from({ length: 5 }).map((_, idx) => <Star key={idx} size={11} className={idx < Math.round(ratingValue) ? "fill-current" : "opacity-25"} />)}</span><span className="font-semibold text-theme">{ratingValue.toFixed(1)}</span></span> : null}
-          {reviewCount > 0 ? <span>{reviewCount} reviews</span> : null}
+          {rating ? <span className="inline-flex items-center gap-1.5" aria-label={`Rated ${rating.value} out of 5`}><span className="flex items-center gap-0.5 text-[var(--c-brand)]">{Array.from({ length: 5 }).map((_, idx) => <Star key={idx} size={11} className={idx < Math.round(rating.value) ? "fill-current" : "opacity-25"} />)}</span><span className="font-semibold text-theme">{rating.value.toFixed(1)}</span></span> : null}
+          {rating ? <span>{rating.count} reviews</span> : null}
         </div>
         {tour.shortDescription ? <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">{tour.shortDescription}</p> : null}
       </div>
@@ -146,7 +145,9 @@ export const TourImageGallery = ({ images = [], title }) => {
   );
 };
 
-export const TourBookingCard = ({ tour }) => (
+export const TourBookingCard = ({ tour }) => {
+  const pricing = getTourPricing(tour);
+  return (
   <aside className="tour-booking-card overflow-hidden rounded-xl border border-[rgba(15,23,42,0.08)] bg-theme-surface shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
     <div className="h-0.5 bg-[var(--c-brand)]" />
     <div className="flex flex-col gap-5 p-5">
@@ -155,14 +156,17 @@ export const TourBookingCard = ({ tour }) => (
           Starting from
         </p>
 
-        <div className="mt-2 flex items-end gap-2">
+        <div className="mt-2 flex flex-wrap items-end gap-x-2 gap-y-1">
           <span className="text-[1.35rem] font-bold leading-none text-theme">
-            {formatCurrencyAmount(tour.price, tour.currency)}
+            {pricing.hasPrice ? pricing.formattedFinal : "Contact for price"}
           </span>
+          {pricing.hasPrice ? <span className="text-xs text-muted">{pricing.unitLabel}</span> : null}
+          {pricing.hasDiscount ? <del className="text-xs text-muted">{pricing.formattedBase}</del> : null}
+          {pricing.hasDiscount ? <span className="rounded bg-[rgba(var(--c-brand-rgb),0.1)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--c-brand)]">{pricing.discountPercent}% off</span> : null}
         </div>
 
-        <p className="mt-1 text-[11px] text-muted">
-          Per trip, based on selected plan
+        <p className="mt-1 text-[11px] leading-5 text-muted">
+          Tour rate per day. Vehicle and per-guest charges are added when you choose them at booking.
         </p>
       </div>
 
@@ -171,9 +175,12 @@ export const TourBookingCard = ({ tour }) => (
       <p className="flex items-center gap-2 border-t border-theme pt-4 text-[11px] text-muted"><ShieldCheck size={14} className="text-[var(--c-brand)]" />Secure booking request</p>
     </div>
   </aside>
-);
+  );
+};
 
-export const MobileBookingBar = ({ tour }) => (
+export const MobileBookingBar = ({ tour }) => {
+  const pricing = getTourPricing(tour);
+  return (
   <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[rgba(15,23,42,0.08)] bg-white/96 px-4 py-3 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur lg:hidden">
     <div className="mx-auto flex max-w-[1600px] items-center gap-3">
       <Link
@@ -189,7 +196,7 @@ export const MobileBookingBar = ({ tour }) => (
         </p>
 
         <p className="truncate text-[15px] font-semibold text-theme">
-          {formatCurrencyAmount(tour.price, tour.currency)}
+          {pricing.hasPrice ? <>{pricing.formattedFinal} <span className="text-xs font-normal text-muted">{pricing.unitLabel}</span></> : "Contact for price"}
         </p>
       </div>
 
@@ -200,4 +207,5 @@ export const MobileBookingBar = ({ tour }) => (
       </Link>
     </div>
   </div>
-);
+  );
+};

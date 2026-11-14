@@ -87,7 +87,11 @@ export const calculateBookingQuote = ({
   const selectedHotel = hotelOptions.find((x) => normalizeOptionKey(x.key) === normalizedSelectedHotelKey);
   const selectedVehicle = vehicleOptions.find((x) => normalizeOptionKey(x.key) === normalizedSelectedVehicleKey);
 
-  const baseTourDailyRate = toNumber(tour?.price, 0);
+  // `tour.price` is a per-day rate. The tour's discount applies to that rate only
+  // (not to vehicle, hotel or per-guest fees), matching what tour cards advertise.
+  const listTourDailyRate = toNumber(tour?.price, 0);
+  const discountPercent = Math.max(0, Math.min(95, toNumber(tour?.discountPercent, 0)));
+  const baseTourDailyRate = Math.round(listTourDailyRate * (1 - discountPercent / 100));
   const dailyBaseFee = toNumber(pricing.dailyBaseFee, 0);
   const perGuestDailyFee = toNumber(pricing.perGuestDailyFee, 0);
   const mealsDailyRate = toNumber(pricing.mealsDailyRate, 0);
@@ -95,6 +99,7 @@ export const calculateBookingQuote = ({
   const airportTransferRate = toNumber(pricing.airportTransferRate, 0);
 
   const baseTourTotal = baseTourDailyRate * days;
+  const tourDiscountTotal = (listTourDailyRate - baseTourDailyRate) * days;
   const baseDailyCharges = dailyBaseFee * days;
   const guestDailyCharges = perGuestDailyFee * guests * days;
   const hotelTotal = toNumber(selectedHotel?.dailyRate, 0) * days;
@@ -140,6 +145,10 @@ export const calculateBookingQuote = ({
       addOns: addOnsFromPayload,
     },
     breakdown: {
+      listTourDailyRate,
+      tourDailyRate: baseTourDailyRate,
+      discountPercent,
+      tourDiscountTotal,
       baseTourTotal,
       baseDailyCharges,
       guestDailyCharges,

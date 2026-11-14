@@ -30,13 +30,9 @@ const sanitizeStringList = (items = []) =>
     .map((item) => String(item || "").trim())
     .filter(Boolean);
 
-const getReviewStats = (items = [], fallbackRating = 4.8, fallbackCount = 0) => {
-  if (!items.length) {
-    return {
-      rating: Number(fallbackRating || 4.8),
-      count: Number(fallbackCount || 0),
-    };
-  }
+// Rating and count are derived only from real review items — never from defaults.
+const getReviewStats = (items = []) => {
+  if (!items.length) return { rating: 0, count: 0 };
 
   const total = items.reduce((sum, item) => sum + Number(item.rating || 0), 0);
   return {
@@ -63,11 +59,12 @@ const toTourResponse = (tour) => ({
   availableSeats: tour.availableSeats,
   featured: tour.featured,
   status: tour.status,
-  rating: tour.rating,
-  reviews: tour.reviewsCount,
+  rating: tour.reviewsCount > 0 ? tour.rating : 0,
+  reviews: tour.reviewsCount || 0,
   reviewItems: tour.reviewItems || [],
   tags: tour.tags,
   itinerary: tour.itinerary,
+  places: tour.places || [],
   availableOptions: tour.availableOptions || {
     hotelCategories: [],
     vehicleTypes: [],
@@ -116,7 +113,7 @@ router.post(
     const payload = req.body;
     const syncedSeats = Number(payload.availableSeats ?? payload.capacity ?? 20);
     const reviewItems = sanitizeReviewItems(payload.reviewItems);
-    const reviewStats = getReviewStats(reviewItems, payload.rating, payload.reviews);
+    const reviewStats = getReviewStats(reviewItems);
     const title = payload.title?.trim();
     const coverImage = String(payload.image || payload.coverImage || "").trim();
     const gallery = sanitizeStringList(payload.gallery);
@@ -152,6 +149,7 @@ router.post(
       reviewItems,
       tags: payload.tags || [],
       itinerary: payload.itinerary || [],
+      places: sanitizeStringList(payload.places),
       availableOptions: payload.availableOptions || {},
     });
 
@@ -165,13 +163,15 @@ router.patch(
     const payload = req.body;
     const reviewItems = payload.reviewItems !== undefined ? sanitizeReviewItems(payload.reviewItems) : undefined;
     const reviewStats = reviewItems !== undefined
-      ? getReviewStats(reviewItems, payload.rating, payload.reviews)
+      ? getReviewStats(reviewItems)
       : null;
+    // Rating and count can only change through reviewItems, never be set directly.
+    const { rating: _rating, reviews: _reviews, reviewsCount: _reviewsCount, ...editable } = payload;
     const update = {
-      ...payload,
+      ...editable,
       coverImage: payload.image || payload.coverImage,
-      reviewsCount: payload.reviews,
       availableOptions: payload.availableOptions,
+      places: payload.places !== undefined ? sanitizeStringList(payload.places) : undefined,
       gallery: payload.gallery !== undefined ? sanitizeStringList(payload.gallery) : undefined,
       currency: payload.currency !== undefined ? String(payload.currency || "PKR").trim() || "PKR" : undefined,
       durationLabel:
@@ -195,7 +195,7 @@ router.patch(
     }
 
     delete update.image;
-    delete update.reviews;
+    if (update.places === undefined) delete update.places;
     if (update.availableOptions === undefined) delete update.availableOptions;
     if (update.gallery === undefined) delete update.gallery;
     if (update.currency === undefined) delete update.currency;

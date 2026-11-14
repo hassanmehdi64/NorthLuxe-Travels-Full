@@ -1,4 +1,5 @@
 import { MapPin, ShieldCheck, Route } from "lucide-react";
+import SectionHeading from "../common/SectionHeading";
 
 const values = [
   { icon: MapPin, title: "Local knowledge", text: "Trusted partners across the North." },
@@ -15,8 +16,7 @@ const OurStory = () => (
             onError={(event) => { if (event.currentTarget.dataset.fallbackApplied) return; event.currentTarget.dataset.fallbackApplied = "true"; event.currentTarget.src = "/gb.jpg"; }} />
         </div>
         <div className="about-story-copy">
-          <p className="about-eyebrow">Our story</p>
-          <h2 id="about-story-title">Travel made personal</h2>
+          <SectionHeading id="about-story-title" eyebrow="Our story" title="Travel made personal" />
           <p>North Luxe Travels makes exploring the North simple, comfortable and well managed. We handle the planning so you can enjoy the journey.</p>
           <p>From family holidays to quiet escapes and adventures, we shape each trip around your needs. Our local team brings practical knowledge and support from the first plan to your return.</p>
           <div className="about-values">

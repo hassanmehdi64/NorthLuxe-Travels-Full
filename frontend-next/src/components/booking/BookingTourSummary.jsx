@@ -10,8 +10,9 @@ const BookingTourSummary = ({
 }) => {
   if (!selectedTour) return null;
 
-  const totalAmount = Number(quoteData?.totalAmount || selectedTour.price || 0);
-  const advanceAmount = Number(quoteData?.advanceAmount || totalAmount * 0.1 || 0);
+  // Amounts come only from the server quote (discount, vehicle and guest fees applied there).
+  const totalAmount = Number(quoteData?.totalAmount || 0);
+  const advanceAmount = Number(quoteData?.advanceAmount || 0);
   const payableAmount = isArrivalPayment ? 0 : paymentPlan === "full" ? totalAmount : advanceAmount;
   const selectedPlanLabel = isArrivalPayment
     ? "On Arrival"
@@ -37,7 +38,9 @@ const BookingTourSummary = ({
           <p className="mt-0.5 text-sm font-bold text-theme">
             {quoteLoading && !quoteData
               ? "Calculating..."
-              : formatCurrencyAmount(payableAmount, paymentCurrency || selectedTour.currency)}
+              : quoteData
+                ? formatCurrencyAmount(payableAmount, paymentCurrency || selectedTour.currency)
+                : "Calculated after dates"}
           </p>
         </div>
     </div>

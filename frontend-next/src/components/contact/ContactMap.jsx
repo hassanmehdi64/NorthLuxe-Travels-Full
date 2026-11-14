@@ -7,12 +7,15 @@ const getMapEmbedUrl = (settings) => {
     return `${configured}${configured.includes("?") ? "&" : "?"}output=embed`;
   }
 
-  const query = encodeURIComponent(settings?.address || "Skardu, Gilgit-Baltistan");
+  if (!settings?.address) return "";
+  const query = encodeURIComponent(settings.address);
   return `https://www.google.com/maps?q=${query}&output=embed`;
 };
 
 const ContactMap = () => {
   const { data: settings } = useSettings(true);
+  const mapUrl = getMapEmbedUrl(settings);
+  if (!mapUrl) return null;
 
   return (
     <div className="overflow-hidden rounded-2xl border border-theme bg-theme-surface shadow-[0_6px_18px_rgba(15,23,42,0.045)]">
@@ -27,7 +30,7 @@ const ContactMap = () => {
       </div>
       <iframe
         title="North Luxe Travels Location"
-        src={getMapEmbedUrl(settings)}
+        src={mapUrl}
         className="h-[280px] w-full border-0 sm:h-[320px] lg:h-[340px]"
         loading="lazy"
       ></iframe>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "@/lib/router";
 import { ChevronLeft, MoveUpRight } from "lucide-react";
+import SectionHeading from "./SectionHeading";
 
 export const DetailState = ({ children }) => (
   <main className="grid min-h-[55vh] place-items-center bg-theme-bg px-4 py-16">
@@ -80,10 +81,7 @@ export const RelatedContentGrid = ({ title, route, items = [] }) => {
 
   return (
     <section className="border-t border-slate-200 pt-7">
-      <div className="mb-4 flex items-end justify-between gap-4">
-        <h2 className="text-lg font-bold tracking-tight text-[var(--c-navy)]">{title}</h2>
-        <Link to={`/${route}`} className="text-xs font-semibold text-slate-500 transition-colors hover:text-[var(--c-brand)]">View all</Link>
-      </div>
+      <SectionHeading title={title} link="View all" to={`/${route}`} />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         {items.map((item) => (
           <Link key={item.id || item.slug} to={`/${route}/${item.slug || item.id}`} className="group overflow-hidden rounded-xl border border-slate-200 bg-white transition duration-300 hover:-translate-y-0.5 hover:border-[rgba(var(--c-brand-rgb),0.35)] hover:shadow-[0_10px_24px_rgba(var(--c-brand-rgb),0.07)]">

@@ -45,6 +45,9 @@ const siteSettingSchema = new mongoose.Schema(
     key: { type: String, unique: true, required: true },
     siteName: { type: String, default: "North Luxe" },
     siteTagline: { type: String, default: "Premium tours across Gilgit-Baltistan." },
+    // Short line above the home hero title, e.g. "Gilgit-Baltistan · Since 2015".
+    heroEyebrow: { type: String, default: "" },
+    foundingYear: { type: String, default: "" },
     siteEmail: { type: String, default: "info@northluxetravels.com" },
     supportEmail: { type: String, default: "" },
     sitePhone: { type: String, default: "" },

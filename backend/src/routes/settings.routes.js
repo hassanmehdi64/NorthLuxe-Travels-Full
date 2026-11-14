@@ -194,6 +194,8 @@ const buildSettingsUpdate = (payload = {}) => {
   const stringFields = [
     "siteName",
     "siteTagline",
+    "heroEyebrow",
+    "foundingYear",
     "siteEmail",
     "supportEmail",
     "sitePhone",
