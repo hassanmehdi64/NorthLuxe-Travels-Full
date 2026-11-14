@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "@/lib/router";
 import { ChevronLeft, MoveUpRight } from "lucide-react";
 import SectionHeading from "./SectionHeading";
+import SafeImage from "./SafeImage";
 
 export const DetailState = ({ children }) => (
   <main className="grid min-h-[55vh] place-items-center bg-theme-bg px-4 py-16">
@@ -85,7 +86,7 @@ export const RelatedContentGrid = ({ title, route, items = [] }) => {
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         {items.map((item) => (
           <Link key={item.id || item.slug} to={`/${route}/${item.slug || item.id}`} className="group overflow-hidden rounded-xl border border-slate-200 bg-white transition duration-300 hover:-translate-y-0.5 hover:border-[rgba(var(--c-brand-rgb),0.35)] hover:shadow-[0_10px_24px_rgba(var(--c-brand-rgb),0.07)]">
-            {item.image || item.coverImage ? <img src={item.image || item.coverImage} alt={item.title} onError={(event) => { event.currentTarget.style.display = "none"; }} className="h-28 w-full object-cover transition-transform duration-500 group-hover:scale-[1.025] sm:h-36" /> : null}
+            <div className="media media-zoom relative h-28 sm:h-36"><SafeImage src={item.image || item.coverImage} alt={item.title} label={item.title} loading="lazy" /></div>
             <div className="p-3.5">
               {item.category || item.location ? <p className="truncate text-[9px] font-bold uppercase tracking-[0.13em] text-[var(--c-brand)]">{item.category || item.location}</p> : null}
               <h3 className="mt-1 line-clamp-2 text-sm font-semibold leading-5 text-[var(--c-navy)] group-hover:text-[var(--c-brand)]">{item.title}</h3>

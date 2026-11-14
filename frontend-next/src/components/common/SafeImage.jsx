@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Mountain } from "lucide-react";
 
 /**
- * <img> that swaps to a branded placeholder when the source is missing or fails.
+ * <img> that swaps to a branded placeholder (brand gradient + the place/tour name
+ * from `label`, else `alt`) when the source is missing or fails.
  * We deliberately do NOT fall back to another real photo: showing a different
  * place's picture under a destination's name is misleading.
  */
@@ -20,10 +20,10 @@ export default function SafeImage({ src, alt = "", label, className = "", onErro
   }, [src]);
 
   if (failed) {
+    const name = label || alt;
     return (
-      <span role="img" aria-label={alt || label || "Photo coming soon"} className={`image-fallback ${className}`}>
-        <Mountain aria-hidden="true" size={28} strokeWidth={1.4} />
-        {label ? <span className="image-fallback-label">{label}</span> : null}
+      <span role="img" aria-label={alt || (label ? `${label} (photo coming soon)` : "Photo coming soon")} className={`image-fallback ${className}`}>
+        {name ? <span className="image-fallback-label">{name}</span> : null}
       </span>
     );
   }

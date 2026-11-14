@@ -1,6 +1,7 @@
 import { Link, useParams } from "@/lib/router";
 import { usePublicContentItem, usePublicTours } from "../hooks/useCms";
 import { toDynamicSeason } from "../components/seasonal-journeys/seasonalJourneysData";
+import SafeImage from "../components/common/SafeImage";
 
 const SeasonDetails = () => {
   const { slug } = useParams();
@@ -25,7 +26,7 @@ const SeasonDetails = () => {
       <div className="site-page-container mx-auto space-y-6">
         <div className="overflow-hidden rounded-2xl border border-theme bg-theme-surface">
           <div className="relative h-[250px] sm:h-[300px] lg:h-[340px]">
-            <img src={season.image} alt={season.title} className="h-full w-full object-cover" />
+            <div className="media absolute inset-0"><SafeImage src={season.image} alt={season.title} /></div>
             <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/15" />
             <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-6 lg:p-9">
               <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[var(--c-brand)] sm:text-[10px]">

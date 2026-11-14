@@ -1,4 +1,5 @@
 import { Link } from "@/lib/router";
+import SafeImage from "../common/SafeImage";
 
 const BlogCard = ({ blog, compact = false }) => {
   return (
@@ -6,18 +7,9 @@ const BlogCard = ({ blog, compact = false }) => {
       to={`/blog/${blog.slug}`}
       className="luxe-blog-card group flex h-full flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-[0_3px_12px_rgba(var(--c-brand-rgb),0.045)] transition-[border-color,box-shadow] duration-200 hover:border-[rgba(var(--c-brand-rgb),0.35)] hover:shadow-[0_8px_20px_rgba(var(--c-brand-rgb),0.08)]"
     >
-      <img
-        src={blog.image || "/gb.jpg"}
-        alt={blog.title}
-        loading="lazy"
-        decoding="async"
-        onError={(event) => {
-          if (event.currentTarget.dataset.fallbackApplied) return;
-          event.currentTarget.dataset.fallbackApplied = "true";
-          event.currentTarget.src = "/gb.jpg";
-        }}
-        className={`${compact ? "h-32 sm:h-36 md:h-40" : "h-40 sm:h-44"} w-full object-cover transition-transform duration-500 group-hover:scale-[1.035]`}
-      />
+      <div className={`media media-zoom relative ${compact ? "h-32 sm:h-36 md:h-40" : "h-40 sm:h-44"}`}>
+        <SafeImage src={blog.image} alt={blog.title} label={blog.title} loading="lazy" decoding="async" />
+      </div>
 
       <div className={`${compact ? "p-4" : "p-4"} flex flex-1 flex-col`}>
         <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-[var(--c-brand)]">

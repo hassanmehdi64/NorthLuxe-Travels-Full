@@ -5,6 +5,7 @@ import FeaturePageHeader from "../../components/features/FeaturePageHeader";
 import { addToCart, clearWishlist, getWishlist, removeFromWishlist } from "../../features/commerce/storage";
 import { useToast } from "../../context/ToastContext";
 import { getTourPricing } from "../../lib/pricing";
+import SafeImage from "../../components/common/SafeImage";
 
 const WishlistPage = () => {
   const [items, setItems] = useState([]);
@@ -64,7 +65,7 @@ const WishlistPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
               {items.map((item) => (
                 <article key={item.id} className="rounded-2xl border border-theme bg-theme-surface overflow-hidden">
-                  <img src={item.image} alt={item.title} className="h-48 w-full object-cover" />
+                  <div className="media relative h-48"><SafeImage src={item.image} alt={item.title} label={item.title} /></div>
                   <div className="p-5">
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--c-brand)]">
                       {item.location}

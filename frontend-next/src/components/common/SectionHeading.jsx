@@ -1,4 +1,3 @@
-import { ArrowRight } from "lucide-react";
 import { Link } from "@/lib/router";
 
 /**
@@ -20,7 +19,6 @@ export default function SectionHeading({ eyebrow, title, description, link, to, 
           {link && to && (
             <Link className="link-arrow" to={to}>
               {link}
-              <ArrowRight size={15} aria-hidden="true" />
             </Link>
           )}
         </div>

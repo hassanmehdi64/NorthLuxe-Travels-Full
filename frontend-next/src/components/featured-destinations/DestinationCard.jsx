@@ -1,4 +1,3 @@
-import { ArrowUpRight } from "lucide-react";
 import { Link } from "@/lib/router";
 import SafeImage from "../common/SafeImage";
 
@@ -23,7 +22,6 @@ const DestinationCard = ({ destination, overlay = false, showDescription = true 
         <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-navy-950/80 via-navy-950/15 to-transparent" />
         <div className="absolute inset-x-3 bottom-3 flex items-end justify-between gap-2 sm:inset-x-4 sm:bottom-3.5">
           <h3 className="text-[15px] font-semibold leading-tight text-white sm:text-base">{title}</h3>
-          <ArrowUpRight size={16} aria-hidden="true" className="shrink-0 text-white/80 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
         </div>
       </Link>
     );
@@ -32,7 +30,7 @@ const DestinationCard = ({ destination, overlay = false, showDescription = true 
   return (
     <Link to={href} className="card card-hover group flex flex-col overflow-hidden">
       <div className="media media-zoom aspect-[16/10]">
-        <SafeImage src={destination?.image} alt="" label="Photo coming soon" loading="lazy" decoding="async" />
+        <SafeImage src={destination?.image} alt="" label={title} loading="lazy" decoding="async" />
       </div>
       <div className="flex flex-1 flex-col gap-1.5 p-4">
         <h3 className="heading-3">{title}</h3>

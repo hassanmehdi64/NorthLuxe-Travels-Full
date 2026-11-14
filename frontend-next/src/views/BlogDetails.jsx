@@ -5,6 +5,7 @@ import { CalendarDays, ChevronLeft, ChevronRight, Clock3, Tag } from "lucide-rea
 import RelatedBlogs from "../components/blog/RelatedBlogs";
 import { usePublicBlog, usePublicBlogs } from "../hooks/useCms";
 import { DetailState } from "../components/common/EditorialDetails";
+import SafeImage from "../components/common/SafeImage";
 
 const estimateReadingTime = (blog) => {
   const words = String(blog?.content || blog?.description || blog?.excerpt || "").trim().split(/\s+/).filter(Boolean).length;
@@ -58,7 +59,7 @@ const BlogDetails = () => {
           {blog.excerpt && String(blog.content || blog.description || "").trim() !== blog.excerpt.trim() ? <p className="mt-3 text-[13px] leading-6 text-slate-500">{blog.excerpt}</p> : null}
         </header>
 
-        {blog.image ? <div className="blog-article-cover mx-auto mt-5 max-w-[800px] overflow-hidden rounded-lg bg-slate-100"><img src={blog.image} alt={blog.title} decoding="async" onError={(event) => { if (event.currentTarget.dataset.fallbackApplied) return; event.currentTarget.dataset.fallbackApplied = "true"; event.currentTarget.src = "/gb.jpg"; }} className="h-[200px] w-full object-cover sm:h-[300px]" /></div> : null}
+        {blog.image ? <div className="blog-article-cover mx-auto mt-5 max-w-[800px] overflow-hidden rounded-lg bg-slate-100"><div className="media relative h-[200px] sm:h-[300px]"><SafeImage src={blog.image} alt={blog.title} label={blog.title} decoding="async" /></div></div> : null}
 
         {paragraphs.length && (blog.content || blog.description || !blog.excerpt) ? <div className="blog-article-body mx-auto mt-6 max-w-[800px] space-y-4">{paragraphs.map((paragraph, paragraphIndex) => <p key={`${paragraphIndex}-${paragraph.slice(0, 28)}`} className="whitespace-pre-line text-[13px] leading-7 text-slate-700 sm:text-[14px]">{paragraph}</p>)}</div> : null}
 

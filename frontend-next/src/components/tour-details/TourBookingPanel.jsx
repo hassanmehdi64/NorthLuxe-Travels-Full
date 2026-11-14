@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Dialog } from "radix-ui";
-import { ArrowRight, Loader2, MessageCircle, Route, ShieldCheck, X } from "lucide-react";
+import { Loader2, MessageCircle, Route, ShieldCheck, X } from "lucide-react";
 import { Link, useNavigate } from "@/lib/router";
 import { usePublicBookingQuote, useSettings, useTourAvailability } from "../../hooks/useCms";
 import { useStickyBottomBar } from "../../hooks/useStickyBottomBar";
@@ -161,7 +161,6 @@ const PanelBody = ({ tour, draft, onBook, idPrefix }) => {
 
       <button type="button" onClick={onBook} disabled={draft.fullyBooked || draft.tooMany} className="btn btn-primary btn-lg w-full">
         Book now
-        <ArrowRight size={16} aria-hidden="true" />
       </button>
 
       <div className="grid gap-2 text-sm">

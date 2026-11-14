@@ -10,7 +10,7 @@
 
 .public-site .public-page-content :is(.luxe-content-card,.luxe-blog-card) > div:last-child { padding: 16px; }
 
-.public-site .public-page-content :is(.luxe-content-card,.luxe-blog-card) > div:first-child:has(> img) { height: auto; aspect-ratio: 16/9; }
+.public-site .public-page-content :is(.luxe-content-card,.luxe-blog-card) > div:first-child:has(> img, > .image-fallback) { height: auto; aspect-ratio: 16/9; }
 
 .public-site .public-page-content :is(.luxe-content-card,.luxe-blog-card) p { color: var(--c-muted); font-size: 12px; line-height: 1.7; }
 

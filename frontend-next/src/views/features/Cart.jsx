@@ -5,6 +5,7 @@ import FeaturePageHeader from "../../components/features/FeaturePageHeader";
 import { clearCart, getCart, removeFromCart } from "../../features/commerce/storage";
 import { useToast } from "../../context/ToastContext";
 import { getTourPricing } from "../../lib/pricing";
+import SafeImage from "../../components/common/SafeImage";
 
 const CartPage = () => {
   const [items, setItems] = useState([]);
@@ -45,7 +46,7 @@ const CartPage = () => {
             <div className="lg:col-span-2 space-y-4">
               {items.map((item) => (
                 <article key={item.id} className="rounded-2xl border border-theme bg-theme-surface cart-tour-row grid grid-cols-[64px_minmax(0,1fr)_44px] items-start gap-3 p-3 sm:grid-cols-[112px_minmax(0,1fr)_44px] sm:p-4">
-                  <img src={item.image} alt={item.title} className="h-16 w-16 rounded-lg object-cover sm:h-20 sm:w-28" />
+                  <span className="media relative block h-16 w-16 overflow-hidden rounded-lg sm:h-20 sm:w-28"><SafeImage src={item.image} alt={item.title} label={item.title} /></span>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--c-brand)]">
                       {item.location}

@@ -1,19 +1,16 @@
+// Defaults use only North Luxe's own photo; admins set the real ones in Settings.
+// Never default to images hosted on other websites.
 export const defaultPageHeroImages = {
-  tours: "https://gilgitbaltistan.gov.pk/public/images/river-5688258_1920.jpg",
+  tours: "/gb.jpg",
   destinations: "/gb.jpg",
   activities: "/gb.jpg",
   services: "/gb.jpg",
-  about: "https://www.travelertrails.com/wp-content/uploads/2022/11/Gilgit-Baltistan-4.jpg",
-  blog: "https://res.cloudinary.com/www-travelpakistani-com/image/upload/v1670002655/Roundu_Valley_pakistan.jpg",
-  contact: "https://gilgitbaltistan.gov.pk/public/images/river-5688258_1920.jpg",
+  about: "/gb.jpg",
+  blog: "/gb.jpg",
+  contact: "/gb.jpg",
 };
 
-export const defaultHomeHeroImages = [
-  "/gb.jpg",
-  "https://res.cloudinary.com/www-travelpakistani-com/image/upload/v1670002655/Roundu_Valley_pakistan.jpg",
-  "https://realpakistan.com.pk/wp-content/uploads/2025/04/shangrila-resort.jpg",
-  "https://luxushunza.com/wp-content/uploads/slider/cache/da7922896e4ca1abc15bafab13c8151f/DSC_9668-HDR-1-scaled.jpg",
-];
+export const defaultHomeHeroImages = ["/gb.jpg"];
 
 export const defaultLogoUrl = "/north-luxe-logo.png";
 export const defaultBrandColor = "#00875a";

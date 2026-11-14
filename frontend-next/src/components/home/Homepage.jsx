@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react";
 import { useReducedMotion } from "framer-motion";
 import {
-  ArrowRight,
-  ArrowUpRight,
   BedDouble,
   BriefcaseBusiness,
   Building2,
@@ -83,7 +81,7 @@ function Hero() {
           </p>
           <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
             <Link to="/tours" className="btn btn-primary btn-lg">
-              Explore tours<ArrowRight size={16} aria-hidden="true" />
+              Explore tours
             </Link>
             <Link to={planRoute} className="text-sm font-semibold text-white underline-offset-4 hover:underline">
               Or plan a private trip
@@ -174,7 +172,7 @@ function WhyNorthLuxe() {
             ))}
           </ul>
           <Link to="/tours?q=Pakistan" className="btn btn-secondary mt-7">
-            Explore Pakistan tours<ArrowRight size={15} aria-hidden="true" />
+            Explore Pakistan tours
           </Link>
         </div>
       </div>
@@ -199,7 +197,7 @@ function ExperiencesAndServices() {
             {experiences.map((item) => (
               <Link key={item.id || item.slug} to={item.href} className="card card-hover group flex flex-col overflow-hidden">
                 <div className="media media-zoom aspect-[16/10]">
-                  <SafeImage src={item.image} alt="" label="Photo coming soon" loading="lazy" />
+                  <SafeImage src={item.image} alt="" label={item.title} loading="lazy" />
                 </div>
                 <div className="flex flex-1 flex-col p-4">
                   {(item.eyebrow || item.category || item.location) && (
@@ -207,7 +205,7 @@ function ExperiencesAndServices() {
                   )}
                   <h3 className="heading-3 mt-1">{item.title}</h3>
                   {item.description && <p className="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-subtle">{item.description}</p>}
-                  <span className="link-arrow mt-auto pt-3">Explore<ArrowRight size={14} aria-hidden="true" /></span>
+                  <span className="link-arrow mt-auto pt-3">Explore</span>
                 </div>
               </Link>
             ))}
@@ -220,7 +218,7 @@ function ExperiencesAndServices() {
           <div className="mt-10">
             <div className="mb-4 flex items-end justify-between gap-4">
               <h3 className="heading-3">Travel services</h3>
-              <Link to="/services" className="link-arrow">All services<ArrowRight size={15} aria-hidden="true" /></Link>
+              <Link to="/services" className="link-arrow">All services</Link>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {services.map((item, index) => {
@@ -275,7 +273,7 @@ function ContactBand() {
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <Link to={planRoute} className="btn btn-primary">Plan my trip<ArrowUpRight size={15} aria-hidden="true" /></Link>
+          <Link to={planRoute} className="btn btn-primary">Plan my trip</Link>
           {whatsappHref && (
             <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="btn btn-outline-light">
               <MessageCircle size={15} aria-hidden="true" />WhatsApp us

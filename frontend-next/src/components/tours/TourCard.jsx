@@ -1,5 +1,5 @@
 import { Link } from "@/lib/router";
-import { ArrowRight, Clock3, Heart, MapPin, ShoppingBag, Star, Users } from "lucide-react";
+import { Clock3, Heart, MapPin, ShoppingBag, Star, Users } from "lucide-react";
 import { useState } from "react";
 
 import { useToast } from "../../context/ToastContext";
@@ -94,7 +94,7 @@ const TourCard = ({ tour = {} }) => {
     <article className="card card-hover group flex h-full flex-col overflow-hidden">
       <div className="media media-zoom relative aspect-[16/10]">
         <Link to={href} aria-label={`View ${displayTitle}`} className="absolute inset-0">
-          <SafeImage src={image} alt={displayTitle} label="Photo coming soon" loading="lazy" decoding="async" />
+          <SafeImage src={image} alt={displayTitle} label={displayTitle} loading="lazy" decoding="async" />
         </Link>
         {pricing.hasDiscount && <span className="badge badge-brand absolute left-3 top-3">{pricing.discountPercent}% off</span>}
         <button
@@ -156,7 +156,7 @@ const TourCard = ({ tour = {} }) => {
               <ShoppingBag size={15} />
             </button>
             <Link to={href} className="btn btn-primary btn-sm">
-              View<ArrowRight size={14} aria-hidden="true" />
+              View
             </Link>
           </div>
         </div>
