@@ -1,12 +1,6 @@
-import React, { useState } from "react";
-import {
-  CheckCheck,
-  Calendar,
-  Inbox,
-  Sparkles,
-  BellRing,
-  ShieldCheck,
-} from "lucide-react";
+import { useState } from "react";
+import { CheckCheck, Calendar, Inbox, Sparkles } from "lucide-react";
+import { Button, Card, EmptyState, ErrorState, PageHeader, SkeletonRows, useConfirm } from "../ui";
 import NotificationItem from "./NotificationItem";
 import NotificationFilters from "./NotificationFilters";
 import {
@@ -27,7 +21,9 @@ const isRecentlyReceived = (value) => {
 const Notifications = () => {
   const [renderedAt] = useState(() => Date.now());
   const [activeFilter, setActiveFilter] = useState("All");
-  const { data: notifications = [] } = useNotifications();
+  const notificationsQuery = useNotifications();
+  const notifications = notificationsQuery.data || [];
+  const confirm = useConfirm();
   const updateNotification = useUpdateNotification();
   const markAllRead = useMarkAllNotificationsRead();
   const deleteNotification = useDeleteNotification();
@@ -41,8 +37,14 @@ const Notifications = () => {
     markAllRead.mutate();
   };
 
-  const handleDelete = (id) => {
-    deleteNotification.mutate(id);
+  const handleDelete = async (id) => {
+    const ok = await confirm({
+      title: "Delete this notification?",
+      description: "It will be removed from the inbox. This cannot be undone.",
+      confirmLabel: "Delete notification",
+      cancelLabel: "Keep it",
+    });
+    if (ok) deleteNotification.mutate(id);
   };
 
   const filteredData = notifications
@@ -63,62 +65,66 @@ const Notifications = () => {
     System: unread.filter((n) => n.type === "System").length,
   };
 
+  const description = notificationsQuery.isLoading
+    ? "Booking updates and system alerts."
+    : `${unread.length} unread · ${recent.length} in the last 3 days`;
+
+  let content;
+  if (notificationsQuery.isLoading) {
+    content = <SkeletonRows rows={5} />;
+  } else if (notificationsQuery.isError && !notifications.length) {
+    content = <ErrorState onRetry={() => notificationsQuery.refetch()} />;
+  } else if (!filteredData.length) {
+    content = (
+      <EmptyState
+        icon={Inbox}
+        title="No notifications"
+        description={activeFilter === "All" ? "You're all caught up." : `Nothing in ${activeFilter} right now.`}
+      />
+    );
+  } else {
+    content = (
+      <ul className="divide-y divide-line">
+        {filteredData.map((item) => {
+          const typeStyles =
+            item.type === "Bookings"
+              ? { icon: <Calendar size={16} aria-hidden="true" />, color: "text-brand-700", bgColor: "bg-brand-50" }
+              : { icon: <Sparkles size={16} aria-hidden="true" />, color: "text-subtle", bgColor: "bg-canvas" };
+          return (
+            <NotificationItem
+              key={item.id}
+              item={{
+                ...item,
+                ...typeStyles,
+                time: new Date(item.time || item.createdAt || renderedAt).toLocaleString(),
+                isLatest: isRecentlyReceived(item.time || item.createdAt),
+              }}
+              onMarkAsRead={handleMarkAsRead}
+              onDelete={handleDelete}
+            />
+          );
+        })}
+      </ul>
+    );
+  }
+
   return (
-    <div className="space-y-6 py-2 animate-in fade-in duration-500">
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="admin-soft-label">Notifications</p>
-          <h1 className="admin-page-title mt-2 normal-case">
-            Alerts & Activity
-          </h1>
-          <p className="admin-page-subtitle mt-2 max-w-2xl">
-            Review live booking updates, system alerts, and recent admin activity from one clean inbox.
-          </p>
-        </div>
-
-        <button
-          onClick={handleMarkAllRead}
-          className="admin-soft-button-ghost inline-flex items-center gap-2 px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.12em]"
-        >
-          <CheckCheck size={16} /> Mark all read
-        </button>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="admin-soft-panel rounded-[1.35rem] p-4">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-[1rem] bg-[rgba(var(--c-brand-rgb),0.1)] text-[var(--admin-accent)]">
-              <BellRing size={18} />
-            </span>
-            <div>
-              <p className="admin-soft-label">Unread</p>
-              <p className="mt-1 text-[1.2rem] font-black text-[var(--admin-text)]">{unread.length}</p>
-            </div>
-          </div>
-        </div>
-        <div className="admin-soft-panel rounded-[1.35rem] p-4">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-[1rem] bg-blue-50 text-blue-600">
-              <Calendar size={18} />
-            </span>
-            <div>
-              <p className="admin-soft-label">Booking Alerts</p>
-              <p className="mt-1 text-[1.2rem] font-black text-[var(--admin-text)]">{counts.Bookings}</p>
-            </div>
-          </div>
-        </div>
-        <div className="admin-soft-panel rounded-[1.35rem] p-4">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-[1rem] bg-violet-50 text-violet-600">
-              <ShieldCheck size={18} />
-            </span>
-            <div>
-              <p className="admin-soft-label">Recent Updates</p>
-              <p className="mt-1 text-[1.2rem] font-black text-[var(--admin-text)]">{recent.length}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div>
+      <PageHeader
+        title="Notifications"
+        description={description}
+        actions={
+          <Button
+            size="sm"
+            icon={CheckCheck}
+            onClick={handleMarkAllRead}
+            loading={markAllRead.isPending}
+            disabled={!unread.length}
+          >
+            Mark all read
+          </Button>
+        }
+      />
 
       <NotificationFilters
         activeFilter={activeFilter}
@@ -126,39 +132,7 @@ const Notifications = () => {
         counts={counts}
       />
 
-      <div className="grid gap-5">
-        {filteredData.length > 0 ? (
-          filteredData.map((item) => {
-            const typeStyles =
-              item.type === "Bookings"
-                ? { icon: <Calendar size={18} />, color: "text-blue-600", bgColor: "bg-blue-50" }
-                : { icon: <Sparkles size={18} />, color: "text-violet-600", bgColor: "bg-violet-50" };
-            return (
-              <NotificationItem
-                key={item.id}
-                item={{
-                  ...item,
-                  ...typeStyles,
-                  time: new Date(item.time || item.createdAt || renderedAt).toLocaleString(),
-                  isLatest: isRecentlyReceived(item.time || item.createdAt),
-                }}
-                onMarkAsRead={handleMarkAsRead}
-                onDelete={handleDelete}
-              />
-            );
-          })
-        ) : (
-          <div className="rounded-[2rem] border border-dashed border-white/40 bg-white/45 py-20 text-center">
-            <div className="mb-5 inline-flex rounded-full bg-white p-6 text-slate-200 shadow-sm">
-              <Inbox size={48} strokeWidth={1} />
-            </div>
-            <h3 className="admin-section-title text-[1.02rem]">No Notifications</h3>
-            <p className="admin-soft-muted text-sm">
-              Everything looks clear in {activeFilter}.
-            </p>
-          </div>
-        )}
-      </div>
+      <Card flush>{content}</Card>
     </div>
   );
 };

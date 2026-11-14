@@ -1,15 +1,19 @@
 import { Link } from "@/lib/router";
 import {
   ArrowRight,
+  ArrowUpRight,
   Bell,
   Volume2,
   BookOpen,
   Briefcase,
+  CalendarCheck,
   FolderOpen,
   Image,
   MessageSquare,
   ShieldCheck,
 } from "lucide-react";
+import { Badge, Button, Card, EmptyState, ErrorState, PageHeader, Skeleton, SkeletonRows, StatusBadge } from "../ui";
+import StatsCard from "./StatsCard";
 import {
   useBookings,
   useAdminContentList,
@@ -73,18 +77,30 @@ const playTestNotificationSound = async () => {
   }
 };
 
-const DashboardHome = () => {
-  const { data: overview } = useDashboardOverview();
-  const { data: bookings = [] } = useBookings();
+const Count = ({ loading, value }) =>
+  loading ? <Skeleton className="h-4 w-8" /> : <span className="text-sm font-semibold tabular-nums text-navy-900">{value}</span>;
 
-  const { data: notifications = [] } = useNotifications();
-  const { data: tours = [] } = usePublicTours();
-  const { data: blogs = [] } = usePublicBlogs();
-  const { data: gallery = [] } = useGallery();
-  const { data: users = [] } = useUsers();
+const DashboardHome = () => {
+  const overviewQuery = useDashboardOverview();
+  const bookingsQuery = useBookings();
+  const notificationsQuery = useNotifications();
+  const toursQuery = usePublicTours();
+  const blogsQuery = usePublicBlogs();
+  const galleryQuery = useGallery();
+  const usersQuery = useUsers();
   const { data: settings = {} } = useSettings();
-  const { data: activities = [] } = useAdminContentList("activity");
-  const { data: services = [] } = useAdminContentList("service");
+  const activitiesQuery = useAdminContentList("activity");
+  const servicesQuery = useAdminContentList("service");
+
+  const overview = overviewQuery.data;
+  const bookings = bookingsQuery.data || [];
+  const notifications = notificationsQuery.data || [];
+  const tours = toursQuery.data || [];
+  const blogs = blogsQuery.data || [];
+  const gallery = galleryQuery.data || [];
+  const users = usersQuery.data || [];
+  const activities = activitiesQuery.data || [];
+  const services = servicesQuery.data || [];
   const activeCurrency = displayCurrency(settings?.currency || "PKR");
 
   const stats = overview?.stats || {};
@@ -109,55 +125,124 @@ const DashboardHome = () => {
     return paymentStatus.includes("pending") || paymentStatus.includes("unverified") || status === "pending";
   }).length;
 
+  const overviewLoading = overviewQuery.isLoading;
+  const recentLoading = overviewLoading || (!overview?.latestBookings && bookingsQuery.isLoading);
+  const recentError = !recentLoading && !latestBookings.length && overviewQuery.isError && bookingsQuery.isError;
+
   const cards = [
-    { title: "Total bookings", value: formatNumber(stats.totalBookings ?? bookings.length), hint: "Bookings received" },
-    { title: "Revenue", value: formatCurrencyAmount(stats.totalRevenue || 0, activeCurrency), hint: "Confirmed collections" },
-    { title: "Users", value: formatNumber(stats.totalUsers ?? users.length), hint: "Registered accounts" },
-    { title: "Pending payments", value: formatNumber(pendingPaymentVerifications), hint: "Need verification" },
+    { title: "Total bookings", value: formatNumber(stats.totalBookings ?? bookings.length), hint: "Bookings received", loading: overviewLoading },
+    { title: "Revenue", value: formatCurrencyAmount(stats.totalRevenue || 0, activeCurrency), hint: "Confirmed collections", loading: overviewLoading },
+    { title: "Users", value: formatNumber(stats.totalUsers ?? users.length), hint: "Registered accounts", loading: overviewLoading },
+    { title: "Pending payments", value: formatNumber(pendingPaymentVerifications), hint: "Need verification", loading: bookingsQuery.isLoading },
   ];
+  const attention = [
+    { label: "Unread updates", value: unreadNotifications, to: "/admin/notifications", icon: Bell, loading: notificationsQuery.isLoading },
+    { label: "Custom requests", value: customPlanRequests, to: "/admin/bookings", icon: MessageSquare, loading: bookingsQuery.isLoading },
+  ];
+  // "Notifications" and "Custom requests" are already reachable from the attention links
+  // above, so quick actions keep the remaining shortcuts and carry the content counts.
   const quickLinks = [
     { title: "Review payments", to: "/admin/bookings", icon: ShieldCheck },
-    { title: "Custom requests", to: "/admin/bookings", icon: MessageSquare },
-    { title: "Notifications", to: "/admin/notifications", icon: Bell },
-    { title: "Manage tours", to: "/admin/tours", icon: FolderOpen },
-    { title: "Manage activities", to: "/admin/activities", icon: Briefcase },
-    { title: "Manage services", to: "/admin/services", icon: BookOpen },
+    { title: "Manage tours", to: "/admin/tours", icon: FolderOpen, count: tours.length, loading: toursQuery.isLoading },
+    { title: "Manage activities", to: "/admin/activities", icon: Briefcase, count: activities.length, loading: activitiesQuery.isLoading },
+    { title: "Manage services", to: "/admin/services", icon: BookOpen, count: services.length, loading: servicesQuery.isLoading },
+    { title: "Blogs", to: "/admin/blogs", icon: BookOpen, count: blogs.length, loading: blogsQuery.isLoading },
+    { title: "Media", to: "/admin/gallery", icon: Image, count: gallery.length, loading: galleryQuery.isLoading },
   ];
 
+  const retryRecent = () => {
+    overviewQuery.refetch();
+    bookingsQuery.refetch();
+  };
+
   return (
-    <div className="admin-dashboard">
-      <header className="admin-dashboard-heading">
-        <div><h1 className="admin-page-title">Overview</h1><p className="admin-page-subtitle">Bookings, payments and website content.</p></div>
-        <div className="admin-dashboard-heading-actions"><button type="button" onClick={playTestNotificationSound} className="admin-soft-button-ghost"><Volume2 size={14} />Test sound</button><Link to="/" className="admin-soft-button-ghost">View website<ArrowRight size={13} /></Link></div>
-      </header>
-      <section className="admin-dashboard-metrics" aria-label="Business metrics">
-        {cards.map((card) => <article key={card.title} className="admin-soft-kpi"><p className="admin-metric-label">{card.title}</p><p className="admin-metric-value">{card.value}</p><p className="admin-metric-hint">{card.hint}</p></article>)}
+    <div className="space-y-5">
+      <PageHeader
+        title="Overview"
+        description="Bookings, payments and website content."
+        actions={
+          <>
+            <Button variant="ghost" size="sm" icon={Volume2} onClick={playTestNotificationSound}>Test sound</Button>
+            <Button variant="secondary" size="sm" to="/" iconRight={ArrowUpRight}>View website</Button>
+          </>
+        }
+      />
+
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Business metrics">
+        {cards.map((card) => <StatsCard key={card.title} {...card} />)}
       </section>
-      <section className="admin-dashboard-attention" aria-label="Operational updates">
-        <Link to="/admin/notifications"><Bell size={15} /><span>Unread updates</span><strong>{unreadNotifications}</strong><ArrowRight size={13} /></Link>
-        <Link to="/admin/bookings"><MessageSquare size={15} /><span>Custom requests</span><strong>{customPlanRequests}</strong><ArrowRight size={13} /></Link>
+
+      <section className="grid gap-3 sm:grid-cols-2" aria-label="Needs attention">
+        {attention.map(({ label, value, to, icon: Icon, loading }) => (
+          <Link
+            key={label}
+            to={to}
+            className="group flex items-center gap-3 rounded-card border border-line bg-surface px-4 py-3 transition-colors hover:bg-canvas"
+          >
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-50 text-brand-700">
+              <Icon size={15} aria-hidden="true" />
+            </span>
+            <span className="min-w-0 flex-1 text-sm font-medium text-navy-900">{label}</span>
+            <Count loading={loading} value={value} />
+            <ArrowRight size={14} aria-hidden="true" className="text-subtle transition-transform group-hover:translate-x-0.5" />
+          </Link>
+        ))}
       </section>
-      <div className="admin-dashboard-columns">
-        <section className="admin-soft-panel admin-recent-bookings">
-          <div className="admin-panel-heading"><h2 className="admin-section-title">Recent bookings</h2><Link to="/admin/bookings">View all<ArrowRight size={12} /></Link></div>
-          <div className="admin-booking-list">
-            {latestBookings.length ? latestBookings.map((item) => <Link key={item.id || item.bookingCode} to={item.id ? `/admin/bookings/${item.id}` : "/admin/bookings"} className="admin-booking-row">
-              <div className="min-w-0"><p className="admin-booking-name">{item.user || item.customer || "Guest"}{isRecentlyReceived(item.createdAt || item.date) && <span className="admin-soft-badge admin-soft-badge-primary">New</span>}</p><p className="admin-booking-tour">{item.tour || item.tourTitle || item.bookingCode || "Tour booking"}</p></div>
-              <div className="admin-booking-amount"><p>{formatCurrencyAmount(item.amount || 0, item.currency || "PKR")}</p><span className="admin-soft-badge admin-soft-badge-muted">{item.status || "pending"}</span></div>
-            </Link>) : <p className="admin-empty-note">No bookings yet.</p>}
-          </div>
-        </section>
-        <section className="admin-soft-panel admin-quick-actions">
-          <div className="admin-panel-heading"><h2 className="admin-section-title">Quick actions</h2></div>
-          {quickLinks.map(({ title, to, icon: Icon }) => <Link key={title} to={to} className="admin-quick-action"><span className="admin-action-icon"><Icon size={15} /></span><span>{title}</span><ArrowRight size={13} /></Link>)}
-        </section>
+
+      <div className="grid gap-5 lg:grid-cols-3">
+        <Card
+          flush
+          className="lg:col-span-2"
+          title="Recent bookings"
+          actions={<Button variant="ghost" size="sm" to="/admin/bookings" iconRight={ArrowRight}>View all</Button>}
+        >
+          {recentLoading ? (
+            <SkeletonRows rows={5} className="border-t border-line" />
+          ) : recentError ? (
+            <ErrorState onRetry={retryRecent} className="border-t border-line" />
+          ) : latestBookings.length ? (
+            <ul className="divide-y divide-line border-t border-line">
+              {latestBookings.map((item) => (
+                <li key={item.id || item.bookingCode}>
+                  <Link
+                    to={item.id ? `/admin/bookings/${item.id}` : "/admin/bookings"}
+                    className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-canvas sm:px-5"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="flex items-center gap-2 text-sm font-semibold text-navy-900">
+                        <span className="truncate">{item.user || item.customer || "Guest"}</span>
+                        {isRecentlyReceived(item.createdAt || item.date) && <Badge tone="brand">New</Badge>}
+                      </p>
+                      <p className="mt-0.5 truncate text-[13px] text-subtle">{item.tour || item.tourTitle || item.bookingCode || "Tour booking"}</p>
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3">
+                      <span className="text-sm font-semibold tabular-nums text-navy-900">{formatCurrencyAmount(item.amount || 0, item.currency || "PKR")}</span>
+                      <StatusBadge status={item.status || "pending"} />
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <EmptyState icon={CalendarCheck} title="No bookings yet" description="New bookings will show up here." className="border-t border-line" />
+          )}
+        </Card>
+
+        <Card flush title="Quick actions">
+          <ul className="divide-y divide-line border-t border-line">
+            {quickLinks.map(({ title, to, icon: Icon, count, loading }) => (
+              <li key={title}>
+                <Link to={to} className="group flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-canvas sm:px-5">
+                  <Icon size={15} aria-hidden="true" className="shrink-0 text-subtle" />
+                  <span className="min-w-0 flex-1 text-sm font-medium text-navy-900">{title}</span>
+                  {count !== undefined && <Count loading={loading} value={count} />}
+                  <ArrowRight size={14} aria-hidden="true" className="text-subtle transition-transform group-hover:translate-x-0.5" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </Card>
       </div>
-      <section className="admin-soft-panel admin-content-summary">
-        <div className="admin-panel-heading"><h2 className="admin-section-title">Website content</h2></div>
-        <div className="admin-content-links">
-          {[["Tours", tours.length, "/admin/tours", Briefcase], ["Activities", activities.length, "/admin/activities", Briefcase], ["Services", services.length, "/admin/services", BookOpen], ["Blogs", blogs.length, "/admin/blogs", BookOpen], ["Media", gallery.length, "/admin/gallery", Image]].map(([label, count, to, Icon]) => <Link key={label} to={to}><Icon size={15} /><span>{label}</span><strong>{count}</strong></Link>)}
-        </div>
-      </section>
     </div>
   );
 };

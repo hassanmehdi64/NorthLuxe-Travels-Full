@@ -1,9 +1,9 @@
-import React, { useState } from "react";
-import { Lock, ShieldCheck } from "lucide-react";
+import { useState } from "react";
 import { useUpdateUser } from "../../hooks/useCms";
 import { useAuth } from "../../context/useAuth";
 import { useToast } from "../../context/ToastContext";
 import { getApiErrorMessage } from "../../lib/apiError";
+import { Button, Card, Field, Input, PageHeader } from "../ui";
 
 const AccountSettings = () => {
   const { user } = useAuth();
@@ -14,19 +14,27 @@ const AccountSettings = () => {
     newPassword: "",
     confirmPassword: "",
   });
+  const [errors, setErrors] = useState({});
+
+  const setField = (key) => (e) => {
+    const value = e.target.value;
+    setPasswords((prev) => ({ ...prev, [key]: value }));
+    if (errors[key] || errors.server) setErrors((prev) => ({ ...prev, [key]: undefined, server: undefined }));
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (!user?.id) return;
     if (!passwords.newPassword || passwords.newPassword.length < 8) {
-      toast.error("Weak password", "New password must be at least 8 characters.");
+      setErrors({ newPassword: "New password must be at least 8 characters." });
       return;
     }
     if (passwords.newPassword !== passwords.confirmPassword) {
-      toast.error("Password mismatch", "Confirm password must match the new password.");
+      setErrors({ confirmPassword: "Confirm password must match the new password." });
       return;
     }
+    setErrors({});
 
     try {
       await updateUser.mutateAsync({
@@ -36,62 +44,55 @@ const AccountSettings = () => {
       setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
       toast.success("Password updated", "Your account password has been changed.");
     } catch (error) {
-      toast.error("Update failed", getApiErrorMessage(error, "Could not update password."));
+      const message = getApiErrorMessage(error, "Could not update password.");
+      setErrors({ server: message });
+      toast.error("Update failed", message);
     }
   };
 
   return (
-    <div className="max-w-2xl space-y-6 animate-in fade-in duration-500">
-      <form onSubmit={handleSubmit} className="admin-soft-panel space-y-6 p-6 sm:p-7">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/40 bg-[rgba(var(--c-brand-rgb),0.1)] text-[var(--c-brand)]">
-            <Lock size={18} />
-          </div>
+    <div className="max-w-2xl">
+      <PageHeader title="Account settings" description="Keep your admin account protected with a strong password." />
+
+      <Card title="Change password">
+        <form onSubmit={handleSubmit} className="grid gap-4" noValidate>
+          <Field
+            label="Current password"
+            hint="Not checked yet: the password is changed through your signed-in session."
+          >
+            <Input
+              type="password"
+              autoComplete="current-password"
+              value={passwords.currentPassword}
+              onChange={setField("currentPassword")}
+            />
+          </Field>
+          <Field label="New password" hint="At least 8 characters." error={errors.newPassword} required>
+            <Input
+              type="password"
+              autoComplete="new-password"
+              value={passwords.newPassword}
+              onChange={setField("newPassword")}
+            />
+          </Field>
+          <Field label="Confirm new password" error={errors.confirmPassword} required>
+            <Input
+              type="password"
+              autoComplete="new-password"
+              value={passwords.confirmPassword}
+              onChange={setField("confirmPassword")}
+            />
+          </Field>
+
+          {errors.server && <p role="alert" className="text-xs font-medium text-red-700">{errors.server}</p>}
+
           <div>
-            <h3 className="admin-section-title text-[1.02rem]">Security Credentials</h3>
-            <p className="admin-soft-muted mt-1 text-sm">
-              Keep your admin account protected with a strong password.
-            </p>
+            <Button type="submit" variant="primary" loading={updateUser.isPending}>
+              Update password
+            </Button>
           </div>
-        </div>
-
-        <div className="grid gap-4">
-          <input
-            type="password"
-            placeholder="Current Password"
-            value={passwords.currentPassword}
-            onChange={(e) => setPasswords((prev) => ({ ...prev, currentPassword: e.target.value }))}
-            className="w-full p-4 font-bold"
-          />
-          <input
-            type="password"
-            placeholder="New Password"
-            value={passwords.newPassword}
-            onChange={(e) => setPasswords((prev) => ({ ...prev, newPassword: e.target.value }))}
-            className="w-full p-4 font-bold"
-          />
-          <input
-            type="password"
-            placeholder="Confirm New Password"
-            value={passwords.confirmPassword}
-            onChange={(e) => setPasswords((prev) => ({ ...prev, confirmPassword: e.target.value }))}
-            className="w-full p-4 font-bold"
-          />
-        </div>
-
-        <div className="rounded-2xl border border-white/35 bg-white/45 p-4">
-          <div className="flex items-start gap-3 text-sm text-slate-600">
-            <ShieldCheck size={18} className="mt-0.5 text-[var(--c-brand)]" />
-            <p>
-              The current password field is shown for clarity, but this admin flow currently updates the password directly through the secure account session.
-            </p>
-          </div>
-        </div>
-
-        <button className="admin-soft-button w-full py-3">
-          Update Password
-        </button>
-      </form>
+        </form>
+      </Card>
     </div>
   );
 };
