@@ -563,12 +563,12 @@
 .brand-search-option svg { color: var(--color-brand); }
 .brand-search-scroll { display: flex; justify-content: center; padding: 4px; color: var(--color-subtle); }
 
-.brand-search-calendar { width: 304px; max-width: calc(100vw - 24px); padding: 0; overflow: visible; }
-.brand-calendar-heading { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--color-line); }
+.brand-search-calendar { width: 300px; max-width: calc(100vw - 24px); padding: 0; overflow: visible; }
+.brand-calendar-heading { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--color-line); }
 .brand-calendar-heading-icon { display: grid; place-items: center; width: 30px; height: 30px; flex-shrink: 0; border-radius: 8px; background: var(--color-brand-50); color: var(--color-brand-700); }
 .brand-calendar-heading strong { font-size: 0.8125rem; font-weight: 600; }
 .brand-calendar-heading p { margin-top: 1px; color: var(--color-subtle); font-size: 0.6875rem; }
-.brand-calendar-navigation { display: grid; grid-template-columns: 30px minmax(0, 1fr) 84px 30px; align-items: center; gap: 6px; padding: 12px 12px 6px; }
+.brand-calendar-navigation { display: grid; grid-template-columns: 30px minmax(0, 1fr) 84px 30px; align-items: center; gap: 6px; padding: 12px 16px 6px; }
 .brand-calendar-navigation > button:not(.select-trigger) { display: grid; place-items: center; height: 32px; border-radius: 6px; color: var(--color-navy-900); background: var(--color-canvas); }
 .brand-calendar-navigation > button:not(.select-trigger):hover { background: var(--color-brand-50); color: var(--color-brand-700); }
 .brand-calendar-navigation > button:not(.select-trigger):disabled { opacity: .35; cursor: not-allowed; }
@@ -689,7 +689,15 @@
   --rdp-accent-background-color: var(--color-brand-50);
   --rdp-today-color: var(--color-brand-700);
   --rdp-selected-border: 0;
+  --rdp-day-height: 38px;
+  --rdp-day-width: 38px;
+  --rdp-day_button-height: 34px;
+  --rdp-day_button-width: 34px;
+  margin: 0;
+  padding: 4px 16px 12px; /* equal space left and right: 16 + 7×38 + 16 = 298 */
 }
+.brand-search-calendar .rdp-months { max-width: none; justify-content: center; }
+.brand-search-calendar .rdp-month_grid { margin-inline: auto; }
 .brand-search-calendar .rdp-chevron { fill: var(--color-navy-900); }
 .brand-search-calendar .rdp-button_previous:disabled .rdp-chevron,
 .brand-search-calendar .rdp-button_next:disabled .rdp-chevron { fill: var(--color-line-strong); }
