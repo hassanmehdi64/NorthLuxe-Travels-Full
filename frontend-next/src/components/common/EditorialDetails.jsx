@@ -3,6 +3,7 @@ import { ChevronLeft, MoveUpRight } from "lucide-react";
 import SectionHeading from "./SectionHeading";
 import SafeImage from "./SafeImage";
 import PhotoGallery from "../media/PhotoGallery";
+import Reveal from "../motion/Reveal";
 
 export const DetailState = ({ children }) => (
   <main className="grid min-h-[55vh] place-items-center bg-theme-bg px-4 py-16">
@@ -64,7 +65,7 @@ export const RelatedContentGrid = ({ title, route, items = [] }) => {
   return (
     <section className="border-t border-slate-200 pt-7">
       <SectionHeading title={title} link="View all" to={`/${route}`} />
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+      <Reveal stagger className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         {items.map((item) => (
           <Link key={item.id || item.slug} to={`/${route}/${item.slug || item.id}`} className="group overflow-hidden rounded-xl border border-slate-200 bg-white transition duration-300 hover:-translate-y-0.5 hover:border-[rgba(var(--c-brand-rgb),0.35)] hover:shadow-[0_10px_24px_rgba(var(--c-brand-rgb),0.07)]">
             <div className="media media-zoom relative h-28 sm:h-36"><SafeImage src={item.image || item.coverImage} alt={item.title} label={item.title} loading="lazy" /></div>
@@ -74,7 +75,7 @@ export const RelatedContentGrid = ({ title, route, items = [] }) => {
             </div>
           </Link>
         ))}
-      </div>
+      </Reveal>
     </section>
   );
 };

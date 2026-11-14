@@ -21,7 +21,7 @@ const Booking = () => {
 
   if (step === 3) {
     return (
-      <div className="container-site py-10 sm:py-14">
+      <div className="container-site step-enter py-10 sm:py-14">
         <DoneStep flow={flow} />
       </div>
     );
@@ -41,10 +41,13 @@ const Booking = () => {
       <div className="mt-6 grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="min-w-0">
           <StepIndicator flow={flow} />
-          {step === 1 && section === 1 && <TripSection flow={flow} />}
-          {step === 1 && section === 2 && <DetailsSection flow={flow} />}
-          {step === 1 && section === 3 && <PaymentSection flow={flow} />}
-          {step === 2 && <ReviewStep flow={flow} />}
+          {/* Keyed so each step fades in when the visitor moves between steps. */}
+          <div key={`${step}-${section}`} className="step-enter">
+            {step === 1 && section === 1 && <TripSection flow={flow} />}
+            {step === 1 && section === 2 && <DetailsSection flow={flow} />}
+            {step === 1 && section === 3 && <PaymentSection flow={flow} />}
+            {step === 2 && <ReviewStep flow={flow} />}
+          </div>
         </div>
         <BookingSummary flow={flow} />
       </div>

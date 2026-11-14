@@ -1,4 +1,5 @@
 import BlogCard from "./BlogCard";
+import Reveal from "../motion/Reveal";
 
 const BlogGrid = ({ blogs, isLoading = false }) => {
   if (isLoading) {
@@ -27,11 +28,11 @@ const BlogGrid = ({ blogs, isLoading = false }) => {
   }
 
   return (
-    <div className="grid grid-cols-1 items-stretch gap-3.5 sm:grid-cols-2 xl:grid-cols-3">
+    <Reveal stagger className="grid grid-cols-1 items-stretch gap-3.5 sm:grid-cols-2 xl:grid-cols-3">
       {blogs.map((blog) => (
         <BlogCard key={blog.id} blog={blog} />
       ))}
-    </div>
+    </Reveal>
   );
 };
 

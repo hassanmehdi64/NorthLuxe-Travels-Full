@@ -11,6 +11,7 @@ import {
   DetailState,
   RelatedContentGrid,
 } from "../components/common/EditorialDetails";
+import Reveal from "../components/motion/Reveal";
 
 const toParagraphs = (value) => String(value || "").split(/\n\s*\n/).map((item) => item.trim()).filter(Boolean);
 const toList = (value) => (Array.isArray(value) ? value : String(value || "").split(/[\n,]/)).map((item) => String(item).trim()).filter(Boolean);
@@ -52,7 +53,7 @@ const DestinationDetails = () => {
         <DetailBreadcrumb href="/destinations" label="All destinations" />
 
         <header className="mt-4 grid gap-5 border-b border-slate-200 pb-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-          <div>
+          <div className="hero-enter">
             <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-[var(--c-brand)]">Destination</p>
             <h1 className="mt-2 max-w-4xl text-[1.6rem] font-bold leading-[1.1] tracking-[-0.035em] text-[var(--c-navy)] sm:text-[2rem] lg:text-[2.35rem]">{destination.title}</h1>
             {destination.shortDescription || destination.description ? <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-500 sm:text-base">{destination.shortDescription || destination.description}</p> : null}
@@ -69,7 +70,7 @@ const DestinationDetails = () => {
         <div className="mt-7 grid gap-7 lg:grid-cols-[minmax(0,1fr)_290px] lg:items-start">
           <article className="min-w-0">
             {paragraphs.length ? <section><h2 className="text-xl font-bold tracking-tight text-[var(--c-navy)]">Discover {destination.title}</h2><div className="mt-3 space-y-4">{paragraphs.map((paragraph, index) => <p key={`${index}-${paragraph.slice(0, 24)}`} className="text-[15px] leading-7 text-slate-600">{paragraph}</p>)}</div></section> : null}
-            {highlights.length || features.length || idealFor.length ? <div className="mt-7 grid gap-6 border-t border-slate-200 pt-6 sm:grid-cols-2 xl:grid-cols-3"><FeatureList title="Highlights" items={highlights} /><FeatureList title="Experience" items={features} /><FeatureList title="Ideal for" items={idealFor} /></div> : null}
+            {highlights.length || features.length || idealFor.length ? <Reveal stagger className="mt-7 grid gap-6 border-t border-slate-200 pt-6 sm:grid-cols-2 xl:grid-cols-3"><FeatureList title="Highlights" items={highlights} /><FeatureList title="Experience" items={features} /><FeatureList title="Ideal for" items={idealFor} /></Reveal> : null}
           </article>
           <DetailAside eyebrow="Plan this destination" title={`Travel to ${destination.title}`} text="Share your preferred dates, group size and travel style for a custom itinerary." buttonLabel="Plan my trip" />
         </div>

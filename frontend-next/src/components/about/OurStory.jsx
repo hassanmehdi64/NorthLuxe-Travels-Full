@@ -1,5 +1,6 @@
 import { MapPin, ShieldCheck, Route } from "lucide-react";
 import SectionHeading from "../common/SectionHeading";
+import Reveal from "../motion/Reveal";
 
 const values = [
   { icon: MapPin, title: "Local knowledge", text: "Trusted partners across the North." },
@@ -8,7 +9,7 @@ const values = [
 ];
 
 const OurStory = () => (
-  <section className="about-story" aria-labelledby="about-story-title">
+  <Reveal as="section" className="about-story" aria-labelledby="about-story-title">
     <div className="about-container">
       <div className="about-story-grid">
         <div className="about-story-image">
@@ -30,7 +31,7 @@ const OurStory = () => (
         </div>
       </div>
     </div>
-  </section>
+  </Reveal>
 );
 
 export default OurStory;

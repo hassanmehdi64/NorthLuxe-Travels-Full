@@ -1,5 +1,6 @@
 import TourCard from "./TourCard";
 import { SearchX, ShieldCheck } from "lucide-react";
+import Reveal from "../motion/Reveal";
 
 const ToursList = ({ tours = [], searchSummary = {}, isLoading = false }) => {
   const hasSearchSummary = Boolean(searchSummary?.query || searchSummary?.dateLabel || searchSummary?.guests);
@@ -67,11 +68,11 @@ const ToursList = ({ tours = [], searchSummary = {}, isLoading = false }) => {
             ))}
           </div>
         ) : tours.length ? (
-          <div className="tour-card-grid">
+          <Reveal stagger className="tour-card-grid">
             {tours.map((tour, index) => (
               <TourCard key={tour.id} tour={tour} index={index} />
             ))}
-          </div>
+          </Reveal>
         ) : (
           <div className="flex flex-col items-center rounded-2xl border border-slate-200 bg-white px-4 py-14 text-center">
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-slate-50">

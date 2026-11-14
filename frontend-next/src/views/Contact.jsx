@@ -2,6 +2,7 @@ import PageHero from "../components/common/PageHero";
 import ContactInfo from "../components/contact/ContactInfo";
 import ContactForm from "../components/contact/ContactForm";
 import ContactMap from "../components/contact/ContactMap";
+import Reveal from "../components/motion/Reveal";
 
 const ContactPage = () => {
   return (
@@ -20,9 +21,9 @@ const ContactPage = () => {
         <ContactForm />
       </section>
 
-      <section className="mx-auto w-full max-w-[1400px] px-4 pb-9 sm:px-6 sm:pb-10 lg:px-10 lg:pb-12">
+      <Reveal as="section" className="mx-auto w-full max-w-[1400px] px-4 pb-9 sm:px-6 sm:pb-10 lg:px-10 lg:pb-12">
         <ContactMap />
-      </section>
+      </Reveal>
     </main>
   );
 };

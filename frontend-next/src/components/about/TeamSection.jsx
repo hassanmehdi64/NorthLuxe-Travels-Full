@@ -1,5 +1,6 @@
 
 import SectionHeading from "../common/SectionHeading";
+import Reveal from "../motion/Reveal";
 
 const leadershipTeam = [
   {
@@ -21,7 +22,7 @@ const leadershipTeam = [
 ];
 
 const TeamSection = () => (
-  <section className="about-team" aria-labelledby="about-team-title">
+  <Reveal as="section" className="about-team" aria-labelledby="about-team-title">
     <div className="about-container">
       <SectionHeading id="about-team-title" title="Meet our team" description="The people behind your journey." />
       <div className="about-team-grid">
@@ -36,7 +37,7 @@ const TeamSection = () => (
         ))}
       </div>
     </div>
-  </section>
+  </Reveal>
 );
 
 export default TeamSection;

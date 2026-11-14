@@ -3,6 +3,7 @@ import { usePublicContentList } from "../../hooks/useCms";
 import PageHero from "../common/PageHero";
 import SectionHeading from "../common/SectionHeading";
 import SafeImage from "../common/SafeImage";
+import Reveal from "../motion/Reveal";
 
 const ContentListingPage = ({
   type,
@@ -51,7 +52,7 @@ const ContentListingPage = ({
               ))}
             </div>
           ) : items.length ? (
-            <div className="grid grid-cols-1 items-stretch sm:grid-cols-2 gap-2.5 sm:gap-3.5 md:grid-cols-3 xl:grid-cols-4">
+            <Reveal stagger className="grid grid-cols-1 items-stretch sm:grid-cols-2 gap-2.5 sm:gap-3.5 md:grid-cols-3 xl:grid-cols-4">
               {items.map((item) => {
                 const itemRoute = item.slug || item.id;
                 const image = item.image || item.coverImage || "";
@@ -93,7 +94,7 @@ const ContentListingPage = ({
                   </Link>
                 );
               })}
-            </div>
+            </Reveal>
           ) : (
             <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-14 text-center">
               <h3 className="text-base font-bold text-[var(--c-navy)]">Nothing published yet</h3>

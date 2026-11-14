@@ -53,7 +53,7 @@ function Hero() {
 
       {/* Text layer lets swipes/drags through to the photo slider; links stay clickable. */}
       <div className="container-site pointer-events-none relative pb-20 pt-14 sm:pb-24 sm:pt-20 lg:pb-28 lg:pt-24 [&_a]:pointer-events-auto [&_button]:pointer-events-auto">
-        <div className="max-w-xl">
+        <div className="hero-enter max-w-xl">
           {heroEyebrow && <p className="eyebrow eyebrow-light mb-4">{heroEyebrow}</p>}
           <h1 id="home-hero-title" className="heading-display text-white">Travel beyond the ordinary</h1>
           <p className="mt-4 min-h-[3.25em] max-w-md text-base leading-relaxed text-white/85 sm:min-h-0">

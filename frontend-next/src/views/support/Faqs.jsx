@@ -1,5 +1,6 @@
 import FeaturePageHeader from "../../components/features/FeaturePageHeader";
 import { usePublicContentList } from "../../hooks/useCms";
+import Reveal from "../../components/motion/Reveal";
 
 const faqs = [
   {
@@ -35,14 +36,14 @@ const Faqs = () => {
           description="Quick answers to the most common questions from travelers."
         />
 
-        <div className="space-y-4">
+        <Reveal stagger className="space-y-4">
           {faqItems.map((item) => (
             <article key={item.q} className="rounded-lg border border-theme bg-theme-surface p-5">
               <h2 className="font-bold text-theme">{item.q}</h2>
               <p className="text-sm text-muted mt-2">{item.a}</p>
             </article>
           ))}
-        </div>
+        </Reveal>
       </div>
     </section>
   );

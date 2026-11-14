@@ -116,8 +116,8 @@ export default function BookingSummary({ flow }) {
 
       <Dialog.Root open={open} onOpenChange={setOpen}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-[70] bg-navy-950/40 lg:hidden" />
-          <Dialog.Content className="fixed inset-x-0 bottom-0 z-[71] max-h-[85dvh] overflow-y-auto rounded-t-panel bg-surface px-4 pb-[calc(16px+env(safe-area-inset-bottom))] pt-3 shadow-pop outline-none lg:hidden">
+          <Dialog.Overlay className="sheet-overlay fixed inset-0 z-[70] bg-navy-950/40 lg:hidden" />
+          <Dialog.Content className="sheet-content fixed inset-x-0 bottom-0 z-[71] max-h-[85dvh] overflow-y-auto rounded-t-panel bg-surface px-4 pb-[calc(16px+env(safe-area-inset-bottom))] pt-3 shadow-pop outline-none lg:hidden">
             <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-line-strong" aria-hidden="true" />
             <div className="mb-3 flex items-center justify-between">
               <Dialog.Title className="text-base font-semibold text-navy-900">Your trip</Dialog.Title>

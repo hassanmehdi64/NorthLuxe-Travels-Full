@@ -70,7 +70,14 @@ export function SiteNavigation() {
   const [open, setOpen] = useState(false);
   const counts = useCommerceCounts();
 
+  const [scrolled, setScrolled] = useState(false);
   useEffect(() => setOpen(false), [pathname]);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
   useEffect(() => {
     if (!open) return undefined;
     const onKey = (event) => { if (event.key === "Escape") setOpen(false); };
@@ -79,7 +86,7 @@ export function SiteNavigation() {
   }, [open]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
+    <header data-scrolled={scrolled} className="site-header sticky top-0 z-40 border-b border-line bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
       <div className="container-site flex h-16 items-center gap-4">
         <Brand />
 
@@ -129,7 +136,7 @@ export function SiteNavigation() {
         <nav
           id="mobile-menu"
           aria-label="Mobile navigation"
-          className="max-h-[calc(100dvh-64px)] overflow-y-auto border-t border-line bg-white lg:hidden"
+          className="menu-enter max-h-[calc(100dvh-64px)] overflow-y-auto border-t border-line bg-white lg:hidden"
         >
           <div className="container-site grid gap-1 py-3">
             {navigation.map(([label, to]) => {

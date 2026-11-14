@@ -6,6 +6,7 @@ import FeaturePageHeader from "../../components/features/FeaturePageHeader";
 import PlaceSearchInput from "../../components/search/PlaceSearchInput";
 import { usePublicContentList, usePublicTours } from "../../hooks/useCms";
 import { buildPlaceSuggestions, getTourSearchScore } from "../../utils/tourSearch";
+import Reveal from "../../components/motion/Reveal";
 
 const SearchPage = () => {
   const { data: tours = [] } = usePublicTours();
@@ -59,11 +60,11 @@ const SearchPage = () => {
         </div>
 
         {results.length ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+          <Reveal stagger className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
             {results.map((tour, index) => (
               <TourCard key={tour.id} tour={tour} index={index} />
             ))}
-          </div>
+          </Reveal>
         ) : (
           <div className="rounded-2xl border border-dashed border-theme bg-theme-surface py-16 text-center text-muted">
             No tours matched your search.

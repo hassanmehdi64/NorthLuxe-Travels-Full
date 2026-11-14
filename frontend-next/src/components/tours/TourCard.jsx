@@ -19,7 +19,7 @@ import SafeImage from "../common/SafeImage";
 
 const TourCard = ({ tour = {} }) => {
   const toast = useToast();
-  const [, setWishlistVersion] = useState(0);
+  const [wishlistVersion, setWishlistVersion] = useState(0);
 
   const {
     id,
@@ -104,7 +104,8 @@ const TourCard = ({ tour = {} }) => {
           aria-label={savedInWishlist ? `Remove ${displayTitle} from wishlist` : `Save ${displayTitle}`}
           className={`absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-white/95 shadow-card transition-colors hover:text-brand-700 ${savedInWishlist ? "text-brand" : "text-navy-900"}`}
         >
-          <Heart size={15} className={savedInWishlist ? "fill-current" : ""} />
+          {/* Re-keyed on each tap so the pop plays once per tap (never on page load). */}
+          <Heart key={wishlistVersion} size={15} className={`${savedInWishlist ? "fill-current" : ""} ${wishlistVersion ? "heart-pop" : ""}`} />
         </button>
       </div>
 

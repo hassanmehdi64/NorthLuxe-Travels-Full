@@ -14,10 +14,10 @@ import { getTourRating } from "../lib/reviews";
 
 /** Section with a heading and a hairline above it (no boxed cards). */
 const Section = ({ id, title, children }) => (
-  <section aria-labelledby={id} className="border-t border-line pt-8">
+  <Reveal as="section" aria-labelledby={id} className="border-t border-line pt-8">
     <h2 id={id} className="heading-3 mb-4 text-xl">{title}</h2>
     {children}
-  </section>
+  </Reveal>
 );
 
 const Paragraphs = ({ text }) =>
@@ -90,7 +90,7 @@ const TourDetails = () => {
           <ArrowLeft size={14} aria-hidden="true" /> All tours
         </Link>
 
-        <header className="mt-3 max-w-3xl">
+        <header className="hero-enter mt-3 max-w-3xl">
           {tour.location && (
             <p className="eyebrow mb-2"><MapPin size={13} aria-hidden="true" />{tour.location}</p>
           )}
