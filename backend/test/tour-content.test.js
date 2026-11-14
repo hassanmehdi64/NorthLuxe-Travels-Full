@@ -49,3 +49,25 @@ describe("Seat availability endpoint", () => {
     assert.equal(res.json.available, 7);
   });
 });
+
+describe("Image lists with embedded uploads", () => {
+  const upload = "data:image/jpeg;base64,/9j/4AAQSkZJRg==";
+
+  test("a gallery saved in two halves by the old admin form is re-joined when read", async () => {
+    const tour = await createTour({ gallery: ["data:image/jpeg;base64", "/9j/4AAQSkZJRg==", "https://example.com/a.jpg"] });
+    const pub = await app.request("GET", `/api/tours/${tour.slug}/public`);
+    assert.deepEqual(pub.json.item.gallery, [upload, "https://example.com/a.jpg"]);
+  });
+
+  test("saving a split gallery stores it whole", async () => {
+    const tour = await createTour();
+    const res = await app.request("PATCH", `/api/tours/${tour._id}`, {
+      token: editor.token,
+      body: { gallery: ["https://example.com/a.jpg", "data:image/jpeg;base64", "/9j/4AAQSkZJRg=="] },
+    });
+    assert.equal(res.status, 200);
+    const { Tour } = await import("../src/models/Tour.js");
+    const saved = await Tour.findById(tour._id).lean();
+    assert.deepEqual(saved.gallery, ["https://example.com/a.jpg", upload]);
+  });
+});

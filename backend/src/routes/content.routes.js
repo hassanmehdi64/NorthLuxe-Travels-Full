@@ -3,6 +3,7 @@ import { requireAuth, requireRole } from "../middleware/auth.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { ContentEntry } from "../models/ContentEntry.js";
 import { slugify } from "../utils/slugify.js";
+import { cleanImageList, cleanMetaImageLists } from "../utils/imageList.js";
 
 const router = express.Router();
 
@@ -18,7 +19,7 @@ const toContentResponse = (item) => ({
   content: item.content,
   image: item.coverImage,
   coverImage: item.coverImage,
-  gallery: item.gallery,
+  gallery: cleanImageList(item.gallery),
   location: item.location,
   category: item.category,
   duration: item.duration,
@@ -30,7 +31,7 @@ const toContentResponse = (item) => ({
   includes: item.includes,
   deliverables: item.deliverables,
   blocks: item.blocks,
-  meta: item.meta || {},
+  meta: cleanMetaImageLists(item.meta || {}),
   featured: item.featured,
   status: item.status,
   sortOrder: item.sortOrder || 0,
@@ -118,7 +119,7 @@ router.post(
       description: payload.description || "",
       content: payload.content || "",
       coverImage: payload.image || payload.coverImage || "",
-      gallery: payload.gallery || [],
+      gallery: cleanImageList(payload.gallery),
       location: payload.location || "",
       category: payload.category || "",
       duration: payload.duration || "",
@@ -130,7 +131,7 @@ router.post(
       includes: payload.includes || [],
       deliverables: payload.deliverables || [],
       blocks: payload.blocks || [],
-      meta: payload.meta || {},
+      meta: cleanMetaImageLists(payload.meta || {}),
       featured: Boolean(payload.featured),
       status: payload.status || "published",
       sortOrder: Number(payload.sortOrder || 0),
@@ -162,7 +163,7 @@ router.patch(
     if (payload.image !== undefined || payload.coverImage !== undefined) {
       item.coverImage = payload.image || payload.coverImage || "";
     }
-    if (payload.gallery !== undefined) item.gallery = payload.gallery;
+    if (payload.gallery !== undefined) item.gallery = cleanImageList(payload.gallery);
     if (payload.location !== undefined) item.location = payload.location;
     if (payload.category !== undefined) item.category = payload.category;
     if (payload.duration !== undefined) item.duration = payload.duration;
@@ -174,7 +175,7 @@ router.patch(
     if (payload.includes !== undefined) item.includes = payload.includes;
     if (payload.deliverables !== undefined) item.deliverables = payload.deliverables;
     if (payload.blocks !== undefined) item.blocks = payload.blocks;
-    if (payload.meta !== undefined) item.meta = payload.meta;
+    if (payload.meta !== undefined) item.meta = cleanMetaImageLists(payload.meta);
     if (payload.featured !== undefined) item.featured = Boolean(payload.featured);
     if (payload.status !== undefined) item.status = payload.status;
     if (payload.sortOrder !== undefined) item.sortOrder = Number(payload.sortOrder || 0);

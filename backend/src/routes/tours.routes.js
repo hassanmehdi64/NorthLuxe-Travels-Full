@@ -5,6 +5,7 @@ import { Tour } from "../models/Tour.js";
 import { slugify } from "../utils/slugify.js";
 import { WRITABLE_FIELDS, pickWritable } from "../utils/fieldPolicy.js";
 import { expireStaleHolds, getAvailability, toSeatDate } from "../utils/bookingLifecycle.js";
+import { cleanImageList } from "../utils/imageList.js";
 
 const router = express.Router();
 
@@ -54,7 +55,7 @@ const toTourResponse = (tour) => ({
   discountPercent: normalizeDiscountPercent(tour.discountPercent ?? 0),
   currency: tour.currency,
   image: tour.coverImage,
-  gallery: tour.gallery,
+  gallery: cleanImageList(tour.gallery),
   shortDescription: tour.shortDescription,
   description: tour.description,
   capacity: tour.capacity,
@@ -134,7 +135,7 @@ router.post(
     const reviewStats = getReviewStats(reviewItems);
     const title = payload.title?.trim();
     const coverImage = String(payload.image || payload.coverImage || "").trim();
-    const gallery = sanitizeStringList(payload.gallery);
+    const gallery = cleanImageList(payload.gallery);
     if (!title) return res.status(400).json({ message: "Title is required" });
     if (!coverImage) return res.status(400).json({ message: "Cover image is required" });
 
@@ -193,7 +194,7 @@ router.patch(
       places: payload.places !== undefined ? sanitizeStringList(payload.places) : undefined,
       inclusions: payload.inclusions !== undefined ? sanitizeStringList(payload.inclusions) : undefined,
       exclusions: payload.exclusions !== undefined ? sanitizeStringList(payload.exclusions) : undefined,
-      gallery: payload.gallery !== undefined ? sanitizeStringList(payload.gallery) : undefined,
+      gallery: payload.gallery !== undefined ? cleanImageList(payload.gallery) : undefined,
       currency: payload.currency !== undefined ? String(payload.currency || "PKR").trim() || "PKR" : undefined,
       durationLabel:
         payload.durationLabel !== undefined ? String(payload.durationLabel || "").trim() : undefined,
