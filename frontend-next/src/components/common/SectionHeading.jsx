@@ -1,4 +1,5 @@
 import { Link } from "@/lib/router";
+import Reveal from "../motion/Reveal";
 
 /**
  * The one section header used across the site.
@@ -7,7 +8,7 @@ import { Link } from "@/lib/router";
  */
 export default function SectionHeading({ eyebrow, title, description, link, to, id, children, as: Heading = "h2", className = "" }) {
   return (
-    <div className={`section-head ${className}`}>
+    <Reveal className={`section-head ${className}`}>
       <div className="min-w-0 max-w-2xl">
         {eyebrow && <p className="eyebrow mb-2">{eyebrow}</p>}
         <Heading id={id} className="heading-2">{title}</Heading>
@@ -23,6 +24,6 @@ export default function SectionHeading({ eyebrow, title, description, link, to, 
           )}
         </div>
       )}
-    </div>
+    </Reveal>
   );
 }

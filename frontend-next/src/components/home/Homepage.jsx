@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useReducedMotion } from "framer-motion";
 import {
   BedDouble,
   BriefcaseBusiness,
@@ -27,6 +25,9 @@ import GallerySection from "../about/GallerySection";
 import { homeDestinations, featuredTours, contentCards, internationalDestinations } from "./homeData.mjs";
 import { homeAssets as assets } from "./homeAssets";
 import { planRoute } from "./SiteChrome";
+import HeroSlider from "../media/HeroSlider";
+import Carousel from "../media/Carousel";
+import Reveal from "../motion/Reveal";
 
 // Configurable in Admin → Settings → General. Never shows the street address.
 const getHeroEyebrow = (settings) => {
@@ -38,45 +39,24 @@ const getHeroEyebrow = (settings) => {
 
 function Hero() {
   const { data: settings } = useSettings(true);
-  const reducedMotion = useReducedMotion();
   const slides = settings?.homeHeroImages?.length ? getHomeHeroImages(settings) : [assets.CinematicHunzaHero];
-  const [activeSlide, setActiveSlide] = useState(0);
   const heroEyebrow = getHeroEyebrow(settings);
-
-  useEffect(() => {
-    if (slides.length < 2 || reducedMotion) return undefined;
-    const timer = window.setInterval(() => setActiveSlide((current) => (current + 1) % slides.length), 7000);
-    return () => window.clearInterval(timer);
-  }, [slides.length, reducedMotion]);
 
   return (
     <>
     <section aria-labelledby="home-hero-title" className="relative isolate bg-navy-950">
-      <div className="absolute inset-0 -z-10 overflow-hidden">
-        {slides.map((src, index) => {
-          const active = index === activeSlide % slides.length;
-          return (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={src}
-              src={src}
-              alt={active ? "Northern Pakistan landscape" : ""}
-              aria-hidden={!active}
-              fetchPriority={index === 0 ? "high" : "auto"}
-              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${active ? "opacity-100" : "opacity-0"}`}
-              onError={(event) => { if (!event.currentTarget.src.endsWith("/gb.jpg")) event.currentTarget.src = "/gb.jpg"; }}
-            />
-          );
-        })}
-        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-navy-950/80 via-navy-950/45 to-navy-950/10" />
-        <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-navy-950/50 to-transparent" />
+      <div className="absolute inset-0 overflow-hidden">
+        <HeroSlider images={slides} alt="Northern Pakistan landscape" label="Destination photos" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-r from-navy-950/80 via-navy-950/45 to-navy-950/10" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-navy-950/50 to-transparent" />
       </div>
 
-      <div className="container-site pb-20 pt-14 sm:pb-24 sm:pt-20 lg:pb-28 lg:pt-24">
+      {/* Text layer lets swipes/drags through to the photo slider; links stay clickable. */}
+      <div className="container-site pointer-events-none relative pb-20 pt-14 sm:pb-24 sm:pt-20 lg:pb-28 lg:pt-24 [&_a]:pointer-events-auto [&_button]:pointer-events-auto">
         <div className="max-w-xl">
           {heroEyebrow && <p className="eyebrow eyebrow-light mb-4">{heroEyebrow}</p>}
           <h1 id="home-hero-title" className="heading-display text-white">Travel beyond the ordinary</h1>
-          <p className="mt-4 max-w-md text-base leading-relaxed text-white/85">
+          <p className="mt-4 min-h-[3.25em] max-w-md text-base leading-relaxed text-white/85 sm:min-h-0">
             {settings?.siteTagline || "Journeys across Pakistan and beyond, tailored to you."}
           </p>
           <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
@@ -113,9 +93,11 @@ function PopularDestinations() {
             {Array.from({ length: 8 }, (_, index) => <div key={index} className="destination-tile-skeleton" />)}
           </div>
         ) : destinations.length ? (
-          <div className="grid-cards-4">
-            {destinations.map((item) => <DestinationCard key={item.slug || item.id || item.title} destination={item} overlay />)}
-          </div>
+          <Reveal>
+            <Carousel label="Popular destinations" slideClassName="basis-[72%] sm:basis-1/3 lg:basis-1/4">
+              {destinations.map((item) => <DestinationCard key={item.slug || item.id || item.title} destination={item} overlay />)}
+            </Carousel>
+          </Reveal>
         ) : (
           <p className="empty-state">Published destinations will appear here.</p>
         )}
@@ -132,7 +114,11 @@ function FeaturedTours() {
       <div className="container-site">
         <SectionHeading eyebrow="Ready-made journeys" title="Featured tours" link="All tours" to="/tours" />
         {packages.length ? (
-          <div className="tour-card-grid scroll-row-mobile">{packages.map((tour) => <TourCard key={tour.id || tour.slug} tour={tour} />)}</div>
+          <Reveal>
+            <Carousel label="Featured tours" slideClassName="basis-[85%] sm:basis-1/2 lg:basis-1/4">
+              {packages.map((tour) => <TourCard key={tour.id || tour.slug} tour={tour} />)}
+            </Carousel>
+          </Reveal>
         ) : (
           <p className="empty-state">{isLoading ? "Loading tours…" : "Published tours will appear here."}</p>
         )}
@@ -150,7 +136,7 @@ const benefits = [
 function WhyNorthLuxe() {
   return (
     <section className="section" aria-labelledby="why-title">
-      <div className="container-site grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
+      <Reveal className="container-site grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
         <div className="media aspect-[4/3] rounded-panel lg:aspect-[5/4]">
           <SafeImage src={assets.SkarduLandscape} alt="Upper Kachura Lake, Skardu" loading="lazy" />
         </div>
@@ -175,7 +161,7 @@ function WhyNorthLuxe() {
             Explore Pakistan tours
           </Link>
         </div>
-      </div>
+      </Reveal>
     </section>
   );
 }
@@ -193,7 +179,8 @@ function ExperiencesAndServices() {
       <div className="container-site">
         <SectionHeading eyebrow="Ways to explore" title="Experiences" link="All experiences" to="/activities" />
         {experiences.length ? (
-          <div className="grid-cards-3 scroll-row-mobile">
+          <Reveal>
+          <Carousel label="Experiences" slideClassName="basis-[85%] sm:basis-1/2 lg:basis-1/3">
             {experiences.map((item) => (
               <Link key={item.id || item.slug} to={item.href} className="card card-hover group flex flex-col overflow-hidden">
                 <div className="media media-zoom aspect-[16/10]">
@@ -209,7 +196,8 @@ function ExperiencesAndServices() {
                 </div>
               </Link>
             ))}
-          </div>
+          </Carousel>
+          </Reveal>
         ) : (
           <p className="empty-state">{activitiesLoading ? "Loading experiences…" : "Published activities will appear here."}</p>
         )}
@@ -251,9 +239,11 @@ function InternationalDestinations() {
     <section className="section">
       <div className="container-site">
         <SectionHeading eyebrow="Beyond Pakistan" title="International destinations" link="International tours" to="/tours?q=international" />
-        <div className="grid-cards-4">
-          {international.map((item) => <DestinationCard key={item.id || item.slug} destination={item} overlay />)}
-        </div>
+        <Reveal>
+          <Carousel label="International destinations" slideClassName="basis-[72%] sm:basis-1/3 lg:basis-1/4">
+            {international.map((item) => <DestinationCard key={item.id || item.slug} destination={item} overlay />)}
+          </Carousel>
+        </Reveal>
       </div>
     </section>
   );
