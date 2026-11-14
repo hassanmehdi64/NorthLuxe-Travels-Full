@@ -9,7 +9,7 @@ import "../styles/public-consistency.css";
 
 // Pages rebuilt on the design system opt out of the legacy `.public-page-content`
 // overrides (styles/public-theme.css). Remove this once the legacy CSS is deleted.
-const REBUILT_ROUTES = [/^\/$/, /^\/tours\/[^/]+\/?$/, /^\/book(\/|$)/, /^\/custom-booking(\/|$)/];
+const REBUILT_ROUTES = [/^\/$/, /^\/gallery\/?$/, /^\/tours\/[^/]+\/?$/, /^\/book(\/|$)/, /^\/custom-booking(\/|$)/];
 const usesLegacyStyles = (pathname = "") => !REBUILT_ROUTES.some((pattern) => pattern.test(pathname));
 
 const PublicLayout = ({ children }) => {

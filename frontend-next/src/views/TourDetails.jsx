@@ -4,7 +4,9 @@ import { useMemo } from "react";
 import { ArrowLeft, Check, ChevronDown, Clock3, MapPin, Star, Users, X } from "lucide-react";
 import { Link, useParams } from "@/lib/router";
 import { usePublicContentList, usePublicTour, usePublicTours, useSettings } from "../hooks/useCms";
-import TourGallery from "../components/tour-details/TourGallery";
+import PhotoGallery from "../components/media/PhotoGallery";
+import Carousel from "../components/media/Carousel";
+import Reveal from "../components/motion/Reveal";
 import TourBookingPanel from "../components/tour-details/TourBookingPanel";
 import TourCard from "../components/tours/TourCard";
 import { buildDisplayItinerary, buildPlacesCovered, buildTourReviews, getTourPlaceName } from "../components/tour-details/tourDetailsData";
@@ -108,7 +110,7 @@ const TourDetails = () => {
         </header>
 
         <div className="mt-6">
-          <TourGallery images={data.photos} title={tour.title} />
+          <PhotoGallery images={data.photos} title={tour.title} />
         </div>
 
         <div className="mt-8 grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_360px]">
@@ -215,9 +217,11 @@ const TourDetails = () => {
         <section aria-labelledby="related-title" className="section mt-6 section-white">
           <div className="container-site">
             <h2 id="related-title" className="heading-2 mb-5">More tours in {getTourPlaceName(tour)}</h2>
-            <div className="tour-card-grid scroll-row-mobile">
-              {data.related.map((item) => <TourCard key={item.id} tour={item} />)}
-            </div>
+            <Reveal>
+              <Carousel label={`More tours in ${getTourPlaceName(tour)}`} slideClassName="basis-[85%] sm:basis-1/2 lg:basis-1/4">
+                {data.related.map((item) => <TourCard key={item.id} tour={item} />)}
+              </Carousel>
+            </Reveal>
           </div>
         </section>
       )}

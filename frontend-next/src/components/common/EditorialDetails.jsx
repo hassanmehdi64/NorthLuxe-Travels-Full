@@ -1,8 +1,8 @@
-import { useState } from "react";
 import { Link } from "@/lib/router";
 import { ChevronLeft, MoveUpRight } from "lucide-react";
 import SectionHeading from "./SectionHeading";
 import SafeImage from "./SafeImage";
+import PhotoGallery from "../media/PhotoGallery";
 
 export const DetailState = ({ children }) => (
   <main className="grid min-h-[55vh] place-items-center bg-theme-bg px-4 py-16">
@@ -22,27 +22,8 @@ export const DetailBreadcrumb = ({ href, label }) => (
   </Link>
 );
 
-export const DetailMediaGrid = ({ images = [], title }) => {
-  const [failedImages, setFailedImages] = useState([]);
-  const uniqueImages = [...new Set(images.filter(Boolean))]
-    .filter((image) => !failedImages.includes(image))
-    .slice(0, 5);
-  if (!uniqueImages.length) return null;
-
-  const hideFailedImage = (image) => {
-    setFailedImages((current) =>
-      current.includes(image) ? current : [...current, image],
-    );
-  };
-
-  return (
-    <section className="brand-gallery-grid tour-photo-grid" style={{ "--photo-columns": Math.min(uniqueImages.length, 3) }} aria-label={`${title} photos`}>
-      {uniqueImages.map((image, index) => <div className="brand-gallery-tile" key={image}>
-        <img src={image} alt={`${title}, photo ${index + 1}`} loading={index === 0 ? "eager" : "lazy"} onError={() => hideFailedImage(image)} />
-      </div>)}
-    </section>
-  );
-};
+/** Detail-page photos: the shared PhotoGallery (main photo + balanced grid + Lightbox). */
+export const DetailMediaGrid = ({ images = [], title }) => <PhotoGallery images={images} title={title} />;
 
 export const DetailFacts = ({ items = [] }) => {
   const visible = items.filter((item) => item?.value);
