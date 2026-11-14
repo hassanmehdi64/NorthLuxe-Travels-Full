@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "@/lib/router";
-import { ChevronDown } from "lucide-react";
 import { useCreatePublicBooking } from "../../hooks/useCms";
 import { useToast } from "../../context/ToastContext";
 import BookingDropdown from "../../components/booking/BookingDropdown";
+import MultiSelectMenu from "../../components/forms/MultiSelectMenu";
 import BookingDateField from "../../components/booking/BookingDateField";
 
 const DESTINATION_OPTIONS = [
@@ -38,122 +38,6 @@ const BUDGET_TYPE_OPTIONS = [
   { value: "total_trip", label: "Total Trip Budget" },
   { value: "per_person", label: "Per Person Budget" },
 ];
-
-const BookingStyleDropdown = ({
-  value,
-  onChange,
-  options,
-  placeholder = "Select an option",
-  multiple = false,
-  selectedValues = [],
-  onToggleOption,
-  renderValue,
-  children,
-}) => {
-  const [open, setOpen] = useState(false);
-  const [openUpward, setOpenUpward] = useState(false);
-  const menuRef = useRef(null);
-  const selectedOption = options.find((item) => item.value === value);
-
-  useEffect(() => {
-    if (!open) return;
-    const handleOutside = (event) => {
-      if (!menuRef.current?.contains(event.target)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleOutside);
-    return () => document.removeEventListener("mousedown", handleOutside);
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    const rect = menuRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
-    const spaceBelow = viewportHeight - rect.bottom;
-    const spaceAbove = rect.top;
-    const dropdownNeed = 270;
-    setOpenUpward(spaceBelow < dropdownNeed && spaceAbove > spaceBelow);
-  }, [open, options.length]);
-
-  return (
-    <div className="relative min-w-0" ref={menuRef}>
-      <button
-        type="button"
-        className={`w-full min-w-0 overflow-hidden rounded-lg border px-3 py-2.5 text-left text-[13px] text-theme transition ${
-          open
-            ? "border-[#67d7b2] bg-[#f2fff9] shadow-[0_5px_14px_rgba(123,231,196,0.14)]"
-            : "border-[var(--c-border)] bg-white hover:border-[#8fdcc1] hover:bg-[#fbfffd]"
-        }`}
-        onClick={() => setOpen((prev) => !prev)}
-        aria-expanded={open}
-      >
-        <span className="block truncate">
-          {renderValue
-            ? renderValue()
-            : selectedOption?.label || placeholder}
-        </span>
-        <ChevronDown
-          size={14}
-          className={`pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted transition ${open ? "rotate-180" : ""}`}
-        />
-      </button>
-
-      {open ? (
-        <div
-          className={`absolute z-[120] w-full overflow-hidden rounded-lg border border-[#89dfc3] bg-white p-1 shadow-[0_12px_28px_rgba(15,23,42,0.12)] ${
-            openUpward ? "bottom-full mb-2" : "top-full mt-2"
-          }`}
-        >
-          <div className="max-h-60 overflow-auto space-y-1">
-            {multiple
-              ? options.map((item) => {
-                  const active = selectedValues.includes(item.value);
-                  return (
-                    <label
-                      key={item.value}
-                      className={`flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-[13px] transition ${
-                        active ? "bg-[#dcf8ed] text-theme" : "bg-[#f8fffc] text-theme hover:bg-[#dcf8ed]"
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        className="ql-check"
-                        checked={active}
-                        onChange={() => onToggleOption?.(item.value)}
-                      />
-                      <span>{item.label}</span>
-                    </label>
-                  );
-                })
-              : options.map((item) => {
-                  const active = item.value === value;
-                  return (
-                    <button
-                      key={item.value}
-                      type="button"
-                      onClick={() => {
-                        onChange?.(item.value);
-                        setOpen(false);
-                      }}
-                      className={`w-full rounded-md px-3 py-2 text-left text-[13px] transition ${
-                        active
-                          ? "bg-[#20b77a] font-semibold text-white"
-                          : "bg-[#f8fffc] text-theme hover:bg-[#dcf8ed]"
-                      }`}
-                    >
-                      {item.label}
-                    </button>
-                  );
-                })}
-          </div>
-          {children ? <div className="mt-2">{children}</div> : null}
-        </div>
-      ) : null}
-    </div>
-  );
-};
 
 const createInitialForm = (sourceTour = null) => ({
   name: "",
@@ -311,20 +195,6 @@ const CustomPlanRequest = () => {
     });
   };
 
-  const selectedDestinationLabel = (() => {
-    const destinations = form.destinations.includes("Other")
-      ? [
-          ...form.destinations.filter((item) => item !== "Other"),
-          ...form.customDestinations,
-          ...(form.otherDestination.trim() ? [form.otherDestination.trim()] : []),
-        ].filter(Boolean)
-      : form.destinations;
-
-    const count = destinations.length;
-    if (!count) return "Select destinations";
-    if (count <= 2) return destinations.join(", ");
-    return `${destinations[0]}, ${destinations[1]} +${count - 2} more`;
-  })();
 
   return (
     <section className="light-request-page min-h-[70vh] bg-theme-bg py-5 sm:py-7">
@@ -414,19 +284,21 @@ const CustomPlanRequest = () => {
                 value={form.endDate}
                 onChange={(date) => setForm((prev) => ({ ...prev, endDate: date }))}
                 placeholder="Select end date"
+                minDate={form.startDate ? new Date(`${form.startDate}T00:00:00`) : undefined}
               />
             </label>
           </div>
           <div className="md:col-span-2 grid gap-4 md:grid-cols-3">
             <div className="md:col-span-1">
               <span className="ql-label">Preferred Destinations</span>
-              <BookingStyleDropdown
-                multiple
+              <MultiSelectMenu
+                aria-label="Preferred destinations"
+                placeholder="Select destinations"
                 options={DESTINATION_OPTIONS.map((item) => ({ value: item, label: item }))}
-                selectedValues={form.destinations}
-                onToggleOption={toggleDestination}
-                renderValue={() => selectedDestinationLabel}
-              >
+                values={form.destinations}
+                onToggle={toggleDestination}
+              />
+              <div className="mt-2">
                 {form.destinations.includes("Other") ? (
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
@@ -496,7 +368,7 @@ const CustomPlanRequest = () => {
                     ) : null}
                   </div>
                 ) : null}
-              </BookingStyleDropdown>
+              </div>
             </div>
             <label>
               <span className="ql-label">Persons</span>

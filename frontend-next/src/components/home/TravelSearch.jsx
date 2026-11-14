@@ -1,8 +1,9 @@
 "use client";
 
 import { useId, useState } from "react";
-import { MapPin, CalendarDays, Users, Compass, Search, ChevronDown, ChevronLeft, ChevronRight, Check } from "lucide-react";
-import { Popover, Select } from "radix-ui";
+import { MapPin, CalendarDays, Users, Compass, Search, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { Popover } from "radix-ui";
+import SelectMenu from "../forms/SelectMenu";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/style.css";
 import { useNavigate } from "@/lib/router";
@@ -12,19 +13,12 @@ import { buildTravelSearchUrl } from "./travelSearch.mjs";
 
 const SearchSelect = ({ label, icon: Icon, value, onChange, options, className = "" }) => {
   const labelId = useId();
-  return <div className={`brand-search-field ${className}`}>
-    <span id={labelId} className="brand-search-label">{Icon ? <Icon size={14} aria-hidden="true" /> : null}{label}</span>
-    <Select.Root value={value || "__all__"} onValueChange={(next) => onChange(next === "__all__" ? "" : next)}>
-      <Select.Trigger className="brand-search-control" aria-labelledby={labelId}><Select.Value /><Select.Icon><ChevronDown size={14} /></Select.Icon></Select.Trigger>
-      <Select.Portal><Select.Content className="brand-search-menu" position="popper" sideOffset={6} collisionPadding={12}>
-        <Select.ScrollUpButton className="brand-search-scroll"><ChevronDown size={12} className="rotate-180" /></Select.ScrollUpButton>
-        <Select.Viewport>{options.map((option) => <Select.Item className="brand-search-option" key={option.value || "__all__"} value={option.value || "__all__"} disabled={option.disabled}>
-          <Select.ItemText>{option.label}</Select.ItemText><Select.ItemIndicator><Check size={14} /></Select.ItemIndicator>
-        </Select.Item>)}</Select.Viewport>
-        <Select.ScrollDownButton className="brand-search-scroll"><ChevronDown size={12} /></Select.ScrollDownButton>
-      </Select.Content></Select.Portal>
-    </Select.Root>
-  </div>;
+  return (
+    <div className={`brand-search-field ${className}`}>
+      <span id={labelId} className="brand-search-label">{Icon ? <Icon size={14} aria-hidden="true" /> : null}{label}</span>
+      <SelectMenu size="sm" value={value} onChange={onChange} options={options} aria-labelledby={labelId} />
+    </div>
+  );
 };
 
 const TravelSearch = () => {
@@ -66,8 +60,8 @@ const TravelSearch = () => {
           <div className={`brand-search-field ${moreOpen ? "" : "max-sm:hidden"}`}>
             <span id={dateLabelId} className="brand-search-label"><CalendarDays size={14} aria-hidden="true" />Travel date</span>
             <Popover.Root open={calendarOpen} onOpenChange={(open) => { if (open) setCalendarMonth(selectedDate ? new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1) : firstMonth); setCalendarOpen(open); }}>
-              <Popover.Trigger type="button" className="brand-search-control" aria-labelledby={dateLabelId}>
-                <span>{selectedDate ? selectedDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "Choose date"}</span><ChevronDown size={14} />
+              <Popover.Trigger type="button" className="select-trigger select-trigger-sm" aria-labelledby={dateLabelId}>
+                <span className={`select-trigger-value ${selectedDate ? "" : "text-subtle"}`}>{selectedDate ? selectedDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "Choose date"}</span><span className="select-trigger-chevron"><ChevronDown size={16} /></span>
               </Popover.Trigger>
               <Popover.Portal><Popover.Content className="brand-search-calendar" align="start" sideOffset={6} collisionPadding={12} aria-label="Choose travel date">
                 <div className="brand-calendar-heading"><span className="brand-calendar-heading-icon"><CalendarDays size={16} /></span><div><strong>Choose your travel date</strong><p>Find the right time to explore</p></div></div>

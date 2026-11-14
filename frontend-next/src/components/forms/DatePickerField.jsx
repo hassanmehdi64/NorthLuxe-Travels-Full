@@ -32,7 +32,7 @@ export default function DatePickerField({
   const [open, setOpen] = useState(false);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const min = minDate || today;
+  const min = (typeof minDate === "string" ? fromKey(minDate) : minDate) || today;
   const selected = fromKey(value);
 
   return (
@@ -42,17 +42,15 @@ export default function DatePickerField({
         type="button"
         aria-invalid={invalid || ariaProps["aria-invalid"] || undefined}
         aria-describedby={ariaProps["aria-describedby"]}
-        className={cn(
-          "brand-search-control h-10",
-          (invalid || ariaProps["aria-invalid"]) && "border-red-500 shadow-[0_0_0_3px_rgb(217_45_32/0.1)]",
-          className,
-        )}
+        aria-label={ariaProps["aria-label"]}
+        aria-labelledby={ariaProps["aria-labelledby"]}
+        className={cn("select-trigger", className)}
       >
-        <span className={cn("inline-flex items-center gap-2", !value && "text-subtle")}>
-          <CalendarDays size={16} aria-hidden="true" className="text-brand" />
+        <CalendarDays size={16} aria-hidden="true" className="select-trigger-icon" />
+        <span className={cn("select-trigger-value", !value && "text-subtle")}>
           {value ? formatDateLabel(value) : placeholder}
         </span>
-        <ChevronDown size={15} aria-hidden="true" />
+        <span className="select-trigger-chevron"><ChevronDown size={16} aria-hidden="true" /></span>
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content className="brand-search-calendar" align="start" sideOffset={6} collisionPadding={12} aria-label="Choose a date">

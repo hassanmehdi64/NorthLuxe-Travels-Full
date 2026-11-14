@@ -1,125 +1,13 @@
-import {
-  Calendar,
-  ChevronDown,
-  ListFilter,
-  MapPin,
-  Mountain,
-  RotateCcw,
-} from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useId } from "react";
+import { Calendar, ListFilter, MapPin, Mountain, RotateCcw } from "lucide-react";
+import SelectMenu from "../forms/SelectMenu";
 
-const FilterDropdown = ({
-  value,
-  onChange,
-  options,
-  icon: Icon,
-  label,
-  placeholder = "Select",
-}) => {
-  const [open, setOpen] = useState(false);
-  const [openUpward, setOpenUpward] = useState(false);
-  const menuRef = useRef(null);
-  const selected = options.find((item) => item.value === value);
-
-  useEffect(() => {
-    if (!open) return;
-    const handleOutside = (event) => {
-      if (!menuRef.current?.contains(event.target)) {
-        setOpen(false);
-      }
-    };
-    const handleEscape = (event) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("mousedown", handleOutside);
-    document.addEventListener("keydown", handleEscape);
-    return () => {
-      document.removeEventListener("mousedown", handleOutside);
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    const rect = menuRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
-    const spaceBelow = viewportHeight - rect.bottom;
-    const spaceAbove = rect.top;
-    const dropdownNeed = 220;
-    setOpenUpward(spaceBelow < dropdownNeed && spaceAbove > spaceBelow);
-  }, [open, options.length]);
-
+const FilterDropdown = ({ value, onChange, options, icon, label }) => {
+  const labelId = useId();
   return (
-    <div ref={menuRef} className="relative min-w-0 flex-1">
-      <button
-        type="button"
-        onClick={() => setOpen((prev) => !prev)}
-        className={`flex h-16 w-full items-center gap-3 rounded-xl border bg-white px-3 text-left outline-none transition-[border-color,box-shadow,transform] duration-150 active:scale-[0.99] ${
-          open
-            ? "border-[var(--c-brand)] bg-[rgba(var(--c-brand-rgb),0.025)] shadow-[0_0_0_3px_rgba(var(--c-brand-rgb),0.08)]"
-            : "border-slate-200 hover:border-[rgba(var(--c-brand-rgb),0.38)]"
-        }`}
-        aria-expanded={open}
-        aria-haspopup="listbox"
-      >
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[rgba(var(--c-brand-rgb),0.1)] text-[var(--c-brand)]">
-          <Icon size={17} strokeWidth={1.9} />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-[8px] font-bold uppercase tracking-[0.17em] text-slate-500">
-            {label}
-          </span>
-          <span className="mt-1 block truncate text-[13px] font-semibold text-[var(--c-navy)]">
-            {selected?.label || placeholder}
-          </span>
-        </span>
-        <ChevronDown
-          size={14}
-          className={`pointer-events-none shrink-0 text-slate-400 transition-transform duration-150 ${open ? "rotate-180 text-[var(--c-brand)]" : ""}`}
-        />
-      </button>
-
-      <AnimatePresence>
-      {open ? (
-        <motion.div
-          initial={{ opacity: 0, y: openUpward ? 5 : -5, scale: 0.985 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: openUpward ? 4 : -4, scale: 0.99 }}
-          transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
-          className={`absolute left-0 z-[80] min-w-[190px] w-full overflow-hidden rounded-xl border border-[rgba(var(--c-brand-rgb),0.28)] bg-white p-1.5 shadow-[0_14px_30px_rgba(var(--c-brand-rgb),0.12)] ${
-            openUpward ? "bottom-full mb-1.5" : "top-full mt-1.5"
-          }`}
-          role="listbox"
-        >
-          <div className="max-h-52 space-y-0.5 overflow-y-auto overscroll-contain pr-1 [scrollbar-color:rgba(var(--c-brand-rgb),0.45)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[rgba(var(--c-brand-rgb),0.4)] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-1">
-            {options.map((item) => {
-              const active = value === item.value;
-              return (
-                <button
-                  key={item.value}
-                  type="button"
-                  onClick={() => {
-                    onChange(item.value);
-                    setOpen(false);
-                  }}
-                  className={`w-full rounded-lg border-l-2 px-2.5 py-2 text-left text-[11px] transition-[background-color,color,border-color,transform] duration-150 active:scale-[0.99] ${
-                    active
-                      ? "border-[var(--c-brand)] bg-[rgba(var(--c-brand-rgb),0.11)] font-semibold text-[var(--c-brand-dark)]"
-                      : "border-transparent text-slate-600 hover:border-[rgba(var(--c-brand-rgb),0.3)] hover:bg-[rgba(var(--c-brand-rgb),0.055)] hover:text-[var(--c-brand-dark)]"
-                  }`}
-                  role="option"
-                  aria-selected={active}
-                >
-                  {item.label}
-                </button>
-              );
-            })}
-          </div>
-        </motion.div>
-      ) : null}
-      </AnimatePresence>
+    <div className="min-w-0 flex-1">
+      <span id={labelId} className="mb-1.5 block text-xs font-semibold text-navy-900">{label}</span>
+      <SelectMenu size="sm" icon={icon} aria-labelledby={labelId} value={value} onChange={onChange} options={options} />
     </div>
   );
 };

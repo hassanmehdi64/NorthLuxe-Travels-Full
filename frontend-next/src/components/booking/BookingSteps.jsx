@@ -1,8 +1,9 @@
 "use client";
 
 import { Elements } from "@stripe/react-stripe-js";
-import { ArrowLeft, ArrowRight, Check, CheckCircle2, Clock3, CreditCard, Landmark, Loader2, MessageCircle, ShieldCheck, Wallet } from "lucide-react";
-import { Field, Input, Select, Textarea, Checkbox } from "../../admin/ui/Field";
+import { ArrowLeft, Check, CheckCircle2, Clock3, CreditCard, Landmark, Loader2, MessageCircle, ShieldCheck, Wallet } from "lucide-react";
+import { Field, Input, Textarea, Checkbox } from "../../admin/ui/Field";
+import SelectMenu from "../forms/SelectMenu";
 import DatePickerField, { formatDateLabel } from "../forms/DatePickerField";
 import GuestStepper from "../forms/GuestStepper";
 import BookingCardPaymentFields from "./BookingCardPaymentFields";
@@ -94,10 +95,12 @@ export const TripSection = ({ flow }) => {
       <div className="grid gap-5">
         {!hasLockedTour && (
           <Field label="Tour" required error={err.tourId}>
-            <Select className={big} value={form.tourId} onChange={(e) => update(setForm, { tourId: e.target.value })}>
-              {!form.tourId && <option value="">Choose a tour</option>}
-              {tours.map((tour) => <option key={tour.id} value={tour.id}>{tour.title}</option>)}
-            </Select>
+            <SelectMenu
+              value={form.tourId}
+              onChange={(value) => update(setForm, { tourId: value })}
+              placeholder="Choose a tour"
+              options={tours.map((tour) => ({ value: tour.id, label: tour.title }))}
+            />
           </Field>
         )}
 
@@ -138,25 +141,18 @@ export const TripSection = ({ flow }) => {
           {err.guests && <p role="alert" className="mt-1.5 text-xs font-medium text-red-700">{err.guests}</p>}
         </div>
 
-        <fieldset>
-          <legend className="mb-2 text-[13px] font-semibold text-navy-900">Vehicle <span className="text-red-600" aria-hidden="true">*</span></legend>
-          <div className="grid gap-2 sm:grid-cols-2" role="radiogroup">
-            {vehicleOptions.map((option) => {
-              const active = form.facilities.vehicleType === option.key;
-              return (
-                <label key={option.key} className={`flex cursor-pointer items-center gap-3 rounded-control px-3.5 py-3 ring-1 transition ${active ? "bg-brand-50 ring-brand" : "ring-line-strong hover:ring-navy-700"}`}>
-                  <input type="radio" name="vehicle" className="sr-only" checked={active} onChange={() => updateFacilities(setForm, { vehicleType: option.key })} />
-                  <span className={`grid h-4 w-4 shrink-0 place-items-center rounded-full border ${active ? "border-brand bg-brand" : "border-line-strong"}`} aria-hidden="true">
-                    {active && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
-                  </span>
-                  <span className="min-w-0 flex-1 text-sm font-medium text-navy-900">{option.label}</span>
-                  {Number(option.dailyRate) > 0 && <span className="text-xs text-subtle">+{money(option.dailyRate, flow.paymentCurrency)}/day</span>}
-                </label>
-              );
-            })}
-          </div>
-          {err.vehicleType && <p role="alert" className="mt-1.5 text-xs font-medium text-red-700">{err.vehicleType}</p>}
-        </fieldset>
+        <Field label="Vehicle preference" required error={err.vehicleType} className="sm:max-w-md">
+          <SelectMenu
+            value={form.facilities.vehicleType}
+            onChange={(value) => updateFacilities(setForm, { vehicleType: value })}
+            placeholder="Choose a vehicle"
+            options={vehicleOptions.map((option) => ({
+              value: option.key,
+              label: option.label,
+              hint: Number(option.dailyRate) > 0 ? `+${money(option.dailyRate, flow.paymentCurrency)} per day` : undefined,
+            }))}
+          />
+        </Field>
 
         {realHotels.length > 0 && (
           <div className="grid gap-3">
@@ -168,9 +164,11 @@ export const TripSection = ({ flow }) => {
             />
             {form.facilities.hotelEnabled && (
               <Field label="Hotel category" required error={err.hotelType} className="sm:max-w-sm">
-                <Select className={big} value={form.facilities.hotelType} onChange={(e) => updateFacilities(setForm, { hotelType: e.target.value })}>
-                  {realHotels.map((option) => <option key={option.key} value={option.key}>{option.label}</option>)}
-                </Select>
+                <SelectMenu
+                  value={form.facilities.hotelType}
+                  onChange={(value) => updateFacilities(setForm, { hotelType: value })}
+                  options={realHotels.map((option) => ({ value: option.key, label: option.label }))}
+                />
               </Field>
             )}
           </div>
@@ -196,7 +194,7 @@ export const TripSection = ({ flow }) => {
 
       <Actions>
         <button type="button" className="btn btn-primary btn-lg w-full sm:w-auto" onClick={() => flow.continueFrom(1)}>
-          Continue <ArrowRight size={16} aria-hidden="true" />
+          Continue
         </button>
       </Actions>
     </section>
@@ -240,10 +238,11 @@ export const DetailsSection = ({ flow }) => {
         {isLocal ? (
           <div className="grid gap-5 sm:grid-cols-[180px_minmax(0,1fr)]">
             <Field label="ID type">
-              <Select className={big} value={form.localIdType} onChange={(e) => update(setForm, { localIdType: e.target.value })}>
-                <option value="cnic">CNIC</option>
-                <option value="passport">Passport</option>
-              </Select>
+              <SelectMenu
+                value={form.localIdType}
+                onChange={(value) => update(setForm, { localIdType: value })}
+                options={[{ value: "cnic", label: "CNIC" }, { value: "passport", label: "Passport" }]}
+              />
             </Field>
             <Field label={form.localIdType === "passport" ? "Passport number" : "CNIC number"} required error={err.localIdNumber}>
               <Input className={big} placeholder={form.localIdType === "passport" ? "AA1234567" : "12345-1234567-1"} value={form.localIdNumber} onChange={(e) => update(setForm, { localIdNumber: e.target.value })} />
@@ -263,7 +262,7 @@ export const DetailsSection = ({ flow }) => {
 
       <Actions onBack={() => flow.goToSection(1)}>
         <button type="button" className="btn btn-primary btn-lg w-full sm:w-auto" onClick={() => flow.continueFrom(2)}>
-          Continue <ArrowRight size={16} aria-hidden="true" />
+          Continue
         </button>
       </Actions>
     </section>
@@ -360,7 +359,7 @@ export const PaymentSection = ({ flow }) => {
 
       <Actions onBack={() => flow.goToSection(2)}>
         <button type="button" className="btn btn-primary btn-lg w-full sm:w-auto" onClick={() => flow.continueFrom(3)} disabled={flow.quoteLoading && !quoteData && !flow.isCustomBooking}>
-          Review booking <ArrowRight size={16} aria-hidden="true" />
+          Review booking
         </button>
       </Actions>
     </section>
