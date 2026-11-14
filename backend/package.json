@@ -11,7 +11,8 @@
     "seed:activities": "node src/scripts/seed-activities.js",
     "seed:services": "node src/scripts/seed-services.js",
     "seed:tour-packages": "node src/scripts/seed-tour-packages.js",
-    "create-admin": "node src/scripts/createAdmin.js"
+    "create-admin": "node src/scripts/createAdmin.js",
+    "test": "node --test --test-concurrency=1 \"test/**/*.test.js\""
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -26,6 +27,7 @@
     "stripe": "^17.7.0"
   },
   "devDependencies": {
+    "mongodb-memory-server": "^10.4.3",
     "nodemon": "^3.1.13"
   }
 }
